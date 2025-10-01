@@ -1,9 +1,6 @@
 # app.py
-import os
-print("Current working directory:", os.getcwd())
-
 import streamlit as st
-from modules import primary_eda, secondary_eda, competitor_eda
+from .modules import primary_eda, secondary_eda, competitor_eda
 
 # Set Streamlit app config
 st.set_page_config(page_title="EDA Dashboard", layout="wide")
