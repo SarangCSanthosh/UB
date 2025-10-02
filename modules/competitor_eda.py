@@ -129,6 +129,7 @@ def run():
     # --------------------------
     tab1, tab2, tab3 = st.tabs([
         "Brand Distribution",
+        "Pack Size Wise Analysis",
         "Top SKUs",
         "Monthly Trend"
     ])
@@ -210,8 +211,46 @@ def run():
         fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
 
-    # ---- Tab 2: Top SKUs with Granularity ----
+    # ---- Tab 2: Pack Size Wise Analysis ----
     with tab2:
+        st.subheader("Pack Size Wise Volume Distribution")
+
+        df["Segment"] = df[SKU_COL].apply(extract_segment)
+
+        pack_sales = df.groupby("Segment")[VOLUME_COL].sum().reset_index()
+        pack_sales = pack_sales.sort_values(by=VOLUME_COL, ascending=False)
+
+        # Granularity toggle
+        granularity_pack = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab_pack")
+
+        if granularity_pack == "Percentage":
+            total = pack_sales[VOLUME_COL].sum()
+            pack_sales["Value"] = (pack_sales[VOLUME_COL] / total) * 100
+            y_col = "Value"
+            y_title = "Volume Share (%)"
+        else:
+            pack_sales["Value"] = pack_sales[VOLUME_COL]
+            y_col = "Value"
+            y_title = "Volume"
+
+        fig_pack = px.bar(
+            pack_sales,
+            x="Segment",
+            y=y_col,
+            text=y_col,
+            title="Pack Size Distribution",
+            color="Segment"
+        )
+        fig_pack.update_traces(textposition="outside")
+        fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+        fig_pack.update_xaxes(tickangle=-45)
+        st.plotly_chart(fig_pack, use_container_width=True)
+
+        st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
+
+
+    # ---- Tab 2: Top SKUs with Granularity ----
+    with tab3:
         st.subheader("Top SKUs by Volume")
         sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().reset_index()
         sku_sales = sku_sales.sort_values(by=VOLUME_COL, ascending=False)
@@ -245,7 +284,7 @@ def run():
         st.dataframe(sku_data.set_index(SKU_COL)[[VOLUME_COL, "Value"]].round(2))
 
     # ---- Tab 3: Monthly Trend (Absolute Only) ----
-    with tab3:
+    with tab4:
         st.subheader("Monthly Trend by Brand")
 
         df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
