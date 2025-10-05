@@ -220,7 +220,7 @@ def run():
         # Canvas size, margins, rotate labels
         fig.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig.update_xaxes(tickangle=-45)
-        fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+        fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
 
 
