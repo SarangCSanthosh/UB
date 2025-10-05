@@ -302,11 +302,11 @@ def run():
         sku_data = sku_sales.head(top_n).copy()
         if granularity_sku == "Percentage":
             total = sku_sales[VOLUME_COL].sum()
-            sku_data["Value"] = (sku_data[VOLUME_COL] / total) * 100
+            sku_data["Value"] = ((sku_data[VOLUME_COL] / total) * 100).round(2)
             y_col = "Value"
             y_title = "Volume Share (%)"
         else:
-            sku_data["Value"] = sku_data[VOLUME_COL]
+            sku_data["Value"] = sku_data[VOLUME_COL].round(2)
             y_col = "Value"
             y_title = "Volume"
 
