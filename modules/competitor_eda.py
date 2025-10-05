@@ -215,30 +215,30 @@ def run():
     # ---- Tab 2: Pack Size Wise Analysis ----
     with tab2:
         st.subheader("Pack Size Wise Volume Distribution")
-
+    
         df["Segment"] = df[SKU_COL].apply(extract_segment)
-
+    
         pack_sales = df.groupby("Segment")[VOLUME_COL].sum().reset_index()
         pack_sales = pack_sales.sort_values(by=VOLUME_COL, ascending=False)
-
+    
         # Granularity toggle
         granularity_pack = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab_pack")
-
+    
         if granularity_pack == "Percentage":
             total = pack_sales[VOLUME_COL].sum()
-            pack_sales["Value"] = (pack_sales[VOLUME_COL] / total) * 100
+            pack_sales["Value"] = ((pack_sales[VOLUME_COL] / total) * 100).round(2)  # ✅ Rounded to 2 decimals
             y_col = "Value"
             y_title = "Volume Share (%)"
         else:
             pack_sales["Value"] = pack_sales[VOLUME_COL]
             y_col = "Value"
             y_title = "Volume"
-
+    
         fig_pack = px.bar(
             pack_sales,
             x="Segment",
             y=y_col,
-            text=y_col,
+            text=pack_sales[y_col].round(2),  
             title="Pack Size Distribution",
             color="Segment"
         )
@@ -246,8 +246,9 @@ def run():
         fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig_pack.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_pack, use_container_width=True)
-
+    
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
+
 
     # ---- Tab 5: Bottle vs Can Distribution ----
     with tab3:
