@@ -142,6 +142,7 @@ def run():
 
     # ---- Tab 1: Trends ----
     with tab1:
+        st.markdown("### ❓ Question: How are shipment volumes trending over time?")
         st.subheader("Shipment Trends")
         granularity = st.radio(
             "Select Granularity", 
@@ -190,6 +191,8 @@ def run():
 
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(trend.round(2))
+        st.markdown("**Answer:** The shipment volume trend visualization above shows how volumes vary by the selected granularity and time period.")
+
 
     # ---- Tab 2: Top/Bottom Locations ----
     with tab2:
