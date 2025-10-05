@@ -130,8 +130,8 @@ def run():
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Brand Distribution",
         "Pack Size Wise Analysis",
+        "Bottle v/s Cans",
         "Top SKUs",
-        "Bottle v/s Cans"
         "Monthly Trend"
     ])
 
@@ -249,45 +249,9 @@ def run():
 
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
 
-
-    # ---- Tab 2: Top SKUs with Granularity ----
-    with tab4:
-        st.subheader("Top SKUs by Volume")
-        sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().reset_index()
-        sku_sales = sku_sales.sort_values(by=VOLUME_COL, ascending=False)
-
-        top_n = st.slider("Show Top-N SKUs", 5, 20, 10)
-
-        # Granularity toggle for Top SKUs
-        granularity_sku = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
-        sku_data = sku_sales.head(top_n).copy()
-        if granularity_sku == "Percentage":
-            total = sku_sales[VOLUME_COL].sum()
-            sku_data["Value"] = (sku_data[VOLUME_COL] / total) * 100
-            y_col = "Value"
-            y_title = "Volume Share (%)"
-        else:
-            sku_data["Value"] = sku_data[VOLUME_COL]
-            y_col = "Value"
-            y_title = "Volume"
-
-        fig_sku = px.bar(
-            sku_data,
-            x=SKU_COL,
-            y=y_col,
-            text=y_col,
-            title=f"Top {top_n} SKUs",
-        )
-        fig_sku.update_traces(textposition="outside")
-        fig_sku.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
-        fig_sku.update_xaxes(tickangle=-45)
-        st.plotly_chart(fig_sku, use_container_width=True)
-        st.dataframe(sku_data.set_index(SKU_COL)[[VOLUME_COL, "Value"]].round(2))
-
-
-        # ---- Tab 5: Bottle vs Can Distribution ----
-    with st.tab("Bottle vs Can Distribution"):
-        st.subheader("Packaging Type Volume Distribution")
+    # ---- Tab 5: Bottle vs Can Distribution ----
+    with tab3:
+        st.subheader("Bottle vs Can Distribution")
 
         # Helper function to classify pack type
         def classify_pack_type(sku):
@@ -343,6 +307,44 @@ def run():
         """)
 
     
+
+
+    # ---- Tab 2: Top SKUs with Granularity ----
+    with tab4:
+        st.subheader("Top SKUs by Volume")
+        sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().reset_index()
+        sku_sales = sku_sales.sort_values(by=VOLUME_COL, ascending=False)
+
+        top_n = st.slider("Show Top-N SKUs", 5, 20, 10)
+
+        # Granularity toggle for Top SKUs
+        granularity_sku = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
+        sku_data = sku_sales.head(top_n).copy()
+        if granularity_sku == "Percentage":
+            total = sku_sales[VOLUME_COL].sum()
+            sku_data["Value"] = (sku_data[VOLUME_COL] / total) * 100
+            y_col = "Value"
+            y_title = "Volume Share (%)"
+        else:
+            sku_data["Value"] = sku_data[VOLUME_COL]
+            y_col = "Value"
+            y_title = "Volume"
+
+        fig_sku = px.bar(
+            sku_data,
+            x=SKU_COL,
+            y=y_col,
+            text=y_col,
+            title=f"Top {top_n} SKUs",
+        )
+        fig_sku.update_traces(textposition="outside")
+        fig_sku.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+        fig_sku.update_xaxes(tickangle=-45)
+        st.plotly_chart(fig_sku, use_container_width=True)
+        st.dataframe(sku_data.set_index(SKU_COL)[[VOLUME_COL, "Value"]].round(2))
+
+
+        
     # ---- Tab 3: Monthly Trend (Absolute Only) ----
     with tab5:
         st.subheader("Monthly Trend by Brand")
