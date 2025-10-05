@@ -142,7 +142,7 @@ def run():
 
     # ---- Tab 1: Trends ----
     with tab1:
-        st.markdown("### ❓ Question: How are shipment volumes trending over time?")
+        st.markdown("###  Question: What trends do we see in shipments across months, quarters, or years?")
         st.subheader("Shipment Trends")
         granularity = st.radio(
             "Select Granularity", 
@@ -196,6 +196,7 @@ def run():
 
     # ---- Tab 2: Top/Bottom Locations ----
     with tab2:
+        st.markdown("###  Question: Where are shipments highest and where are they lagging?")
         st.subheader("Top/Bottom Locations")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
             location_volume = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().reset_index()
@@ -229,6 +230,7 @@ def run():
 
     # ---- Tab 3: Heatmaps ----
     with tab3:
+        st.markdown("###  Question: Where are shipment volumes most concentrated?")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
             st.markdown("**Volume Heatmap**")
             agg_loc = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().sort_values(ascending=False)
@@ -243,6 +245,7 @@ def run():
 
     # ---- Tab 4: Clustering ----
     with tab4:
+        st.markdown("###  Question: Are there distinct groups of locations based on shipment activity?")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
             st.subheader("Clustering")
             granularity = st.radio("Clustering Granularity", ["Month", "Quarter", "Year"], horizontal=True)
