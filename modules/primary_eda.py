@@ -159,21 +159,25 @@ def run():
 
         if granularity == "Yearly":
             trend = df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
-            trend["Year_str"] = trend["Year"].astype(int).astype(str)  # Convert to string for axis
-        
+            
             if value_type == "Percentage":
                 trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
                 y_title = "Volume (%)"
             else:
                 y_title = "Volume"
         
+            # Convert Year to string
+            trend["Year"] = trend["Year"].astype(int).astype(str)
+        
             fig = px.line(
                 trend,
-                x="Year_str",  # Use the string column here
+                x="Year",
                 y=VOLUME_COL,
                 markers=True,
                 title="Yearly Shipment Volume"
             )
+            # Force x-axis to be categorical
+            fig.update_xaxes(type="category")
             fig.update_yaxes(title_text=y_title)
 
 
