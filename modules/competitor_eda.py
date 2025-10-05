@@ -127,10 +127,11 @@ def run():
     # --------------------------
     # TABS
     # --------------------------
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Brand Distribution",
         "Pack Size Wise Analysis",
         "Top SKUs",
+        "Bottle v/s Cans"
         "Monthly Trend"
     ])
 
@@ -250,7 +251,7 @@ def run():
 
 
     # ---- Tab 2: Top SKUs with Granularity ----
-    with tab3:
+    with tab4:
         st.subheader("Top SKUs by Volume")
         sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().reset_index()
         sku_sales = sku_sales.sort_values(by=VOLUME_COL, ascending=False)
@@ -283,8 +284,67 @@ def run():
         st.plotly_chart(fig_sku, use_container_width=True)
         st.dataframe(sku_data.set_index(SKU_COL)[[VOLUME_COL, "Value"]].round(2))
 
+
+        # ---- Tab 5: Bottle vs Can Distribution ----
+    with st.tab("Bottle vs Can Distribution"):
+        st.subheader("Packaging Type Volume Distribution")
+
+        # Helper function to classify pack type
+        def classify_pack_type(sku):
+            sku = str(sku).upper()
+            if "CAN" in sku or "CANS" in sku:
+                return "CAN"
+            elif "ML" in sku:
+                return "BOTTLE"
+            else:
+                return "OTHER"
+
+        df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
+
+        pack_type_sales = df.groupby("Pack_Type")[VOLUME_COL].sum().reset_index()
+        pack_type_sales = pack_type_sales.sort_values(by=VOLUME_COL, ascending=False)
+
+        # Toggle between absolute and percentage
+        granularity_packtype = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab_packtype")
+
+        if granularity_packtype == "Percentage":
+            total = pack_type_sales[VOLUME_COL].sum()
+            pack_type_sales["Value"] = (pack_type_sales[VOLUME_COL] / total) * 100
+            y_col = "Value"
+            y_title = "Volume Share (%)"
+        else:
+            pack_type_sales["Value"] = pack_type_sales[VOLUME_COL]
+            y_col = "Value"
+            y_title = "Volume"
+
+        # Pie chart for intuitive visualization
+        fig_packtype = px.pie(
+            pack_type_sales,
+            names="Pack_Type",
+            values="Value",
+            title="Bottle vs Can Volume Distribution",
+            hole=0.4,
+            color="Pack_Type"
+        )
+        fig_packtype.update_traces(textinfo="percent+label")
+        fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+        st.plotly_chart(fig_packtype, use_container_width=True)
+
+        # Data table below the chart
+        st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL, "Value"]].round(2))
+
+        # Optional markdown answer section
+        st.markdown("""
+        ### **Insights**
+        - Cans and bottles exhibit different consumption and distribution dynamics.
+        - Higher can volumes may indicate preference for easy portability and modern retail channels.
+        - Bottle dominance could signal strong on-premise or traditional trade performance.
+        - Tracking shifts in this ratio helps identify packaging strategy trends across years.
+        """)
+
+    
     # ---- Tab 3: Monthly Trend (Absolute Only) ----
-    with tab4:
+    with tab5:
         st.subheader("Monthly Trend by Brand")
 
         df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
