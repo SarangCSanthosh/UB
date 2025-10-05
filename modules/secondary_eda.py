@@ -134,7 +134,7 @@ def run():
     # ---- Shipment Trends ----
     with tab1:
         st.subheader("Shipment Trends")
-
+    
         # --- Controls ---
         granularity = st.radio(
             "Granularity", ["Yearly", "Quarterly", "Monthly"], horizontal=True, key="trend_granularity"
@@ -142,17 +142,17 @@ def run():
         view_mode = st.radio(
             "Display Mode", ["Absolute", "Percentage"], horizontal=True, key="trend_view"
         )
-
+    
         # --- Shipment Trend (Filtered Main Data) ---
         if granularity == "Yearly":
-            df_filtered["Label"] = df_filtered["Year"].astype(str)
+            df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)  # ✅ Convert to int first
         elif granularity == "Quarterly":
             df_filtered["Label"] = df_filtered["Quarter"].astype(str)
         else:
             df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
-
+    
         trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
-
+    
         if view_mode == "Percentage":
             total_sum = trend_df[VOLUME_COL].sum()
             trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
@@ -160,11 +160,10 @@ def run():
         else:
             trend_df["Value"] = trend_df[VOLUME_COL]
             y_title = "Volume"
-
+    
         # --- Load and Filter Normalised Data ---
         df_normalised = load_normalized_data(r"https://docs.google.com/spreadsheets/d/1lg0iIgKx9byQj7d2NZO-k1gKdFuNxxQe/export?format=xlsx")
-
-        # Apply the same filter logic
+    
         if filter_mode == "Year":
             if year_choice:
                 df_normalised = df_normalised[df_normalised["ACTUAL_DATE"].dt.year.isin(year_choice)]
@@ -173,24 +172,23 @@ def run():
                 (df_normalised["ACTUAL_DATE"].dt.date >= start_date) &
                 (df_normalised["ACTUAL_DATE"].dt.date <= end_date)
             ]
-
+    
         # Add granularity columns after filtering
         df_normalised["Year"] = df_normalised["ACTUAL_DATE"].dt.year
         df_normalised["Quarter"] = df_normalised["ACTUAL_DATE"].dt.to_period("Q").astype(str)
         df_normalised["YearMonth"] = df_normalised["ACTUAL_DATE"].dt.to_period("M").astype(str)
-
+    
         # Aggregate by granularity
         if granularity == "Yearly":
             norm_df = df_normalised.groupby("Year")["VOLUME"].sum().reset_index()
-            norm_df["Label"] = norm_df["Year"].astype(str)
+            norm_df["Label"] = norm_df["Year"].astype(int).astype(str)  # ✅ Convert to int first
         elif granularity == "Quarterly":
             norm_df = df_normalised.groupby("Quarter")["VOLUME"].sum().reset_index()
             norm_df["Label"] = norm_df["Quarter"].astype(str)
         else:
             norm_df = df_normalised.groupby("YearMonth")["VOLUME"].sum().reset_index()
             norm_df["Label"] = norm_df["YearMonth"].astype(str)
-
-        # Normalize the normalized data if in Percentage mode
+    
         if view_mode == "Percentage":
             total_norm = norm_df["VOLUME"].sum()
             norm_df["Normalized_Value"] = (norm_df["VOLUME"] / total_norm) * 100
@@ -198,11 +196,10 @@ def run():
         else:
             norm_df["Normalized_Value"] = norm_df["VOLUME"]
             norm_y_title = "Normalized Volume"
-
+    
         # --- Plot both trends ---
         fig = go.Figure()
-
-        # Shipment trend (main data)
+    
         fig.add_trace(
             go.Scatter(
                 x=trend_df["Label"],
@@ -213,8 +210,7 @@ def run():
                 yaxis="y1"
             )
         )
-
-        # Normalized volume (secondary axis)
+    
         fig.add_trace(
             go.Scatter(
                 x=norm_df["Label"],
@@ -225,16 +221,18 @@ def run():
                 yaxis="y2"
             )
         )
-
+    
+        # ✅ Force x-axis to categorical so labels like 2023, 2024 appear properly
         fig.update_layout(
             title=f"Shipment Trend vs Normalized Volume ({granularity})",
-            xaxis=dict(title=granularity),
+            xaxis=dict(title=granularity, type="category"),
             yaxis=dict(title=y_title, side="left"),
             yaxis2=dict(title=norm_y_title, overlaying="y", side="right"),
             legend_title="Metrics"
         )
-
+    
         st.plotly_chart(fig, use_container_width=True)
+
 
 
 
