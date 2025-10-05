@@ -234,6 +234,12 @@ def run():
             else:
                 fig.update_layout(yaxis=dict(categoryorder="total descending"))
             st.plotly_chart(fig, use_container_width=True)
+            st.markdown("""
+### **Answer:**
+The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. Any strategies to increase overall volume should likely focus on maintaining performance in these top three areas or identifying the factors driving the success of these locations to replicate them elsewhere. The business has a clear tiering of locations based on shipment volume.
+Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. Disruptive strategies could be implemented here to improve performance
+""")
+
 
     # ---- Tab 3: Heatmaps ----
     with tab3:
