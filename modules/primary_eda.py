@@ -191,7 +191,16 @@ def run():
 
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(trend.round(2))
-        st.markdown("**Answer:** The shipment volume trend visualization above shows how volumes vary by the selected granularity and time period.")
+        st.markdown("""
+### **Answer: Shipment Volume Analysis (2023–2024)**
+
+- The company experienced a **substantial decrease in yearly shipment volume** between **2023 and 2024**, indicating a contraction in shipping activity or demand.  
+- Shipment activity is **highly cyclical**, with a consistent **drop in Q3** of both years — much more severe in **2024**, signaling a major performance concern.  
+- The period from **2024 Q2 to Q3** marks a **significant low point**, suggesting internal or external disruptions.  
+- On a **monthly basis**, shipment volume shows **high volatility** — with **May 2024** being the peak, followed by a sharp **crash in August 2024**.  
+- The **partial recovery in Q4 2024** (September–October) is encouraging, but volumes remain well below prior highs.
+""")
+
 
 
     # ---- Tab 2: Top/Bottom Locations ----
