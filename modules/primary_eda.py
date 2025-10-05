@@ -159,7 +159,7 @@ def run():
 
         if granularity == "Yearly":
             trend = df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
-            trend["Year"] = trend["Year"].astype(int)
+            trend["Year_str"] = trend["Year"].astype(int).astype(str))
             if value_type == "Percentage":
                 trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
                 y_title = "Volume (%)"
