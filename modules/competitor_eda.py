@@ -251,38 +251,38 @@ def run():
 
     # ---- Tab 5: Bottle vs Can Distribution ----
     with tab3:
-    st.subheader("Bottle vs Can Distribution")
-
-    # Helper function to classify pack type
-    def classify_pack_type(sku):
-        sku = str(sku).upper()
-        if "CAN" in sku or "CANS" in sku:
-            return "CAN"
-        elif "ML" in sku:
-            return "BOTTLE"
-        else:
-            return "OTHER"
-
-    df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
-
-    pack_type_sales = df.groupby("Pack_Type")[VOLUME_COL].sum().reset_index()
-    pack_type_sales = pack_type_sales.sort_values(by=VOLUME_COL, ascending=False)
-
-    # Pie chart for intuitive visualization
-    fig_packtype = px.pie(
-        pack_type_sales,
-        names="Pack_Type",
-        values=VOLUME_COL,
-        title="Bottle vs Can Volume Distribution",
-        hole=0.4,
-        color="Pack_Type"
-    )
-    fig_packtype.update_traces(textinfo="percent+label")
-    fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
-    st.plotly_chart(fig_packtype, use_container_width=True)
-
-    # Data table below the chart
-    st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(2))
+        st.subheader("Bottle vs Can Distribution")
+    
+        # Helper function to classify pack type
+        def classify_pack_type(sku):
+            sku = str(sku).upper()
+            if "CAN" in sku or "CANS" in sku:
+                return "CAN"
+            elif "ML" in sku:
+                return "BOTTLE"
+            else:
+                return "OTHER"
+    
+        df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
+    
+        pack_type_sales = df.groupby("Pack_Type")[VOLUME_COL].sum().reset_index()
+        pack_type_sales = pack_type_sales.sort_values(by=VOLUME_COL, ascending=False)
+    
+        # Pie chart for intuitive visualization
+        fig_packtype = px.pie(
+            pack_type_sales,
+            names="Pack_Type",
+            values=VOLUME_COL,
+            title="Bottle vs Can Volume Distribution",
+            hole=0.4,
+            color="Pack_Type"
+        )
+        fig_packtype.update_traces(textinfo="percent+label")
+        fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+        st.plotly_chart(fig_packtype, use_container_width=True)
+    
+        # Data table below the chart
+        st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(2))
 
   
     
