@@ -211,8 +211,9 @@ def run():
             norm_y_title = "Normalized Volume"
     
         # --- Load Event Calendar ---
-        EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTjKmv-XXXXXXX/pub?output=csv"  # 🔁 Replace with your CSV link
-        df_events = pd.read_csv(EVENT_CSV_URL)
+        EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx" # 🔁 Replace with your published CSV link
+        df_events = load_event_calendar(EVENT_CSV_URL)
+
         df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
     
         # If monthly/quarterly/yearly, adjust events to match label
