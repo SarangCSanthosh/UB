@@ -146,7 +146,7 @@ def run():
         # --- Aggregate volume by Brand ---
         brand_sales = df.groupby("Brand")[VOLUME_COL].sum().round(0).reset_index()
         brand_sales = brand_sales[brand_sales["Brand"] != "OTHER"]
-        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(0)
+        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum().round(0) * 100).round(0)
     
         # --- Group brands with <1% as OTHERS ---
         major_brands = brand_sales[brand_sales["Percentage"] >= 3]
@@ -170,7 +170,7 @@ def run():
             brand_sales,
             x="Brand",
             y=y_col,
-            text=brand_sales[y_col].round(2),
+            text=brand_sales[y_col].round(0),
             title="Volume Distribution Across Brands (Grouped by OTHERS < 1%)",
             color="Brand",
             labels={y_col: y_title}
