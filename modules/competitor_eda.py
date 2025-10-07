@@ -169,53 +169,7 @@ def run():
 All efforts must be focused on protecting, supporting, and potentially growing KFS. This brand is the core of the entire operation. Bullet and KF are the only two other brands that matter. Resources should be allocated to these two to increase their share and slightly diversify the revenue base away from the KFS dependency.
 """)
 
-    # ---- Tab 2: Pack Size Wise Analysis ----
-    with tab2:
-        st.markdown("### Question: What are the top-selling SKUs?")
-        st.subheader("Pack Size Wise Volume Distribution")
 
-        def extract_segment(sku):
-            sku = str(sku).upper().strip()
-            match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
-            return match.group(1) if match else "Other Segment"
-
-        df["Segment"] = df[SKU_COL].apply(extract_segment)
-
-        # ✅ Add Brand filter (All + individual brands)
-        brands = ["All"] + sorted(df["Brand"].unique())
-        selected_brand = st.radio("Select Brand", options=brands, horizontal=True)
-
-        if selected_brand == "All":
-            df_brand = df[df["Brand"] != "OTHER"]
-        else:
-            df_brand = df[df["Brand"] == selected_brand]
-
-        pack_sales = df_brand.groupby("Segment")[VOLUME_COL].sum().reset_index().sort_values(by=VOLUME_COL, ascending=False)
-        pack_sales["Percentage"] = (pack_sales[VOLUME_COL] / pack_sales[VOLUME_COL].sum() * 100).round(2)
-
-        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
-        y_col = "Percentage" if granularity == "Percentage" else VOLUME_COL
-        y_title = "Volume Share (%)" if y_col == "Percentage" else "Volume"
-
-        fig_pack = px.bar(
-            pack_sales,
-            x="Segment",
-            y=y_col,
-            text=pack_sales[y_col].round(2),
-            title=f"{selected_brand} Pack Size Distribution",
-            color="Segment",
-            labels={y_col: y_title}
-        )
-        fig_pack.update_traces(textposition="outside")
-        fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
-        fig_pack.update_xaxes(tickangle=-45)
-        st.plotly_chart(fig_pack, use_container_width=True)
-        st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(2))
-        with st.container():
-            st.markdown("""
-### **Answer:**
-All efforts must be focused on protecting, supporting, and potentially growing KFS. This brand is the core of the entire operation. Bullet and KF are the only two other brands that matter. Resources should be allocated to these two to increase their share and slightly diversify the revenue base away from the KFS dependency.
-""")
 
 
     # ---- Tab 2: Pack Size Wise Analysis ----
