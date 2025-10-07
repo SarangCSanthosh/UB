@@ -186,7 +186,7 @@ def run():
             fig_pie = px.pie(
                 minor_brands,
                 names="Brand",
-                values=VOLUME_COL.round(0),
+                values=VOLUME_COL,
                 title="Distribution of Brands Grouped Under 'OTHERS'",
                 color="Brand",
                 hole=0.4
