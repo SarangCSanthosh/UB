@@ -103,21 +103,12 @@ def run():
     filter_mode = st.sidebar.radio("Filter by:", ["Year", "Date Range"], horizontal=True)
     df_filtered = df.copy()
 
-    if filter_type == "Year(s)":
-        # Fetch all unique, sorted years from your dataframe
-        all_years = sorted(df["Year"].dropna().unique())
-    
-        # ✅ Default to all years instead of only the latest one
+    if filter_mode == "Year":
         year_choice = st.sidebar.multiselect(
-            "Select Year(s)",
-            options=all_years,
-            default=all_years  # <- this line ensures all years are selected by default
+            "Select Year(s)", options=sorted(df["Year"].dropna().unique()), default=[df["Year"].max()]
         )
-    
-        # Apply filtering if any years are selected
         if year_choice:
-            df = df[df["Year"].isin(year_choice)]
-
+            df_filtered = df_filtered[df_filtered["Year"].isin(year_choice)]
     else:
         start_date = st.sidebar.date_input("Start Date", df[DATE_COL].min().date())
         end_date = st.sidebar.date_input("End Date", df[DATE_COL].max().date())
@@ -438,3 +429,4 @@ North Karnataka 2 region is the core volume driver, as confirmed by both the pre
 - HUBBALLI-1 (Light Blue) is the dominant sub-depot, controlling 61.4% of the Hubballi group's total volume.The Hubballi area's volume performance is primarily dependent on the performance and stability of HUBBALLI-1. Any operational issue or decline in sales at HUBBALLI-1 would severely impact the entire Hubballi group's performance.Strategic initiatives should be aimed at boosting HUBBALLI-2's volume to achieve a more even distribution, which would reduce the over-reliance on HUBBALLI-1.
 - The highest risk in this focused group lies in the BELAGAVI 1 depot. Any major operational setback or sales decline here would result in a severe, sudden drop in the overall volume for the entire Belagavi area. Focused marketing and sales investment is needed to significantly increase its volume and achieve a more diversified risk profile, perhaps aiming for a 45%-55% split over time.
 """)
+
