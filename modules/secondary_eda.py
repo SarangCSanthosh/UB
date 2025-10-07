@@ -103,12 +103,21 @@ def run():
     filter_mode = st.sidebar.radio("Filter by:", ["Year", "Date Range"], horizontal=True)
     df_filtered = df.copy()
 
-    if filter_mode == "Year":
+    if filter_type == "Year(s)":
+        # Fetch all unique, sorted years from your dataframe
+        all_years = sorted(df["Year"].dropna().unique())
+    
+        # ✅ Default to all years instead of only the latest one
         year_choice = st.sidebar.multiselect(
-            "Select Year(s)", options=sorted(df["Year"].dropna().unique()), default=[df["Year"].max()]
+            "Select Year(s)",
+            options=all_years,
+            default=all_years  # <- this line ensures all years are selected by default
         )
+    
+        # Apply filtering if any years are selected
         if year_choice:
-            df_filtered = df_filtered[df_filtered["Year"].isin(year_choice)]
+            df = df[df["Year"].isin(year_choice)]
+
     else:
         start_date = st.sidebar.date_input("Start Date", df[DATE_COL].min().date())
         end_date = st.sidebar.date_input("End Date", df[DATE_COL].max().date())
