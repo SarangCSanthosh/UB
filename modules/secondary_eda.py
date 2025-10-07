@@ -430,7 +430,7 @@ North Karnataka 2 region is the core volume driver, as confirmed by both the pre
 
             if view_mode == "Percentage":
                 trend["Total"] = trend.groupby("YearMonth")[VOLUME_COL].transform("sum")
-                trend["Value"] = (trend[VOLUME_COL] / trend["Total"]) * 100
+                trend["Value"] = ((trend[VOLUME_COL] / trend["Total"]) * 100).round(0)
                 y_title = "Volume Share (%)"
             else:
                 trend["Value"] = trend[VOLUME_COL]
