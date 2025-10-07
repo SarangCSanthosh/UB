@@ -146,11 +146,12 @@ def run():
         # --- Aggregate volume by Brand ---
         brand_sales = df.groupby("Brand")[VOLUME_COL].sum().reset_index()
         brand_sales = brand_sales[brand_sales["Brand"] != "OTHER"]
-        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(0)
+        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(2)
     
         # --- Group brands with <1% as OTHERS ---
-        major_brands = brand_sales[brand_sales["Percentage"] >= 3]
-        minor_brands = brand_sales[brand_sales["Percentage"] < 3]
+        major_brands = brand_sales[brand_sales["Percentage"] >= 1]
+        minor_brands = brand_sales[brand_sales["Percentage"] < 1]
+    
         if not minor_brands.empty:
             others_sum = minor_brands[VOLUME_COL].sum()
             others_pct = minor_brands["Percentage"].sum()
@@ -170,7 +171,7 @@ def run():
             x="Brand",
             y=y_col,
             text=brand_sales[y_col].round(2),
-            title="Volume Distribution Across Brands",
+            title="Volume Distribution Across Brands (Grouped by OTHERS < 1%)",
             color="Brand",
             labels={y_col: y_title}
         )
@@ -181,7 +182,7 @@ def run():
     
         # --- Pie Chart: Breakdown of OTHERS ---
         if not minor_brands.empty:
-            st.markdown("#### Breakdown of Brands Under 'OTHERS'")
+            st.markdown("#### Breakdown of Brands Under 'OTHERS' (< 1%)")
             fig_pie = px.pie(
                 minor_brands,
                 names="Brand",
@@ -197,7 +198,7 @@ def run():
             st.info("No brands fall under the 'OTHERS' (<1%) category for the current selection.")
     
         # --- Data Table ---
-        st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(0))
+        st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(2))
        
         with st.container():
             st.markdown("""
