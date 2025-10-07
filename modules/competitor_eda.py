@@ -353,7 +353,7 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
         st.dataframe(sku_data.set_index(SKU_COL)[[VOLUME_COL, "Value"]].round(2))
         st.markdown("""
 ### **Answer:**
-The company’s performance is highly dependent on the stability and success of the KF 500ML SKU. Protecting this product from competition is required. While KF 500ML is the leader, the three largest SKUs (KF 500ML, 500ML, and KF GULAL CART) should receive the most detailed operational focus, as they represent the foundation of the total volume.
+The company’s performance is highly dependent on the stability and success of the KFS 650ML SKU. Protecting this product from competition is required. While KFS 650ML is the leader, the three largest SKUs (KFS 650ML, Bullet 650ML, and KFS 330 ML Cans) should receive the most detailed operational focus, as they represent the foundation of the total volume.
 """)
 
 
