@@ -278,6 +278,7 @@ def run():
             width=1200,  # Increased chart width for more horizontal space
             template="plotly_dark",  # Optional: for a dark-themed background (can be omitted)
         )
+        st.plotly_chart(fig, use_container_width=True)
         st.markdown("""
 ### **Answer:**
 - While the absolute volume peaked in Q2, the normalized volume hit one of its lowest points. This implies that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) was very high in Q2. In other words, the high absolute volume in Q2 did not meet expectations or capacity, resulting in a poor normalized performance.
