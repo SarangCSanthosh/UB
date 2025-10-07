@@ -250,11 +250,11 @@ def run():
         view_mode_tab2 = st.radio("Display Mode", ["Absolute", "Percentage"], horizontal=True, key="top_outlets_view_mode")
         top_n = st.slider("Top-N Outlets", 5, 25, 10)
         
-        outlet_volume = df_filtered.groupby(OUTLET_COL)[VOLUME_COL].sum().reset_index()
+        outlet_volume = df_filtered.groupby(OUTLET_COL)[VOLUME_COL].sum().round(0).reset_index()
         top_outlets = outlet_volume.sort_values(by=VOLUME_COL, ascending=False).head(top_n)
         
         if view_mode_tab2 == "Percentage":
-            top_outlets["Value"] = (top_outlets[VOLUME_COL] / top_outlets[VOLUME_COL].sum()) * 100
+            top_outlets["Value"] = (top_outlets[VOLUME_COL] / top_outlets[VOLUME_COL].sum().round(0)) * 100
             value_col = "Value"
             title_suffix = " (%)"
         else:
@@ -268,7 +268,7 @@ def run():
         st.plotly_chart(fig, use_container_width=True)
         
         # Dataframe
-        display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(2)
+        display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0)
         st.dataframe(display_df)
         
         st.markdown("""
@@ -283,10 +283,10 @@ def run():
         st.markdown("###  Question: Which depots are driving the majority of volume?")
         st.subheader("Depot-wise ABC Analysis")
         if "DBF_DEPOT" in df_filtered.columns:
-            depot_volume = df_filtered.groupby("DBF_DEPOT")[VOLUME_COL].sum().reset_index()
+            depot_volume = df_filtered.groupby("DBF_DEPOT")[VOLUME_COL].sum().round(0).reset_index()
             depot_volume = depot_volume.sort_values(by=VOLUME_COL, ascending=False).reset_index(drop=True)
-            depot_volume["Cum_Volume"] = depot_volume[VOLUME_COL].cumsum()
-            depot_volume["Cum_Percentage"] = 100 * depot_volume["Cum_Volume"] / depot_volume[VOLUME_COL].sum()
+            depot_volume["Cum_Volume"] = depot_volume[VOLUME_COL].cumsum().round(0)
+            depot_volume["Cum_Percentage"] = 100 * depot_volume["Cum_Volume"] / depot_volume[VOLUME_COL].sum().round(0)
 
             def classify(pct):
                 if pct <= 70:
@@ -320,7 +320,7 @@ def run():
                 yaxis2=dict(title="Cumulative %", overlaying="y", side="right", range=[0, 110]),
             )
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(depot_volume.round(2))
+            st.dataframe(depot_volume.round(0))
         else:
             st.info("DBF_DEPOT column not found.")
         st.markdown("""
@@ -334,11 +334,11 @@ def run():
         st.markdown("###  Question: Which regions account for the largest share of shipments?")
         st.subheader("Region-wise Volume Share")
         if "DBF_REGION" in df_filtered.columns:
-            region_volume = df_filtered.groupby("DBF_REGION")[VOLUME_COL].sum().reset_index()
+            region_volume = df_filtered.groupby("DBF_REGION")[VOLUME_COL].sum().round(0).reset_index()
             fig = px.pie(region_volume, values=VOLUME_COL, names="DBF_REGION", hole=0.5,
                          title="Volume Distribution by Region")
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(region_volume.set_index("DBF_REGION").round(2))
+            st.dataframe(region_volume.set_index("DBF_REGION").round(0))
         else:
             st.info("DBF_REGION column not found.")
         st.markdown("""
@@ -357,8 +357,8 @@ NORTH KARNATAKA 2 is the primary driver of volume in this combined area, account
                 Total_Volume=(VOLUME_COL, "sum"),
             ).reset_index()
 
-            region_stats["Outlet %"] = (region_stats["Outlet_Count"] / region_stats["Outlet_Count"].sum()) * 100
-            region_stats["Volume %"] = (region_stats["Total_Volume"] / region_stats["Total_Volume"].sum()) * 100
+            region_stats["Outlet %"] = (region_stats["Outlet_Count"] / region_stats["Outlet_Count"].sum().round(0)) * 100
+            region_stats["Volume %"] = (region_stats["Total_Volume"] / region_stats["Total_Volume"].sum().round(0)) * 100
 
             melted = region_stats.melt(
                 id_vars="DBF_REGION",
@@ -368,11 +368,11 @@ NORTH KARNATAKA 2 is the primary driver of volume in this combined area, account
             )
 
             fig = px.bar(melted, x="DBF_REGION", y="Percent", color="Metric",
-                         barmode="stack", text=melted["Percent"].round(2),
+                         barmode="stack", text=melted["Percent"].round(0),
                          title="Outlets vs Volume % by Region")
             fig.update_traces(texttemplate="%{text:.2f}%", textposition="inside")
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(region_stats.set_index("DBF_REGION").round(2))
+            st.dataframe(region_stats.set_index("DBF_REGION").round(0))
         else:
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
         st.markdown("""
@@ -402,10 +402,10 @@ North Karnataka 2 region is the core volume driver, as confirmed by both the pre
         ]
 
         if not df_special.empty:
-            comp = df_special.groupby("DBF_DEPOT")[VOLUME_COL].sum().reset_index()
+            comp = df_special.groupby("DBF_DEPOT")[VOLUME_COL].sum().round(0).reset_index()
 
             if view_mode == "Percentage":
-                comp["Value"] = (comp[VOLUME_COL] / comp[VOLUME_COL].sum()) * 100
+                comp["Value"] = (comp[VOLUME_COL] / comp[VOLUME_COL].sum().round(0)) * 100
                 value_col = "Value"
                 title_suffix = " (%)"
             else:
