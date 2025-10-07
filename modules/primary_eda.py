@@ -274,8 +274,7 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
 ### **Answer:**
 - There is a clear cyclical pattern across most locations. Volume tends to be highest during the middle of the year, roughly from April to July.
 - Conversely, volume is consistently lower at the beginning (Jan/Feb) and end (Oct/Dec) of the year. This seasonality is a critical factor for forecasting, inventory management, and planning marketing campaigns.
-- The most prominent feature is the massive volume spike for Vijayapura around April-May 2024. This white-hot cell indicates an extraordinary event, such as a highly successful local marketing campaign, a one-time project, or a regional event that drove volume far beyond the norm. This anomaly warrants immediate investigation to understand its cause.
-
+- The most prominent feature is the massive volume spike for Vijayapura around April-May 2024. This white-hot cell indicates an extraordinary event, such as a highly successful local marketing campaign, a one-time project, or a regional event that drove volume far beyond the norm.
 """)
 
     # ---- Tab 4: Clustering ----
