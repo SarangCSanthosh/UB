@@ -104,7 +104,7 @@ def run():
         year_choice = st.sidebar.multiselect(
             "Select Year(s)",
             options=sorted(df["Year"].dropna().unique()),
-            default=[df["Year"].max()]
+            default=sorted(df["Year"].dropna().unique())
         )
         if year_choice:
             df = df[df["Year"].isin(year_choice)]
