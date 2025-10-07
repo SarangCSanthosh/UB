@@ -274,8 +274,8 @@ def run():
             yaxis=dict(title=y_title, side="left"),
             yaxis2=dict(title=norm_y_title, overlaying="y", side="right"),
             legend_title="Metrics",
-            height=1800,  # Increased chart height for better readability
-            width=1200,  # Increased chart width for more horizontal space
+            height=1000,  # Increased chart height for better readability
+            width=1800,  # Increased chart width for more horizontal space
             template="plotly_dark",  # Optional: for a dark-themed background (can be omitted)
         )
         st.plotly_chart(fig, use_container_width=True)
