@@ -36,7 +36,15 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
     df["YearMonth"] = df[date_col].dt.to_period("M")
     df["Quarter"] = df[date_col].dt.to_period("Q")
     return df, date_col
-
+    
+# ---- EVENT CALENDAR LOADER ----
+@st.cache_data
+def load_event_calendar(csv_url):
+    df_events = pd.read_csv(csv_url)
+    df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+    df_events = df_events.dropna(subset=["Event / Task"])
+    return df_events
+    
 # --------------------------
 # MAIN APP
 # --------------------------
@@ -52,6 +60,10 @@ def run():
     OUTLET_COL = "DBF_OUTLET_NAME"
 
     df, DATE_COL = prepare_dates(df)
+
+    # ---- Load Event Calendar ----
+    EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdV9nEwazYDPzyxa1oPBdOxPRgp0UQGQfJYOUGgPc0LNJ0DKz6jbF2tXvgkMEQ8w/pub?output=csv"  # 🔁 Replace with your published CSV link
+    df_events = load_event_calendar(EVENT_CSV_URL)
 
     # --------------------------
     # FIXED KPIs
@@ -136,7 +148,7 @@ def run():
         st.markdown("###  Question: Do shipment trends look different by year, quarter, or month?")
         st.subheader("Shipment Trends")
     
-        # --- Controls ---
+# --- Controls ---
         granularity = st.radio(
             "Granularity", ["Yearly", "Quarterly", "Monthly"], horizontal=True, key="trend_granularity"
         )
@@ -146,7 +158,7 @@ def run():
     
         # --- Shipment Trend (Filtered Main Data) ---
         if granularity == "Yearly":
-            df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)  # ✅ Convert to int first
+            df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
         elif granularity == "Quarterly":
             df_filtered["Label"] = df_filtered["Quarter"].astype(str)
         else:
@@ -182,7 +194,7 @@ def run():
         # Aggregate by granularity
         if granularity == "Yearly":
             norm_df = df_normalised.groupby("Year")["VOLUME"].sum().reset_index()
-            norm_df["Label"] = norm_df["Year"].astype(int).astype(str)  # ✅ Convert to int first
+            norm_df["Label"] = norm_df["Year"].astype(int).astype(str)
         elif granularity == "Quarterly":
             norm_df = df_normalised.groupby("Quarter")["VOLUME"].sum().reset_index()
             norm_df["Label"] = norm_df["Quarter"].astype(str)
@@ -197,6 +209,25 @@ def run():
         else:
             norm_df["Normalized_Value"] = norm_df["VOLUME"]
             norm_y_title = "Normalized Volume"
+    
+        # --- Load Event Calendar ---
+        EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTjKmv-XXXXXXX/pub?output=csv"  # 🔁 Replace with your CSV link
+        df_events = pd.read_csv(EVENT_CSV_URL)
+        df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+    
+        # If monthly/quarterly/yearly, adjust events to match label
+        if granularity == "Yearly":
+            df_events["Label"] = df_events["Date"].dt.year.astype(str)
+        elif granularity == "Quarterly":
+            df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
+        else:
+            df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
+    
+        # Aggregate events per label
+        events_agg = df_events.groupby("Label")["Event / Task"].apply(lambda x: "\n".join(x.dropna())).reset_index()
+    
+        # Merge events with trend_df
+        trend_df = trend_df.merge(events_agg, on="Label", how="left")
     
         # --- Plot both trends ---
         fig = go.Figure()
@@ -223,13 +254,29 @@ def run():
             )
         )
     
-        # ✅ Force x-axis to categorical so labels like 2023, 2024 appear properly
+        # --- Add event annotations ---
+        for _, row in trend_df.dropna(subset=["Event / Task"]).iterrows():
+            fig.add_annotation(
+                x=row["Label"],
+                y=row["Value"],
+                text=row["Event / Task"],
+                showarrow=True,
+                arrowhead=2,
+                ax=0,
+                ay=-40,
+                bgcolor="lightyellow",
+                bordercolor="black",
+                borderwidth=1,
+                font=dict(size=10, color="black")
+            )
+    
         fig.update_layout(
             title=f"Shipment Trend vs Normalized Volume ({granularity})",
             xaxis=dict(title=granularity, type="category"),
             yaxis=dict(title=y_title, side="left"),
             yaxis2=dict(title=norm_y_title, overlaying="y", side="right"),
-            legend_title="Metrics"
+            legend_title="Metrics",
+            height=600
         )
     
         st.plotly_chart(fig, use_container_width=True)
