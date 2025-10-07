@@ -158,10 +158,10 @@ def run():
         )
 
         if granularity == "Yearly":
-            trend = df_filtered.groupby("Year")[VOLUME_COL].sum().round(0).reset_index()
+            trend = df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
             
             if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(0)
+                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
                 y_title = "Volume (%)"
             else:
                 y_title = "Volume"
@@ -183,10 +183,10 @@ def run():
 
 
         elif granularity == "Quarterly":
-            trend = df_filtered.groupby("Quarter")[VOLUME_COL].sum().round(0).reset_index()
+            trend = df_filtered.groupby("Quarter")[VOLUME_COL].sum().reset_index()
             trend["Quarter"] = trend["Quarter"].astype(str)
             if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(0)
+                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
                 y_title = "Volume (%)"
             else:
                 y_title = "Volume"
@@ -194,10 +194,10 @@ def run():
             fig.update_yaxes(title_text=y_title)
 
         else:  # Monthly
-            trend = df_filtered.groupby("YearMonth")[VOLUME_COL].sum().round(0).reset_index()
+            trend = df_filtered.groupby("YearMonth")[VOLUME_COL].sum().reset_index()
             trend["YearMonth"] = trend["YearMonth"].astype(str)
             if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(0)
+                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
                 y_title = "Volume (%)"
             else:
                 y_title = "Volume"
@@ -205,7 +205,7 @@ def run():
             fig.update_yaxes(title_text=y_title)
 
         st.plotly_chart(fig, use_container_width=True)
-        st.dataframe(trend.round(0))
+        st.dataframe(trend.round(2))
         st.markdown("""
 ### **Answer: Shipment Volume Analysis (2023–2024)**
 
