@@ -137,6 +137,7 @@ def run():
 
     # ---- Tab 1: Brand Distribution ----
     with tab1:
+        st.markdown("###  Question: Which brands dominate in shipment volume?")
         st.subheader("Brand Distribution")
     
         df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
@@ -222,10 +223,15 @@ def run():
         fig.update_xaxes(tickangle=-45)
         fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown("""
+### **Answer:**
+All efforts must be focused on protecting, supporting, and potentially growing KFS. This brand is the core of the entire operation. Bullet and KF are the only two other brands that matter. Resources should be allocated to these two to increase their share and slightly diversify the revenue base away from the KFS dependency.
+""")
 
 
     # ---- Tab 2: Pack Size Wise Analysis ----
     with tab2:
+        st.markdown("###  Question: What are the top-selling SKUs?")
         st.subheader("Pack Size Wise Volume Distribution")
     
         df["Segment"] = df[SKU_COL].apply(extract_segment)
@@ -260,10 +266,15 @@ def run():
         st.plotly_chart(fig_pack, use_container_width=True)
     
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
+        st.markdown("""
+### **Answer:**
+The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immense volume, every effort should be made to optimise the production, filling, distribution, and marketing of the 650 ML pack for maximum efficiency and cost savings. Marginal improvements here will yield massive absolute returns.The reliance on a single pack size presents a high risk. Strategies to boost the 1000 ML CART and 1000 ML CSMS packs should be explored to gradually diversify the volume base, providing resilience against potential market shifts targeting the 650 ML format.
+""")
 
 
     # ---- Tab 5: Bottle vs Can Distribution ----
     with tab3:
+        st.markdown("###  Question: How is shipment volume split between bottles and cans?")
         st.subheader("Bottle vs Can Distribution")
     
         # Helper function to classify pack type
@@ -296,6 +307,10 @@ def run():
     
         # Data table below the chart
         st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(2))
+        st.markdown("""
+### **Answer:**
+BOTTLE (light blue) is the primary packaging format, accounting for a massive 83.5% of the total volume. The business's entire supply chain, from manufacturing and filling to inventory, logistics, and recycling/returns, is overwhelmingly structured around the Bottle format. Operational efficiency efforts should naturally be centered here, as marginal improvements in the bottle process will yield the greatest overall volume impact.
+""")
 
   
     
@@ -303,6 +318,7 @@ def run():
 
     # ---- Tab 2: Top SKUs with Granularity ----
     with tab4:
+        st.markdown("###  Question: What are the top-performing SKUs by volume?")
         st.subheader("Top SKUs by Volume")
         sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().reset_index()
         sku_sales = sku_sales.sort_values(by=VOLUME_COL, ascending=False)
@@ -334,11 +350,16 @@ def run():
         fig_sku.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_sku, use_container_width=True)
         st.dataframe(sku_data.set_index(SKU_COL)[[VOLUME_COL, "Value"]].round(2))
+        st.markdown("""
+### **Answer:**
+The company’s performance is highly dependent on the stability and success of the KF 500ML SKU. Protecting this product from competition is required. While KF 500ML is the leader, the three largest SKUs (KF 500ML, 500ML, and KF GULAL CART) should receive the most detailed operational focus, as they represent the foundation of the total volume.
+""")
 
 
         
     # ---- Tab 3: Monthly Trend (Absolute Only) ----
     with tab5:
+        st.markdown("###  Question: How do shipment volumes change month by month for each brand?")
         st.subheader("Monthly Trend by Brand")
 
         df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
@@ -359,6 +380,11 @@ def run():
         fig_trend.update_yaxes(title_text=y_title)
         fig_trend.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         st.plotly_chart(fig_trend, use_container_width=True)
+        st.markdown("""
+### **Answer:**
+- The KFS brand (yellow line) dominates all other brands in absolute volume, consistently operating at a level 2 to 3 times higher than the nearest competitor. Peaks occur in the late Spring/Early Summer reaching volumes of approximately 5,000 to 5,500 units . The 2024 season appears weaker than 2023. The 2024 peak was lower than the 2023 peak, and the post-peak declines were noticeably lower than the equivalent period in 2023.
+- The overall volume for Bullet shows no sustained growth and appears stagnant year-over-year.
+""")
 
 # ===============================
 # Entry Point
