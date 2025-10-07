@@ -249,7 +249,9 @@ def run():
                 mode="lines+markers",
                 name=f"Shipment Trend ({granularity}, {view_mode})",
                 fill="tozeroy",
-                yaxis="y1"
+                yaxis="y1",
+                hovertext=trend_df["Event / Task"],  # Show event content on hover
+                hoverinfo="x+y+text"  # Show the label, value, and event/task on hover
             )
         )
         
@@ -260,25 +262,10 @@ def run():
                 mode="lines+markers",
                 name=f"Normalized {granularity} Volume",
                 line=dict(color="red"),
-                yaxis="y2"
+                yaxis="y2",
+                hoverinfo="x+y"  # Only show x and y info for the normalized trend
             )
         )
-        
-        # --- Add event annotations ---
-        for _, row in trend_df.dropna(subset=["Event / Task"]).iterrows():
-            fig.add_annotation(
-                x=row["Label"],
-                y=row["Value"],
-                text=row["Event / Task"],
-                showarrow=True,
-                arrowhead=2,
-                ax=0,
-                ay=-40,
-                bgcolor="lightyellow",
-                bordercolor="black",
-                borderwidth=1,
-                font=dict(size=10, color="black")
-            )
         
         fig.update_layout(
             title=f"Shipment Trend vs Normalized Volume ({granularity})",
