@@ -196,18 +196,18 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         st.subheader("Pack Size Wise Volume Distribution")
     
         def extract_segment_inline(sku):
-        sku = str(sku).upper()
-        match = re.search(r'(\d+\s*ML)', sku)
-        segment = match.group(1).replace(" ", "") if match else "OTHER"
-
-        if "CAN" in sku or "CANS" in sku:
-            segment += " CANS"
-        elif "BOTTLE" in sku:
-            segment += " BOTTLE"
-        elif "KEG" in sku:
-            segment += " KEG"
-
-        return segment
+            sku = str(sku).upper()
+            match = re.search(r'(\d+\s*ML)', sku)
+            segment = match.group(1).replace(" ", "") if match else "OTHER"
+    
+            if "CAN" in sku or "CANS" in sku:
+                segment += " CANS"
+            elif "BOTTLE" in sku:
+                segment += " BOTTLE"
+            elif "KEG" in sku:
+                segment += " KEG"
+    
+            return segment
 
         df["Segment"] = df[SKU_COL].apply(extract_segment_inline)
     
