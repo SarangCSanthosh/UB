@@ -273,7 +273,7 @@ def run():
         
         st.markdown("""
     ### **Answer:**
-    - The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 80% of the total volume visualized in the Top 10 list.
+    - The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 85% of the total volume visualized in the Top 10 list.
     - The business's volume is heavily reliant on this one outlet. Any disruption, change in operations, or loss of business from MANAGING DIRECTOR MSIL would have a massive, detrimental impact on the overall volume and stability of the entire system.
     """)
 
