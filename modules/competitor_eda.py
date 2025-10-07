@@ -285,7 +285,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immen
     
         # Pie chart for intuitive visualization
         fig_packtype = px.pie(
-            pack_type_sales,
+            pack_type_sales.round(0),
             names="Pack_Type",
             values=VOLUME_COL,
             title="Bottle vs Can Volume Distribution",
@@ -357,7 +357,7 @@ The company’s performance is highly dependent on the stability and success of 
         trend = df.groupby(["YearMonth", "Brand"])[VOLUME_COL].sum().round(0).reset_index()
         trend["YearMonth"] = trend["YearMonth"].astype(str)
 
-        trend["Value"] = trend[VOLUME_COL]
+        trend["Value"] = trend[VOLUME_COL].round(0)
         y_title = "Volume"
 
         fig_trend = px.line(
