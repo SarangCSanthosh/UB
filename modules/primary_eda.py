@@ -158,10 +158,10 @@ def run():
         )
 
         if granularity == "Yearly":
-            trend = df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
+            trend = df_filtered.groupby("Year")[VOLUME_COL].sum().round(0).reset_index()
             
             if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
+                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(0)
                 y_title = "Volume (%)"
             else:
                 y_title = "Volume"
@@ -183,10 +183,10 @@ def run():
 
 
         elif granularity == "Quarterly":
-            trend = df_filtered.groupby("Quarter")[VOLUME_COL].sum().reset_index()
+            trend = df_filtered.groupby("Quarter")[VOLUME_COL].sum().round(0).reset_index()
             trend["Quarter"] = trend["Quarter"].astype(str)
             if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
+                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(0)
                 y_title = "Volume (%)"
             else:
                 y_title = "Volume"
@@ -194,10 +194,10 @@ def run():
             fig.update_yaxes(title_text=y_title)
 
         else:  # Monthly
-            trend = df_filtered.groupby("YearMonth")[VOLUME_COL].sum().reset_index()
+            trend = df_filtered.groupby("YearMonth")[VOLUME_COL].sum().round(0).reset_index()
             trend["YearMonth"] = trend["YearMonth"].astype(str)
             if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
+                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(0)
                 y_title = "Volume (%)"
             else:
                 y_title = "Volume"
@@ -205,7 +205,7 @@ def run():
             fig.update_yaxes(title_text=y_title)
 
         st.plotly_chart(fig, use_container_width=True)
-        st.dataframe(trend.round(2))
+        st.dataframe(trend.round(0))
         st.markdown("""
 ### **Answer: Shipment Volume Analysis (2023–2024)**
 
@@ -221,7 +221,7 @@ def run():
         st.markdown("###  Question: Where are shipments highest and where are they lagging?")
         st.subheader("Top/Bottom Locations")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
-            location_volume = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().reset_index()
+            location_volume = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().round(0).reset_index()
 
             choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
             value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
@@ -233,15 +233,15 @@ def run():
                 locs = location_volume.sort_values(by=VOLUME_COL, ascending=True).head(n_locations)
 
             if value_type == "Percentage":
-                total_volume = df_filtered[VOLUME_COL].sum()
-                locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(2)
+                total_volume = df_filtered[VOLUME_COL].sum().round(0)
+                locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
 
             fig = px.bar(
                 locs,
                 x=VOLUME_COL,
                 y=LOCATION_COL,
                 orientation="h",
-                text=locs[VOLUME_COL].round(2)
+                text=locs[VOLUME_COL].round(0)
             )
             fig.update_traces(textposition="outside")
             if choice == "Top":
@@ -261,7 +261,7 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
         st.markdown("###  Question: Where are shipment volumes most concentrated?")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
             st.markdown("**Volume Heatmap**")
-            agg_loc = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().sort_values(ascending=False)
+            agg_loc = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().round(0).sort_values(ascending=False)
             top_n_heat = st.slider("Top-N Locations for Heatmap", 5, 50, 15, 1)
             keep_locs = agg_loc.head(top_n_heat).index.tolist()
             df_hm = df_filtered[df_filtered[LOCATION_COL].isin(keep_locs)]
@@ -308,7 +308,7 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
 
                 fig_scatter = px.scatter(comp_df, x="PC1", y="PC2", color="Cluster", hover_name=LOCATION_COL)
                 st.plotly_chart(fig_scatter, use_container_width=True)
-                st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(2))
+                st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(0))
                 st.markdown("""
 ### **Answer:**
 The clustering reveals four distinct groups of locations based on their shipment activity patterns:
