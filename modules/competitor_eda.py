@@ -269,7 +269,7 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
         st.markdown("""
 ### **Answer:**
-The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immense volume, every effort should be made to optimise the production, filling, distribution, and marketing of the 650 ML pack for maximum efficiency and cost savings. Marginal improvements here will yield massive absolute returns.The reliance on a single pack size presents a high risk. Strategies to boost the 1000 ML CART and 1000 ML CSMS packs should be explored to gradually diversify the volume base, providing resilience against potential market shifts targeting the 650 ML format.
+The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immense volume, every effort should be made to optimise the production, filling, distribution, and marketing of the 650 ML pack for maximum efficiency and cost savings. Marginal improvements here will yield massive absolute returns.The reliance on a single pack size presents a high risk. Strategies to boost the 330 ML CANS and 500 ML CANS should be explored to gradually diversify the volume base, providing resilience against potential market shifts, targeting the 650 ML format.
 """)
 
 
