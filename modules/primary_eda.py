@@ -252,7 +252,7 @@ def run():
             st.markdown("""
 ### **Answer:**
 The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. Any strategies to increase overall volume should likely focus on maintaining performance in these top three areas or identifying the factors driving the success of these locations to replicate them elsewhere. The business has a clear tiering of locations based on shipment volume.
-Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. Disruptive strategies could be implemented here to improve performance
+Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disruptive strategies could be implemented here to improve performance
 """)
 
 
@@ -270,6 +270,13 @@ Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. Disruptive
             pivot.index = pivot.index.astype(str)
             fig_hm = px.imshow(pivot.T, aspect="auto", labels=dict(color="Volume"))
             st.plotly_chart(fig_hm, use_container_width=True)
+            st.markdown("""
+### **Answer:**
+- There is a clear cyclical pattern across most locations. Volume tends to be highest during the middle of the year, roughly from April to July.
+- Conversely, volume is consistently lower at the beginning (Jan/Feb) and end (Oct/Dec) of the year. This seasonality is a critical factor for forecasting, inventory management, and planning marketing campaigns.
+- The most prominent feature is the massive volume spike for Vijayapura around April-May 2024. This white-hot cell indicates an extraordinary event, such as a highly successful local marketing campaign, a one-time project, or a regional event that drove volume far beyond the norm. This anomaly warrants immediate investigation to understand its cause.
+
+""")
 
     # ---- Tab 4: Clustering ----
     with tab4:
