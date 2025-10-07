@@ -195,38 +195,48 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         st.markdown("###  Question: What are the top-selling SKUs?")
         st.subheader("Pack Size Wise Volume Distribution")
     
-        df["Segment"] = df[SKU_COL].apply(extract_segment)
-    
-        pack_sales = df.groupby("Segment")[VOLUME_COL].sum().reset_index()
-        pack_sales = pack_sales.sort_values(by=VOLUME_COL, ascending=False)
-    
-        # Granularity toggle
-        granularity_pack = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab_pack")
-    
-        if granularity_pack == "Percentage":
-            total = pack_sales[VOLUME_COL].sum()
-            pack_sales["Value"] = ((pack_sales[VOLUME_COL] / total) * 100).round(2)  # ✅ Rounded to 2 decimals
-            y_col = "Value"
-            y_title = "Volume Share (%)"
-        else:
-            pack_sales["Value"] = pack_sales[VOLUME_COL]
-            y_col = "Value"
-            y_title = "Volume"
-    
-        fig_pack = px.bar(
-            pack_sales,
-            x="Segment",
-            y=y_col,
-            text=pack_sales[y_col].round(2),  
-            title="Pack Size Distribution",
-            color="Segment"
-        )
-        fig_pack.update_traces(textposition="outside")
-        fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
-        fig_pack.update_xaxes(tickangle=-45)
-        st.plotly_chart(fig_pack, use_container_width=True)
-    
-        st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
+        def extract_segment_inline(sku):
+            sku = str(sku).upper()
+            match = re.search(r'(\d+\s*ML\.?)', sku)
+            if match:
+                return match.group(1).replace(" ", "").replace(".", "")
+            elif "CAN" in sku or "CANS" in sku:
+                return "CANS"
+            else:
+                return "OTHER"
+
+    df["Segment"] = df[SKU_COL].apply(extract_segment_inline)
+
+    pack_sales = df.groupby("Segment")[VOLUME_COL].sum().reset_index()
+    pack_sales = pack_sales.sort_values(by=VOLUME_COL, ascending=False)
+
+    # Granularity toggle
+    granularity_pack = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab_pack")
+
+    if granularity_pack == "Percentage":
+        total = pack_sales[VOLUME_COL].sum()
+        pack_sales["Value"] = ((pack_sales[VOLUME_COL] / total) * 100).round(2)
+        y_col = "Value"
+        y_title = "Volume Share (%)"
+    else:
+        pack_sales["Value"] = pack_sales[VOLUME_COL]
+        y_col = "Value"
+        y_title = "Volume"
+
+    fig_pack = px.bar(
+        pack_sales,
+        x="Segment",
+        y=y_col,
+        text=pack_sales[y_col].round(2),
+        title="Pack Size Distribution",
+        color="Segment"
+    )
+    fig_pack.update_traces(textposition="outside")
+    fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+    fig_pack.update_xaxes(tickangle=-45)
+    st.plotly_chart(fig_pack, use_container_width=True)
+
+    st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
         st.markdown("""
 ### **Answer:**
 The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immense volume, every effort should be made to optimise the production, filling, distribution, and marketing of the 650 ML pack for maximum efficiency and cost savings. Marginal improvements here will yield massive absolute returns.The reliance on a single pack size presents a high risk. Strategies to boost the 330 ML CANS and 500 ML CANS should be explored to gradually diversify the volume base, providing resilience against potential market shifts, targeting the 650 ML format.
