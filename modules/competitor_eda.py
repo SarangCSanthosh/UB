@@ -275,7 +275,7 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
         top_n = st.slider("Show Top-N SKUs", 5, 20, 10)
 
         # Granularity toggle for Top SKUs
-        granularity_sku = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
+        granularity_sku = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab4")
         sku_data = sku_sales.head(top_n).copy()
         if granularity_sku == "Percentage":
             total = sku_sales[VOLUME_COL].sum()
