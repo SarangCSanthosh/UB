@@ -195,6 +195,7 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         st.markdown("###  Question: What are the top-selling SKUs?")
         st.subheader("Pack Size Wise Volume Distribution")
     
+        # Inline helper to extract segment
         def extract_segment_inline(sku):
             sku = str(sku).upper()
             match = re.search(r'(\d+\s*ML\.?)', sku)
@@ -204,13 +205,35 @@ All efforts must be focused on protecting, supporting, and potentially growing K
                 return "CANS"
             else:
                 return "OTHER"
-
+    
         df["Segment"] = df[SKU_COL].apply(extract_segment_inline)
     
-        pack_sales = df.groupby("Segment")[VOLUME_COL].sum().reset_index()
+        # --- Brand filter buttons ---
+        st.markdown("#### Filter by Brand")
+        brands = sorted(df["Brand"].unique().tolist())
+        cols = st.columns(len(brands) + 1)
+        selected_brand = None
+    
+        if cols[0].button("All"):
+            selected_brand = "All"
+    
+        for i, brand in enumerate(brands):
+            if cols[i + 1].button(brand):
+                selected_brand = brand
+    
+        # --- Apply filter ---
+        if selected_brand and selected_brand != "All":
+            filtered_df = df[df["Brand"] == selected_brand]
+            title_prefix = f"{selected_brand} - "
+        else:
+            filtered_df = df.copy()
+            title_prefix = ""
+    
+        # --- Pack size summary ---
+        pack_sales = filtered_df.groupby("Segment")[VOLUME_COL].sum().reset_index()
         pack_sales = pack_sales.sort_values(by=VOLUME_COL, ascending=False)
     
-        # Granularity toggle
+        # --- Granularity toggle ---
         granularity_pack = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab_pack")
     
         if granularity_pack == "Percentage":
@@ -223,12 +246,13 @@ All efforts must be focused on protecting, supporting, and potentially growing K
             y_col = "Value"
             y_title = "Volume"
     
+        # --- Visualization ---
         fig_pack = px.bar(
             pack_sales,
             x="Segment",
             y=y_col,
             text=pack_sales[y_col].round(2),
-            title="Pack Size Distribution",
+            title=f"{title_prefix}Pack Size Distribution",
             color="Segment"
         )
         fig_pack.update_traces(textposition="outside")
@@ -236,6 +260,7 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         fig_pack.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_pack, use_container_width=True)
     
+        # --- Data table ---
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
         st.markdown("""
 ### **Answer:**
