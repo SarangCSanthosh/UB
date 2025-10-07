@@ -209,7 +209,7 @@ def run():
         st.markdown("""
 ### **Answer: Shipment Volume Analysis (2023–2024)**
 
-- The company or entity represented by this data experienced a substantial decrease in its yearly shipment volume between 2023 and 2024. This indicates a contraction in shipping activity or demand.
+- There has been a substantial decrease in its yearly shipment volume between 2023 and 2024. This indicates a contraction in shipping activity or demand.
 - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years (though much more severe in 2024). The period from 2024 Q2 to 2024 Q3 represents a major performance concern due to the unprecedented low volume.
 - The shipment volume is highly unstable on a monthly basis. While the first half of 2024 contained the single highest month (May), the subsequent crash to the lowest volume in August suggests a major disruption, either due to internal capacity issues, a massive short-term demand spike followed by exhaustion, or an abrupt external market shock. The recent recovery in Q4 2024 (September and October) is a positive sign, but volume remains far below peak levels.
 """)
@@ -314,25 +314,25 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
 ### **Answer:**
 The clustering reveals four distinct groups of locations based on their shipment activity patterns:
 
-- Cluster 0 – Moderate, steady performers:
+- Cluster 0 - Moderate, steady performers:
 Includes locations such as Bagalkot, Chikkodi, Gadag, Gokak, Haveri, Jamakhandi, and Sindhanur.
 These show balanced shipment volumes with relatively consistent monthly activity and minimal fluctuations.
 
-- Cluster 1 – High-activity, central hubs:
+- Cluster 1 - High-activity, central hubs:
 Includes Ballari, Belagavi, Chitradurga, Davangere, Hosapete, and Koppal.
 These centers handle larger shipment volumes and serve as regional distribution nodes.
 
-- Cluster 2 – Emerging or volatile markets:
+- Cluster 2 - Emerging or volatile markets:
 Includes Bidar, Kalaburagi, and Vijayapura.
-Their shipment activity is variable—occasionally spiking due to concentrated dispatches—suggesting developing demand or logistical challenges.
+Their shipment activity is variable—occasionally spiking due to concentrated dispatches-suggesting developing demand or logistical challenges.
 
-- Cluster 3 – Low-volume or specialized locations:
+- Cluster 3 - Low-volume or specialized locations:
 Includes Hubballi, Raichur, Sedam, and Yadgir.
 These sites have comparatively low or niche shipment patterns, possibly influenced by geographic or operational constraints.
 
 
 The presence of four well-separated clusters indicates that shipment behavior varies meaningfully across regions.
-Focusing capacity planning, resource allocation, and route optimization differently for each cluster can improve efficiency—especially by supporting the high-activity hubs (Cluster 1) and addressing bottlenecks in emerging markets (Cluster 2).
+Focusing capacity planning, resource allocation, and route optimization differently for each cluster can improve efficiency - especially by supporting the high-activity hubs (Cluster 1) and addressing bottlenecks in emerging markets (Cluster 2).
 """)
 
     
