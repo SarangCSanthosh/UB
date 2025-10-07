@@ -280,7 +280,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immen
     
         df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
     
-        pack_type_sales = df.groupby("Pack_Type")[VOLUME_COL].sum().reset_index()
+        pack_type_sales = df.groupby("Pack_Type")[VOLUME_COL].sum().round(0).reset_index()
         pack_type_sales = pack_type_sales.sort_values(by=VOLUME_COL, ascending=False)
     
         # Pie chart for intuitive visualization
@@ -297,7 +297,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immen
         st.plotly_chart(fig_packtype, use_container_width=True)
     
         # Data table below the chart
-        st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(2))
+        st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
         st.markdown("""
 ### **Answer:**
 BOTTLE (light blue) is the primary packaging format, accounting for a massive 83.5% of the total volume. The business's entire supply chain, from manufacturing and filling to inventory, logistics, and recycling/returns, is overwhelmingly structured around the Bottle format. Operational efficiency efforts should naturally be centered here, as marginal improvements in the bottle process will yield the greatest overall volume impact.
@@ -311,7 +311,7 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
     with tab4:
         st.markdown("###  Question: What are the top-performing SKUs by volume?")
         st.subheader("Top SKUs by Volume")
-        sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().reset_index()
+        sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().round(0).reset_index()
         sku_sales = sku_sales.sort_values(by=VOLUME_COL, ascending=False)
 
         top_n = st.slider("Show Top-N SKUs", 5, 20, 10)
@@ -321,11 +321,11 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
         sku_data = sku_sales.head(top_n).copy()
         if granularity_sku == "Percentage":
             total = sku_sales[VOLUME_COL].sum()
-            sku_data["Value"] = ((sku_data[VOLUME_COL] / total) * 100).round(2)
+            sku_data["Value"] = ((sku_data[VOLUME_COL] / total) * 100).round(0)
             y_col = "Value"
             y_title = "Volume Share (%)"
         else:
-            sku_data["Value"] = sku_data[VOLUME_COL].round(2)
+            sku_data["Value"] = sku_data[VOLUME_COL].round(0)
             y_col = "Value"
             y_title = "Volume"
 
@@ -340,7 +340,7 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
         fig_sku.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig_sku.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_sku, use_container_width=True)
-        st.dataframe(sku_data.set_index(SKU_COL)[["Value"]].round(2))
+        st.dataframe(sku_data.set_index(SKU_COL)[["Value"]].round(0))
         st.markdown("""
 ### **Answer:**
 The company’s performance is highly dependent on the stability and success of the KFS 650ML SKU. Protecting this product from competition is required. While KFS 650ML is the leader, the three largest SKUs (KFS 650ML, Bullet 650ML, and KFS 330 ML Cans) should receive the most detailed operational focus, as they represent the foundation of the total volume.
@@ -354,7 +354,7 @@ The company’s performance is highly dependent on the stability and success of 
         st.subheader("Monthly Trend by Brand")
 
         df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
-        trend = df.groupby(["YearMonth", "Brand"])[VOLUME_COL].sum().reset_index()
+        trend = df.groupby(["YearMonth", "Brand"])[VOLUME_COL].sum().round(0).reset_index()
         trend["YearMonth"] = trend["YearMonth"].astype(str)
 
         trend["Value"] = trend[VOLUME_COL]
