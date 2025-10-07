@@ -251,7 +251,7 @@ def run():
                 fill="tozeroy",
                 yaxis="y1",
                 hovertext=trend_df["Event / Task"],  # Show event content on hover
-                hoverinfo="x+y+text"  # Show the label, value, and event/task on hover
+                hoverinfo="x+y+text",  # Show the label, value, and event/task on hover
             )
         )
         
@@ -263,20 +263,21 @@ def run():
                 name=f"Normalized {granularity} Volume",
                 line=dict(color="red"),
                 yaxis="y2",
-                hoverinfo="x+y"  # Only show x and y info for the normalized trend
+                hoverinfo="x+y",  # Only show x and y info for the normalized trend
             )
         )
         
+        # --- Customize the layout for more space ---
         fig.update_layout(
             title=f"Shipment Trend vs Normalized Volume ({granularity})",
             xaxis=dict(title=granularity, type="category"),
             yaxis=dict(title=y_title, side="left"),
             yaxis2=dict(title=norm_y_title, overlaying="y", side="right"),
             legend_title="Metrics",
-            height=600
+            height=800,  # Increased chart height for better readability
+            width=1200,  # Increased chart width for more horizontal space
+            template="plotly_dark",  # Optional: for a dark-themed background (can be omitted)
         )
-        
-        st.plotly_chart(fig, use_container_width=True)
         st.markdown("""
 ### **Answer:**
 - While the absolute volume peaked in Q2, the normalized volume hit one of its lowest points. This implies that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) was very high in Q2. In other words, the high absolute volume in Q2 did not meet expectations or capacity, resulting in a poor normalized performance.
