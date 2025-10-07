@@ -245,21 +245,42 @@ def run():
 
 
     # ---- Top Outlets ----
+    # ---- Top Outlets ----
     with tab2:
         st.markdown("###  Question: Where is shipment activity the highest among outlets?")
         st.subheader("Top Outlets by Volume")
-        outlet_volume = df_filtered.groupby(OUTLET_COL)[VOLUME_COL].sum().reset_index()
+        
+        # --- Controls ---
+        view_mode_tab2 = st.radio("Display Mode", ["Absolute", "Percentage"], horizontal=True, key="top_outlets_view_mode")
         top_n = st.slider("Top-N Outlets", 5, 25, 10)
+        
+        outlet_volume = df_filtered.groupby(OUTLET_COL)[VOLUME_COL].sum().reset_index()
         top_outlets = outlet_volume.sort_values(by=VOLUME_COL, ascending=False).head(top_n)
-        fig = px.treemap(top_outlets, path=[OUTLET_COL], values=VOLUME_COL, title=f"Top {top_n} Outlets Treemap")
+        
+        if view_mode_tab2 == "Percentage":
+            top_outlets["Value"] = (top_outlets[VOLUME_COL] / top_outlets[VOLUME_COL].sum()) * 100
+            value_col = "Value"
+            title_suffix = " (%)"
+        else:
+            top_outlets["Value"] = top_outlets[VOLUME_COL]
+            value_col = "Value"
+            title_suffix = ""
+        
+        # Treemap
+        fig = px.treemap(top_outlets, path=[OUTLET_COL], values=value_col, 
+                         title=f"Top {top_n} Outlets Treemap{title_suffix}")
         st.plotly_chart(fig, use_container_width=True)
-        st.dataframe(top_outlets.set_index(OUTLET_COL).round(2))
+        
+        # Dataframe
+        display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(2)
+        st.dataframe(display_df)
+        
         st.markdown("""
-### **Answer:**
-- The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 80% of the total volume visualized in the Top 10 list.
-- The business's volume is heavily reliant on this one outlet. Any disruption, change in operations, or loss of business from MANAGING DIRECTOR MSIL would have a massive, detrimental impact on the overall volume and stability of the entire system.
+    ### **Answer:**
+    - The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 80% of the total volume visualized in the Top 10 list.
+    - The business's volume is heavily reliant on this one outlet. Any disruption, change in operations, or loss of business from MANAGING DIRECTOR MSIL would have a massive, detrimental impact on the overall volume and stability of the entire system.
+    """)
 
-""")
 
     # ---- Depot Analysis ----
     with tab3:
