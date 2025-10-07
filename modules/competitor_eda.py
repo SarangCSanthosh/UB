@@ -191,68 +191,22 @@ All efforts must be focused on protecting, supporting, and potentially growing K
 
 
     # ---- Tab 2: Pack Size Wise Analysis ----
+    # ---- Tab 2: Pack Size Wise Analysis ----
     with tab2:
         st.markdown("###  Question: What are the top-selling SKUs?")
         st.subheader("Pack Size Wise Volume Distribution")
     
-        def extract_segment_inline(sku):
-            sku = str(sku).upper()
-            match = re.search(r'(\d+\s*ML)', sku)
-            segment = match.group(1).replace(" ", "") if match else "OTHER"
+        df["Segment"] = df[SKU_COL].apply(extract_segment)
     
-            if "CAN" in sku or "CANS" in sku:
-                segment += " CANS"
-            elif "BOTTLE" in sku:
-                segment += " BOTTLE"
-            elif "KEG" in sku:
-                segment += " KEG"
-    
-            return segment
-
-        df["Segment"] = df[SKU_COL].apply(extract_segment_inline)
-    
-        # Get all unique segments (including CANS etc.)
-        all_segments = sorted(df["Segment"].unique())
-    
-        # --- Brand filter buttons ---
-        st.markdown("#### Filter by Brand")
-        brands = sorted(df["Brand"].unique().tolist())
-        cols = st.columns(len(brands) + 1)
-        selected_brand = None
-    
-        if cols[0].button("All"):
-            selected_brand = "All"
-    
-        for i, brand in enumerate(brands):
-            if cols[i + 1].button(brand):
-                selected_brand = brand
-    
-        # --- Apply brand filter ---
-        if selected_brand and selected_brand != "All":
-            filtered_df = df[df["Brand"] == selected_brand]
-            title_prefix = f"{selected_brand} - "
-        else:
-            filtered_df = df.copy()
-            title_prefix = ""
-    
-        # --- Group by segment ---
-        pack_sales = (
-            filtered_df.groupby("Segment")[VOLUME_COL]
-            .sum()
-            .reindex(all_segments, fill_value=0)
-            .reset_index()
-        )
+        pack_sales = df.groupby("Segment")[VOLUME_COL].sum().reset_index()
         pack_sales = pack_sales.sort_values(by=VOLUME_COL, ascending=False)
     
-        # --- Granularity toggle ---
+        # Granularity toggle
         granularity_pack = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab_pack")
     
         if granularity_pack == "Percentage":
             total = pack_sales[VOLUME_COL].sum()
-            if total == 0:
-                pack_sales["Value"] = 0
-            else:
-                pack_sales["Value"] = ((pack_sales[VOLUME_COL] / total) * 100).round(2)
+            pack_sales["Value"] = ((pack_sales[VOLUME_COL] / total) * 100).round(2)  # ✅ Rounded to 2 decimals
             y_col = "Value"
             y_title = "Volume Share (%)"
         else:
@@ -260,21 +214,19 @@ All efforts must be focused on protecting, supporting, and potentially growing K
             y_col = "Value"
             y_title = "Volume"
     
-        # --- Visualization ---
         fig_pack = px.bar(
             pack_sales,
             x="Segment",
             y=y_col,
-            text=pack_sales[y_col].round(2),
-            title=f"{title_prefix}Pack Size Distribution",
+            text=pack_sales[y_col].round(2),  
+            title="Pack Size Distribution",
             color="Segment"
         )
         fig_pack.update_traces(textposition="outside")
         fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig_pack.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_pack, use_container_width=True)
-
-    # --- Data table ---
+    
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Value"]].round(2))
         st.markdown("""
 ### **Answer:**
