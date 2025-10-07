@@ -170,7 +170,7 @@ def run():
             brand_sales,
             x="Brand",
             y=y_col,
-            text=brand_sales[y_col].round(0),
+            text=brand_sales[y_col],
             title="Volume Distribution Across Brands (Grouped by OTHERS < 1%)",
             color="Brand",
             labels={y_col: y_title}
