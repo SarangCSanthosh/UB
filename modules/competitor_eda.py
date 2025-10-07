@@ -66,6 +66,24 @@ def map_sku_to_brand(sku):
     return SKU_GROUP_MAPPING.get(sku.strip().upper(), "OTHER")
 
 # ===============================
+# Helper: Extract segment (pack size)
+# ===============================
+def extract_segment(sku):
+    """
+    Extracts pack size segment (like 330 ML., 500 ML., etc.)
+    from SKU names.
+    """
+    sku = str(sku).upper()
+    match = re.search(r'(\d+\s*ML\.?)', sku)
+    if match:
+        return match.group(1).replace(" ", "")
+    elif "CAN" in sku or "CANS" in sku:
+        return "CANS"
+    else:
+        return "OTHER"
+
+
+# ===============================
 # Main app
 # ===============================
 def run():
