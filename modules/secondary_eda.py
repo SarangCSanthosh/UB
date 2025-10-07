@@ -40,7 +40,7 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
 # ---- EVENT CALENDAR LOADER ----
 @st.cache_data
 def load_event_calendar(csv_url):
-    df_events = pd.read_xlsx(csv_url)
+    df_events = pd.read_excel(csv_url)
     df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
     df_events = df_events.dropna(subset=["Event / Task"])
     return df_events
