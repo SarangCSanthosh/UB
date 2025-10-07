@@ -242,7 +242,6 @@ def run():
 
 
 
-        # ---- Top Outlets ----
     with tab2:
         st.markdown("###  Question: Where is shipment activity the highest among outlets?")
         st.subheader("Top Outlets by Volume")
@@ -251,20 +250,17 @@ def run():
         view_mode_tab2 = st.radio("Display Mode", ["Absolute", "Percentage"], horizontal=True, key="top_outlets_view_mode")
         top_n = st.slider("Top-N Outlets", 5, 25, 10)
         
-        # Aggregate total volume per outlet
         outlet_volume = df_filtered.groupby(OUTLET_COL)[VOLUME_COL].sum().reset_index()
-        
-        # Compute percentage relative to total volume of ALL outlets
-        total_volume_all = outlet_volume[VOLUME_COL].sum()
-        outlet_volume["Value"] = outlet_volume[VOLUME_COL]  # default absolute
-        if view_mode_tab2 == "Percentage":
-            outlet_volume["Value"] = (outlet_volume[VOLUME_COL] / total_volume_all) * 100
-        
-        # Select top N by absolute volume (not percentage)
         top_outlets = outlet_volume.sort_values(by=VOLUME_COL, ascending=False).head(top_n)
         
-        value_col = "Value"
-        title_suffix = " (%)" if view_mode_tab2 == "Percentage" else ""
+        if view_mode_tab2 == "Percentage":
+            top_outlets["Value"] = (top_outlets[VOLUME_COL] / top_outlets[VOLUME_COL].sum()) * 100
+            value_col = "Value"
+            title_suffix = " (%)"
+        else:
+            top_outlets["Value"] = top_outlets[VOLUME_COL]
+            value_col = "Value"
+            title_suffix = ""
         
         # Treemap
         fig = px.treemap(top_outlets, path=[OUTLET_COL], values=value_col, 
