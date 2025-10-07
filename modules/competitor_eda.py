@@ -350,7 +350,7 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
         fig_sku.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig_sku.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_sku, use_container_width=True)
-        st.dataframe(sku_data.set_index(SKU_COL)[[VOLUME_COL, "Value"]].round(2))
+        st.dataframe(sku_data.set_index(SKU_COL)[["Value"]].round(2))
         st.markdown("""
 ### **Answer:**
 The company’s performance is highly dependent on the stability and success of the KFS 650ML SKU. Protecting this product from competition is required. While KFS 650ML is the leader, the three largest SKUs (KFS 650ML, Bullet 650ML, and KFS 330 ML Cans) should receive the most detailed operational focus, as they represent the foundation of the total volume.
