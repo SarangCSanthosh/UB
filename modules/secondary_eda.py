@@ -133,6 +133,7 @@ def run():
     # ---- Shipment Trends ----
     # ---- Shipment Trends ----
     with tab1:
+        st.markdown("###  Question: Do shipment trends look different by year, quarter, or month?")
         st.subheader("Shipment Trends")
     
         # --- Controls ---
@@ -232,6 +233,12 @@ def run():
         )
     
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown("""
+### **Answer:**
+- While the absolute volume peaked in Q2, the normalized volume hit one of its lowest points. This implies that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) was very high in Q2. In other words, the high absolute volume in Q2 did not meet expectations or capacity, resulting in a poor normalized performance.
+- Shipments in 2024 did not reach the high peaks seen in 2023, indicating a minor year-over-year volume challenge. The sharp normalized volume drop in May (2023 and 2024) is a critical recurring issue. This suggests that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) for May is either set too high or the operational system fails to cope with the demands of that specific month. The highly efficient performance seen in August 2023 was not repeated in 2024. While the absolute volume was high in May 2024, the normalized score was low, pointing to a failure to translate high volume into high efficiency in 2024.
+
+""")
 
 
 
@@ -239,6 +246,7 @@ def run():
 
     # ---- Top Outlets ----
     with tab2:
+        st.markdown("###  Question: Where is shipment activity the highest among outlets?")
         st.subheader("Top Outlets by Volume")
         outlet_volume = df_filtered.groupby(OUTLET_COL)[VOLUME_COL].sum().reset_index()
         top_n = st.slider("Top-N Outlets", 5, 25, 10)
@@ -246,9 +254,16 @@ def run():
         fig = px.treemap(top_outlets, path=[OUTLET_COL], values=VOLUME_COL, title=f"Top {top_n} Outlets Treemap")
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(top_outlets.set_index(OUTLET_COL).round(2))
+        st.markdown("""
+### **Answer:**
+- The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 80% of the total volume visualized in the Top 10 list.
+- The business's volume is heavily reliant on this one outlet. Any disruption, change in operations, or loss of business from MANAGING DIRECTOR MSIL would have a massive, detrimental impact on the overall volume and stability of the entire system.
+
+""")
 
     # ---- Depot Analysis ----
     with tab3:
+        st.markdown("###  Question: Which depots are driving the majority of volume?")
         st.subheader("Depot-wise ABC Analysis")
         if "DBF_DEPOT" in df_filtered.columns:
             depot_volume = df_filtered.groupby("DBF_DEPOT")[VOLUME_COL].sum().reset_index()
@@ -291,9 +306,15 @@ def run():
             st.dataframe(depot_volume.round(2))
         else:
             st.info("DBF_DEPOT column not found.")
+        st.markdown("""
+### **Answer:**
+ Ensure operations, supply chain, and support for KALABURAGI, BIDAR, and VIJAYAPURA are top-tier, as they are the primary drivers of volume.  Identify which of the Orange depots (KOPPAL to CHITRADURGA) have the highest growth potential to secure the next wave of A-Class contributors. Analyze the cost-to-serve for the Red depots to ensure the low volume is not resulting in disproportionately high operational costs.
+
+""")
 
     # ---- Region Donut ----
     with tab4:
+        st.markdown("###  Question: Which regions account for the largest share of shipments?")
         st.subheader("Region-wise Volume Share")
         if "DBF_REGION" in df_filtered.columns:
             region_volume = df_filtered.groupby("DBF_REGION")[VOLUME_COL].sum().reset_index()
@@ -303,9 +324,15 @@ def run():
             st.dataframe(region_volume.set_index("DBF_REGION").round(2))
         else:
             st.info("DBF_REGION column not found.")
+        st.markdown("""
+### **Answer:**
+NORTH KARNATAKA 2 is the primary driver of volume in this combined area, accounting for nearly two-thirds of the total volume. Resource allocation (e.g., inventory, sales support, and logistics capacity) should prioritize NORTH KARNATAKA 2 to support its dominant volume and ensure continued high performance.
+
+""")
 
     # ---- Region Stacked ----
     with tab5:
+        st.markdown("###  Question: Which outlets contribute most to regional shipment volume?")
         st.subheader("Outlets & Volume by Region (100% Share)")
         if "DBF_REGION" in df_filtered.columns and "DBF_OUTLET_CODE" in df_filtered.columns:
             region_stats = df_filtered.groupby("DBF_REGION").agg(
@@ -331,9 +358,15 @@ def run():
             st.dataframe(region_stats.set_index("DBF_REGION").round(2))
         else:
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
+        st.markdown("""
+### **Answer:**
+North Karnataka 2 region is the core volume driver, as confirmed by both the previous donut chart (60.2% volume share) and this efficiency chart. It generates significantly more volume per outlet than its counterpart. NORTH KARNATAKA 1 has a low return on its outlet footprint. The volume is diluted across a large number of outlets. 
+
+""")
 
     # ---- Special Outlets ----
     with tab6:
+        st.markdown("###  Question: How does shipment performance differ between Hubbali and Belagavi?")
         st.subheader("Focused Analysis: Hubbali & Belagavi Depots")
 
         view_mode = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="special_view_mode")
@@ -390,3 +423,9 @@ def run():
                                 title=f"Monthly Shipment Trend (Special Depots){title_suffix}", markers=True)
             fig_trend.update_yaxes(title_text=y_title)
             st.plotly_chart(fig_trend, use_container_width=True)
+            st.markdown("""
+### **Answer:**
+- All four entities, particularly the top two (BELAGAVI and HUBBALLI-1), contribute a significant portion of the volume. Management should ensure dedicated support and resources are allocated proportionally to maintain their performance.
+- HUBBALLI-1 (Light Blue) is the dominant sub-depot, controlling 61.4% of the Hubballi group's total volume.The Hubballi area's volume performance is primarily dependent on the performance and stability of HUBBALLI-1. Any operational issue or decline in sales at HUBBALLI-1 would severely impact the entire Hubballi group's performance.Strategic initiatives should be aimed at boosting HUBBALLI-2's volume to achieve a more even distribution, which would reduce the over-reliance on HUBBALLI-1.
+- The highest risk in this focused group lies in the BELAGAVI 1 depot. Any major operational setback or sales decline here would result in a severe, sudden drop in the overall volume for the entire Belagavi area. Focused marketing and sales investment is needed to significantly increase its volume and achieve a more diversified risk profile, perhaps aiming for a 45%-55% split over time.
+""")
