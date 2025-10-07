@@ -153,8 +153,8 @@ def run():
         minor_brands = brand_sales[brand_sales["Percentage"] < 3]
     
         if not minor_brands.empty:
-            others_sum = minor_brands[VOLUME_COL].sum()
-            others_pct = minor_brands["Percentage"].sum()
+            others_sum = minor_brands[VOLUME_COL].sum().round(0)
+            others_pct = minor_brands["Percentage"].sum().round(0)
             others_row = pd.DataFrame({"Brand": ["OTHERS"], VOLUME_COL: [others_sum], "Percentage": [others_pct]})
             brand_sales = pd.concat([major_brands, others_row], ignore_index=True)
     
