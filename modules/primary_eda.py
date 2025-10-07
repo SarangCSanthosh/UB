@@ -205,7 +205,7 @@ def run():
             fig.update_yaxes(title_text=y_title)
 
         st.plotly_chart(fig, use_container_width=True)
-        st.dataframe(trend.round(2))
+        st.dataframe(trend.round(0))
         st.markdown("""
 ### **Answer: Shipment Volume Analysis (2023–2024)**
 
