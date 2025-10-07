@@ -144,7 +144,7 @@ def run():
         st.subheader("Brand Distribution")
     
         # --- Aggregate volume by Brand ---
-        brand_sales = df.groupby("Brand")[VOLUME_COL].sum().reset_index()
+        brand_sales = df.groupby("Brand")[VOLUME_COL].sum().round(0).reset_index()
         brand_sales = brand_sales[brand_sales["Brand"] != "OTHER"]
         brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(0)
     
