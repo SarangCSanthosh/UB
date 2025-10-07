@@ -149,8 +149,8 @@ def run():
         brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(0)
     
         # --- Group brands with <1% as OTHERS ---
-        major_brands = brand_sales[brand_sales["Percentage"] >= 1]
-        minor_brands = brand_sales[brand_sales["Percentage"] < 1]
+        major_brands = brand_sales[brand_sales["Percentage"] >= 2]
+        minor_brands = brand_sales[brand_sales["Percentage"] < 2]
         if not minor_brands.empty:
             others_sum = minor_brands[VOLUME_COL].sum()
             others_pct = minor_brands["Percentage"].sum()
