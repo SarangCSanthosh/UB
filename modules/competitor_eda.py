@@ -223,7 +223,8 @@ def run():
         fig.update_xaxes(tickangle=-45)
         fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
-        st.markdown("""
+        with st.container():
+            st.markdown("""
 ### **Answer:**
 All efforts must be focused on protecting, supporting, and potentially growing KFS. This brand is the core of the entire operation. Bullet and KF are the only two other brands that matter. Resources should be allocated to these two to increase their share and slightly diversify the revenue base away from the KFS dependency.
 """)
