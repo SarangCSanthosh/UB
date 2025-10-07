@@ -138,92 +138,78 @@ def run():
 
     # ---- Tab 1: Brand Distribution ----
     with tab1:
-        st.markdown("###  Question: Which brands dominate in shipment volume?")
+        st.markdown("### Question: Which brands dominate in shipment volume?")
         st.subheader("Brand Distribution")
-    
-        df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
-    
-        # Extract segment including packaging
-        def extract_segment(sku):
-            sku = sku.upper().strip()
-            match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
-            return match.group(1) if match else "Other Segment"
-    
-        df["Segment"] = df[SKU_COL].apply(extract_segment)
-    
-        # Aggregate volume by Brand and Segment
-        brand_segment_sales = df.groupby(["Brand", "Segment"])[VOLUME_COL].sum().reset_index()
-        brand_segment_sales = brand_segment_sales[brand_segment_sales["Brand"] != "OTHER"]
-    
-        # Brand selection buttons
-        st.write("### Select Brand to View Segments")
-        brands = sorted(brand_segment_sales["Brand"].unique())
-        selected_brand = st.radio("Click a Brand", options=["All"] + brands, index=0, horizontal=True)
-    
-        # Granularity selection
+
+        brand_sales = df.groupby("Brand")[VOLUME_COL].sum().reset_index()
+        brand_sales = brand_sales[brand_sales["Brand"] != "OTHER"]
+        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(2)
+
         granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab1")
-    
-        if selected_brand == "All":
-            brand_sales = brand_segment_sales.groupby("Brand")[VOLUME_COL].sum().reset_index()
-    
-            # Always calculate percentage for table
-            total_volume = brand_sales[VOLUME_COL].sum()
-            brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / total_volume * 100).round(2)
-    
-            # Chart values depend on granularity
-            if granularity == "Percentage":
-                y_col = "Percentage"
-                y_title = "Volume Share (%)"
-            else:
-                y_col = VOLUME_COL
-                y_title = "Volume"
-    
-            fig = px.bar(
-                brand_sales,
-                x="Brand",
-                y=y_col,
-                title="Volume Distribution Across Brands",
-                text=brand_sales[y_col].round(2),  # Show chart labels properly
-                labels={y_col: y_title},
-                color="Brand"
-            )
-    
-            # Table always shows absolute + percentage
-            st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(2))
-    
-        else:
-            brand_data = brand_segment_sales[brand_segment_sales["Brand"] == selected_brand].copy()
-    
-            # Always calculate percentage for table
-            total_volume = brand_data[VOLUME_COL].sum()
-            brand_data["Percentage"] = (brand_data[VOLUME_COL] / total_volume * 100).round(2)
-    
-            # Chart values depend on granularity
-            if granularity == "Percentage":
-                y_col = "Percentage"
-                y_title = "Volume Share (%)"
-            else:
-                y_col = VOLUME_COL
-                y_title = "Volume"
-    
-            fig = px.bar(
-                brand_data,
-                x="Segment",
-                y=y_col,
-                title=f"{selected_brand} Segment Distribution",
-                text=brand_data[y_col].round(2),  # Show chart labels properly
-                labels={y_col: y_title},
-                color="Segment"
-            )
-    
-            # Table always shows absolute + percentage
-            st.dataframe(brand_data.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(2))
-    
-        # Canvas size, margins, rotate labels
+        y_col = "Percentage" if granularity == "Percentage" else VOLUME_COL
+        y_title = "Volume Share (%)" if y_col == "Percentage" else "Volume"
+
+        fig = px.bar(
+            brand_sales,
+            x="Brand",
+            y=y_col,
+            text=brand_sales[y_col].round(2),
+            title="Volume Distribution Across Brands",
+            color="Brand",
+            labels={y_col: y_title}
+        )
+        fig.update_traces(textposition="outside")
         fig.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig.update_xaxes(tickangle=-45)
-        fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
         st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(2))
+        st.markdown("""
+### **Answer:**
+All efforts must be focused on protecting, supporting, and potentially growing KFS. This brand is the core of the entire operation. Bullet and KF are the only two other brands that matter. Resources should be allocated to these two to increase their share and slightly diversify the revenue base away from the KFS dependency.
+""")
+
+    # ---- Tab 2: Pack Size Wise Analysis ----
+    with tab2:
+        st.markdown("### Question: What are the top-selling SKUs?")
+        st.subheader("Pack Size Wise Volume Distribution")
+
+        def extract_segment(sku):
+            sku = str(sku).upper().strip()
+            match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
+            return match.group(1) if match else "Other Segment"
+
+        df["Segment"] = df[SKU_COL].apply(extract_segment)
+
+        # ✅ Add Brand filter (All + individual brands)
+        brands = ["All"] + sorted(df["Brand"].unique())
+        selected_brand = st.radio("Select Brand", options=brands, horizontal=True)
+
+        if selected_brand == "All":
+            df_brand = df[df["Brand"] != "OTHER"]
+        else:
+            df_brand = df[df["Brand"] == selected_brand]
+
+        pack_sales = df_brand.groupby("Segment")[VOLUME_COL].sum().reset_index().sort_values(by=VOLUME_COL, ascending=False)
+        pack_sales["Percentage"] = (pack_sales[VOLUME_COL] / pack_sales[VOLUME_COL].sum() * 100).round(2)
+
+        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
+        y_col = "Percentage" if granularity == "Percentage" else VOLUME_COL
+        y_title = "Volume Share (%)" if y_col == "Percentage" else "Volume"
+
+        fig_pack = px.bar(
+            pack_sales,
+            x="Segment",
+            y=y_col,
+            text=pack_sales[y_col].round(2),
+            title=f"{selected_brand} Pack Size Distribution",
+            color="Segment",
+            labels={y_col: y_title}
+        )
+        fig_pack.update_traces(textposition="outside")
+        fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+        fig_pack.update_xaxes(tickangle=-45)
+        st.plotly_chart(fig_pack, use_container_width=True)
+        st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(2))
         with st.container():
             st.markdown("""
 ### **Answer:**
