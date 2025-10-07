@@ -236,8 +236,8 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         else:
             df_brand = df[df["Brand"] == selected_brand]
 
-        pack_sales = df_brand.groupby("Segment")[VOLUME_COL].sum().reset_index().sort_values(by=VOLUME_COL, ascending=False)
-        pack_sales["Percentage"] = (pack_sales[VOLUME_COL] / pack_sales[VOLUME_COL].sum() * 100).round(2)
+        pack_sales = df_brand.groupby("Segment")[VOLUME_COL].sum().round(0).reset_index().sort_values(by=VOLUME_COL, ascending=False)
+        pack_sales["Percentage"] = (pack_sales[VOLUME_COL] / pack_sales[VOLUME_COL].sum() * 100).round(0)
 
         granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
         y_col = "Percentage" if granularity == "Percentage" else VOLUME_COL
@@ -256,7 +256,7 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig_pack.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_pack, use_container_width=True)
-        st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(2))
+        st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
 ### **Answer:**
 The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immense volume, every effort should be made to optimise the production, filling, distribution, and marketing of the 650 ML pack for maximum efficiency and cost savings. Marginal improvements here will yield massive absolute returns.The reliance on a single pack size presents a high risk. Strategies to boost the 330 ML CANS and 500 ML CANS should be explored to gradually diversify the volume base, providing resilience against potential market shifts, targeting the 650 ML format.
