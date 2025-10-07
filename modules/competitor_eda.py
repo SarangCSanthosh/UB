@@ -24,10 +24,10 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
 # ===============================
 SKU_GROUP_MAPPING = {
     # KF
-    "KF 330 ML.": "KF",
-    "KF 330 ML. CANS": "KF",
-    "KF 500 ML. CANS": "KF",
-    "KF 650 ML.": "KF",
+    "KF 330 ML.": "KF LAGER",
+    "KF 330 ML. CANS": "KF LAGER",
+    "KF 500 ML. CANS": "KF LAGER",
+    "KF 650 ML.": "KF LAGER",
 
     # KF STORM
     "KF STORM 500 ML. CANS": "KF STORM",
@@ -49,10 +49,10 @@ SKU_GROUP_MAPPING = {
     "KF ULTRA WITBIER 650 ML.": "KF ULTRA WITBIER",
 
     # KFS
-    "KFS 330 ML.": "KFS",
-    "KFS 330 ML. CANS": "KFS",
-    "KFS 500 ML. CANS": "KFS",
-    "KFS 650 ML.": "KFS",
+    "KFS 330 ML.": "KF STRONG",
+    "KFS 330 ML. CANS": "KF STRONG",
+    "KFS 500 ML. CANS": "KF STRONG",
+    "KFS 650 ML.": "KF STRONG",
 
     # Bullet
     "BSSB 300 ML.": "Bullet",
