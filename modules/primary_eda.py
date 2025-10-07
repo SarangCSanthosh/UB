@@ -323,14 +323,14 @@ These centers handle larger shipment volumes and serve as regional distribution 
 
 - Cluster 2 - Emerging or volatile markets:
 Includes Bidar, Kalaburagi, and Vijayapura.
-Their shipment activity is variable—occasionally spiking due to concentrated dispatches-suggesting developing demand or logistical challenges.
+Their shipment activity is variable, occasionally spiking due to concentrated dispatches, suggesting developing demand or logistical challenges.
 
 - Cluster 3 - Low-volume or specialized locations:
 Includes Hubballi, Raichur, Sedam, and Yadgir.
 These sites have comparatively low or niche shipment patterns, possibly influenced by geographic or operational constraints.
 
 
-The presence of four well-separated clusters indicates that shipment behavior varies meaningfully across regions.
+The presence of four well-separated clusters indicates that shipment behaviour varies meaningfully across regions.
 Focusing capacity planning, resource allocation, and route optimization differently for each cluster can improve efficiency - especially by supporting the high-activity hubs (Cluster 1) and addressing bottlenecks in emerging markets (Cluster 2).
 """)
 
