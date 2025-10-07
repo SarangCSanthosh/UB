@@ -149,8 +149,8 @@ def run():
         brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(0)
     
         # --- Group brands with <1% as OTHERS ---
-        major_brands = brand_sales[brand_sales["Percentage"] >= 2]
-        minor_brands = brand_sales[brand_sales["Percentage"] < 2]
+        major_brands = brand_sales[brand_sales["Percentage"] >= 3]
+        minor_brands = brand_sales[brand_sales["Percentage"] < 3]
         if not minor_brands.empty:
             others_sum = minor_brands[VOLUME_COL].sum()
             others_pct = minor_brands["Percentage"].sum()
@@ -164,13 +164,13 @@ def run():
         y_col = "Percentage" if granularity == "Percentage" else VOLUME_COL
         y_title = "Volume Share (%)" if y_col == "Percentage" else "Volume"
     
-        # --- Bar Chart ---
+        # --- Bar Chart for Main Brands ---
         fig = px.bar(
             brand_sales,
             x="Brand",
             y=y_col,
             text=brand_sales[y_col].round(2),
-            title="Volume Distribution Across Brands (Grouped by OTHERS < 1%)",
+            title="Volume Distribution Across Brands",
             color="Brand",
             labels={y_col: y_title}
         )
@@ -179,24 +179,22 @@ def run():
         fig.update_xaxes(tickangle=-45)
         st.plotly_chart(fig, use_container_width=True)
     
-        # --- Pie Chart for OTHERS vs Major Brands ---
-        st.markdown("#### OTHERS vs Major Brands Share")
-        pie_data = brand_sales.copy()
-        pie_data["Category"] = pie_data["Brand"].apply(lambda x: "OTHERS" if x == "OTHERS" else "Major Brand")
-        pie_summary = pie_data.groupby("Category")[VOLUME_COL].sum().reset_index()
-        pie_summary["Percentage"] = (pie_summary[VOLUME_COL] / pie_summary[VOLUME_COL].sum() * 100).round(0)
-    
-        fig_pie = px.pie(
-            pie_summary,
-            names="Category",
-            values=VOLUME_COL,
-            title="OTHERS vs Major Brands Share",
-            color="Category",
-            hole=0.4
-        )
-        fig_pie.update_traces(textinfo="percent+label")
-        fig_pie.update_layout(height=400, margin=dict(t=50, b=50, l=50, r=50))
-        st.plotly_chart(fig_pie, use_container_width=True)
+        # --- Pie Chart: Breakdown of OTHERS ---
+        if not minor_brands.empty:
+            st.markdown("#### Breakdown of Brands Under 'OTHERS'")
+            fig_pie = px.pie(
+                minor_brands,
+                names="Brand",
+                values=VOLUME_COL,
+                title="Distribution of Brands Grouped Under 'OTHERS'",
+                color="Brand",
+                hole=0.4
+            )
+            fig_pie.update_traces(textinfo="percent+label")
+            fig_pie.update_layout(height=400, margin=dict(t=50, b=50, l=50, r=50))
+            st.plotly_chart(fig_pie, use_container_width=True)
+        else:
+            st.info("No brands fall under the 'OTHERS' (<1%) category for the current selection.")
     
         # --- Data Table ---
         st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(0))
