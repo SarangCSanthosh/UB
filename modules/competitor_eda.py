@@ -146,7 +146,7 @@ def run():
         # --- Aggregate volume by Brand ---
         brand_sales = df.groupby("Brand")[VOLUME_COL].sum().reset_index()
         brand_sales = brand_sales[brand_sales["Brand"] != "OTHER"]
-        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(2)
+        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum() * 100).round(0)
     
         # --- Group brands with <1% as OTHERS ---
         major_brands = brand_sales[brand_sales["Percentage"] >= 1]
@@ -198,7 +198,7 @@ def run():
             st.info("No brands fall under the 'OTHERS' (<1%) category for the current selection.")
     
         # --- Data Table ---
-        st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(2))
+        st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(0))
        
         with st.container():
             st.markdown("""
