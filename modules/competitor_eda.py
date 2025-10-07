@@ -181,7 +181,14 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         def extract_segment(sku):
             sku = str(sku).upper().strip()
             match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
-            return match.group(1) if match else "Other Segment"
+            segment = match.group(1) if match else "Other Segment"
+            
+            # Normalize segment names: remove trailing '.' and unify 'CAN'/'CANS'
+            segment = segment.replace(".", "").replace("CANS", "CAN").strip()
+            return segment
+            #sku = str(sku).upper().strip()
+            #match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
+            #return match.group(1) if match else "Other Segment"
 
         df["Segment"] = df[SKU_COL].apply(extract_segment)
 
