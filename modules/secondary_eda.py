@@ -242,13 +242,8 @@ def run():
 
 
 
-
-
-    # ---- Top Outlets ----
-    # ---- Top Outlets ----
-    with tab2:
         # ---- Top Outlets ----
-with tab2:
+    with tab2:
         st.markdown("###  Question: Where is shipment activity the highest among outlets?")
         st.subheader("Top Outlets by Volume")
         
