@@ -310,6 +310,30 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
                 fig_scatter = px.scatter(comp_df, x="PC1", y="PC2", color="Cluster", hover_name=LOCATION_COL)
                 st.plotly_chart(fig_scatter, use_container_width=True)
                 st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(2))
+                st.markdown("""
+### **Answer:**
+The clustering reveals four distinct groups of locations based on their shipment activity patterns:
+
+- Cluster 0 – Moderate, steady performers:
+Includes locations such as Bagalkot, Chikkodi, Gadag, Gokak, Haveri, Jamakhandi, and Sindhanur.
+These show balanced shipment volumes with relatively consistent monthly activity and minimal fluctuations.
+
+- Cluster 1 – High-activity, central hubs:
+Includes Ballari, Belagavi, Chitradurga, Davangere, Hosapete, and Koppal.
+These centers handle larger shipment volumes and serve as regional distribution nodes.
+
+- Cluster 2 – Emerging or volatile markets:
+Includes Bidar, Kalaburagi, and Vijayapura.
+Their shipment activity is variable—occasionally spiking due to concentrated dispatches—suggesting developing demand or logistical challenges.
+
+- Cluster 3 – Low-volume or specialized locations:
+Includes Hubballi, Raichur, Sedam, and Yadgir.
+These sites have comparatively low or niche shipment patterns, possibly influenced by geographic or operational constraints.
+
+
+The presence of four well-separated clusters indicates that shipment behavior varies meaningfully across regions.
+Focusing capacity planning, resource allocation, and route optimization differently for each cluster can improve efficiency—especially by supporting the high-activity hubs (Cluster 1) and addressing bottlenecks in emerging markets (Cluster 2).
+""")
 
     
 # ===============================
