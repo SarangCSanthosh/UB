@@ -149,23 +149,26 @@ def run():
         st.subheader("Shipment Trends")
     
 # --- Controls ---
+        # --- Controls ---
         granularity = st.radio(
-            "Granularity", ["Yearly", "Quarterly", "Monthly"], horizontal=True, key="trend_granularity"
+            "Granularity", ["Yearly", "Quarterly", "Monthly", "Daily"], horizontal=True, key="trend_granularity"
         )
         view_mode = st.radio(
             "Display Mode", ["Absolute", "Percentage"], horizontal=True, key="trend_view"
         )
-    
+        
         # --- Shipment Trend (Filtered Main Data) ---
         if granularity == "Yearly":
             df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
         elif granularity == "Quarterly":
             df_filtered["Label"] = df_filtered["Quarter"].astype(str)
-        else:
+        elif granularity == "Monthly":
             df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
-    
+        else:  # Daily granularity
+            df_filtered["Label"] = df_filtered["ACTUAL_DATE"].dt.date.astype(str)
+        
         trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
-    
+        
         if view_mode == "Percentage":
             total_sum = trend_df[VOLUME_COL].sum()
             trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
@@ -173,24 +176,25 @@ def run():
         else:
             trend_df["Value"] = trend_df[VOLUME_COL]
             y_title = "Volume"
-    
+        
         # --- Load and Filter Normalised Data ---
         df_normalised = load_normalized_data(r"https://docs.google.com/spreadsheets/d/1lg0iIgKx9byQj7d2NZO-k1gKdFuNxxQe/export?format=xlsx")
-    
+        
         if filter_mode == "Year":
             if year_choice:
                 df_normalised = df_normalised[df_normalised["ACTUAL_DATE"].dt.year.isin(year_choice)]
         else:
             df_normalised = df_normalised[
-                (df_normalised["ACTUAL_DATE"].dt.date >= start_date) &
+                (df_normalised["ACTUAL_DATE"].dt.date >= start_date) & 
                 (df_normalised["ACTUAL_DATE"].dt.date <= end_date)
             ]
-    
+        
         # Add granularity columns after filtering
         df_normalised["Year"] = df_normalised["ACTUAL_DATE"].dt.year
         df_normalised["Quarter"] = df_normalised["ACTUAL_DATE"].dt.to_period("Q").astype(str)
         df_normalised["YearMonth"] = df_normalised["ACTUAL_DATE"].dt.to_period("M").astype(str)
-    
+        df_normalised["Date"] = df_normalised["ACTUAL_DATE"].dt.date
+        
         # Aggregate by granularity
         if granularity == "Yearly":
             norm_df = df_normalised.groupby("Year")["VOLUME"].sum().reset_index()
@@ -198,10 +202,13 @@ def run():
         elif granularity == "Quarterly":
             norm_df = df_normalised.groupby("Quarter")["VOLUME"].sum().reset_index()
             norm_df["Label"] = norm_df["Quarter"].astype(str)
-        else:
+        elif granularity == "Monthly":
             norm_df = df_normalised.groupby("YearMonth")["VOLUME"].sum().reset_index()
             norm_df["Label"] = norm_df["YearMonth"].astype(str)
-    
+        else:  # Daily granularity
+            norm_df = df_normalised.groupby("Date")["VOLUME"].sum().reset_index()
+            norm_df["Label"] = norm_df["Date"].astype(str)
+        
         if view_mode == "Percentage":
             total_norm = norm_df["VOLUME"].sum()
             norm_df["Normalized_Value"] = (norm_df["VOLUME"] / total_norm) * 100
@@ -209,30 +216,32 @@ def run():
         else:
             norm_df["Normalized_Value"] = norm_df["VOLUME"]
             norm_y_title = "Normalized Volume"
-    
+        
         # --- Load Event Calendar ---
-        EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx" # 🔁 Replace with your published CSV link
+        EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
         df_events = load_event_calendar(EVENT_CSV_URL)
-
-        df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
     
-        # If monthly/quarterly/yearly, adjust events to match label
+        df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+        
+        # Adjust events to match granularity
         if granularity == "Yearly":
             df_events["Label"] = df_events["Date"].dt.year.astype(str)
         elif granularity == "Quarterly":
             df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
-        else:
+        elif granularity == "Monthly":
             df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
-    
+        else:  # Daily granularity
+            df_events["Label"] = df_events["Date"].dt.date.astype(str)
+        
         # Aggregate events per label
         events_agg = df_events.groupby("Label")["Event / Task"].apply(lambda x: "\n".join(x.dropna())).reset_index()
-    
+        
         # Merge events with trend_df
         trend_df = trend_df.merge(events_agg, on="Label", how="left")
-    
+        
         # --- Plot both trends ---
         fig = go.Figure()
-    
+        
         fig.add_trace(
             go.Scatter(
                 x=trend_df["Label"],
@@ -243,7 +252,7 @@ def run():
                 yaxis="y1"
             )
         )
-    
+        
         fig.add_trace(
             go.Scatter(
                 x=norm_df["Label"],
@@ -254,7 +263,7 @@ def run():
                 yaxis="y2"
             )
         )
-    
+        
         # --- Add event annotations ---
         for _, row in trend_df.dropna(subset=["Event / Task"]).iterrows():
             fig.add_annotation(
@@ -270,7 +279,7 @@ def run():
                 borderwidth=1,
                 font=dict(size=10, color="black")
             )
-    
+        
         fig.update_layout(
             title=f"Shipment Trend vs Normalized Volume ({granularity})",
             xaxis=dict(title=granularity, type="category"),
@@ -279,7 +288,7 @@ def run():
             legend_title="Metrics",
             height=600
         )
-    
+        
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("""
 ### **Answer:**
