@@ -394,4 +394,3 @@ The company’s performance is highly dependent on the stability and success of 
 if __name__ == "__main__":
     run()
 
-in this shift the pack wise distribution for other brands from tab1 to tab 2
