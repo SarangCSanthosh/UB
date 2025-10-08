@@ -175,20 +175,22 @@ def run():
             horizontal=True
         )
     
-        # --- Controls (Granularity and View Mode) ---
-        granularity = st.radio(
-            "Granularity", ["Yearly", "Quarterly", "Monthly"],  # ✅ Removed "Daily"
-            horizontal=True, key="trend_granularity"
-        )
-        view_mode = st.radio(
-            "Display Mode", ["Absolute", "Percentage"],
-            horizontal=True, key="trend_view"
-        )
+        
     
         # ===============================
         # 📊 IF SHIPMENT TREND SELECTED
         # ===============================
         if chart_type == "Shipment Trend":
+
+            # --- Controls (Granularity and View Mode) ---
+            granularity = st.radio(
+                "Granularity", ["Yearly", "Quarterly", "Monthly"],  # ✅ Removed "Daily"
+                horizontal=True, key="trend_granularity"
+            )
+            view_mode = st.radio(
+                "Display Mode", ["Absolute", "Percentage"],
+                horizontal=True, key="trend_view"
+            )
             # --- Shipment Trend (Filtered Main Data) ---
             if granularity == "Yearly":
                 df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
