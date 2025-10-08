@@ -256,26 +256,37 @@ def run():
             df_events = load_event_calendar(EVENT_CSV_URL)
             st.write("Unique Events Loaded:", sorted(df_events["Event / Task"].dropna().unique().tolist()))
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-    
-            if granularity == "Yearly":
-                df_events["Label"] = df_events["Date"].dt.year.astype(str)
-            elif granularity == "Quarterly":
-                df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
-            else:
-                df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
 
-            # --- Clean and aggregate events properly ---
+
+            # --- Clean and normalize event names ---
+            def clean_event_name(text):
+                if pd.isna(text):
+                    return None
+                text = str(text).strip()
+                if not text or text.lower() in ["nan", "none"]:
+                    return None
+            
+                # ✅ Fix common corrupt patterns
+                text = text.replace("Against", "")
+                text = text.replace("Footll", "Football")
+                text = text.replace("Pro Ka", "Pro Kabbadi")
+                text = text.replace("C ", " ")  # remove stray 'C' after Friendly
+                text = text.replace("IND World cup", "IND World Cup")
+                text = text.replace("RCB Match", "RCB Match")
+                text = text.replace("Week end", "Weekend")
+            
+                # Remove extra spaces and normalize casing
+                text = " ".join(text.split())
+                text = text.title().replace("Ipl", "IPL").replace("Ind", "IND")
+                return text
+            
             df_events["Event / Task"] = (
                 df_events["Event / Task"]
-                .astype(str)
-                .str.strip()
-                .replace(["nan", "None", "", " ", "NaT"], pd.NA)
+                .apply(clean_event_name)
+                .dropna()
             )
             
-            # Keep only rows that truly have valid event names
-            df_events = df_events[df_events["Event / Task"].notna() & df_events["Event / Task"].str.len().gt(2)]
-            
-            # --- Aggregate by Label (deduplicate + count properly) ---
+            # --- Aggregate by Label ---
             def summarize_events(x):
                 counts = x.value_counts()
                 lines = []
@@ -291,6 +302,7 @@ def run():
                 .apply(summarize_events)
                 .reset_index()
             )
+
 
     
             
