@@ -571,7 +571,9 @@ def run():
             st.info("DBF_DEPOT column not found.")
         st.markdown("""
 ### **Insights:**
- Ensure operations, supply chain, and support for KALABURAGI, BIDAR, and VIJAYAPURA are top-tier, as they are the primary drivers of volume.  Identify which of the Orange depots (KOPPAL to CHITRADURGA) have the highest growth potential to secure the next wave of A-Class contributors. Analyze the cost-to-serve for the Red depots to ensure the low volume is not resulting in disproportionately high operational costs.
+- KALABURAGI, BIDAR, and VIJAYAPURA are top-tier, as they are the primary drivers of volume. 
+- Orange depots (KOPPAL to CHITRADURGA) have the highest growth potential to secure the next wave of A-Class contributors. 
+- Red depots have lowest contribution to the shipment volume - CHIKKODI AND GOKAK being the most risky depots.
 
 """)
 
