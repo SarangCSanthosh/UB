@@ -117,7 +117,7 @@ def run():
     col3.metric(
         "Total Shipments",
         f"{kpi_shipments}",
-        f"{delta_shipments:+.2f}%" if delta_shipments is not None else None
+        f"{delta_shipments:+.0f}%" if delta_shipments is not None else None
     )
 
     st.caption(f"YoY change: {latest_year} vs {prev_year}")
