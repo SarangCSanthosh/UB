@@ -191,7 +191,10 @@ def run():
                 color="Brand",
                 hole=0.4
             )
-            fig_pie.update_traces(textinfo="percent+label")
+            fig_pie.update_traces(texttemplate="%{label}<br>%{percent:.0%}",  # Show label + rounded percent
+                hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
+                insidetextorientation='auto'
+            )
             fig_pie.update_layout(height=400, margin=dict(t=50, b=50, l=50, r=50))
             st.plotly_chart(fig_pie, use_container_width=True)
         else:
