@@ -200,14 +200,7 @@ def run():
         # ===============================
         # 📈 SHIPMENT TREND
         # ===============================
-        # Clean and standardize date fields
-        
-
-        # Clean date and create granular fields
-        
-
-
-        
+    
 
 
         if chart_type == "Shipment Trend":
@@ -233,7 +226,7 @@ def run():
             
     
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
-            st.write(df_filtered["Label"].unique())
+            
     
             # --- Convert to percentage if needed ---
             if value_type == "Percentage":
@@ -326,7 +319,6 @@ def run():
     
             fig.update_yaxes(title_text=y_title)
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(trend_df.round(0))
     
             st.markdown("""
             ### **Insights: Shipment Volume Analysis (2023–2024)**
