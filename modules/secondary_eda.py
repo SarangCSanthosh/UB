@@ -295,7 +295,7 @@ def run():
             )
             st.plotly_chart(fig, use_container_width=True)
     
-    # ===============================
+        # ===============================
     # 📅 IF EVENT CALENDAR SELECTED
     # ===============================
         else:
@@ -306,7 +306,12 @@ def run():
             df_events = load_event_calendar(EVENT_CSV_URL)
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
     
-            # Add Year and Month columns
+            # --- Ensure columns exist ---
+            for col in ["Event / Task", "Remarks"]:
+                if col not in df_events.columns:
+                    df_events[col] = ""
+    
+            # Add time breakdowns
             df_events["Year"] = df_events["Date"].dt.year
             df_events["Month"] = df_events["Date"].dt.month
             df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
@@ -319,64 +324,71 @@ def run():
                 sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
             )
     
-            # --- Filter Selected Month ---
+            # --- Filter selected month ---
             df_selected = df_events[
                 (df_events["Year"] == selected_year) &
                 (df_events["MonthName"] == selected_month_name)
-            ]
+            ].copy()
     
-            # --- Merge Shipment Data (volume per day) ---
+            # --- Merge with shipment data ---
             df_ship = df.copy()
-            df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"])
+            df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
             df_ship["DateOnly"] = df_ship["Date"].dt.date
             ship_day = df_ship.groupby("DateOnly")[VOLUME_COL].sum().reset_index()
-            ship_day["Date"] = pd.to_datetime(ship_day["DateOnly"])
+            ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
+            ship_day["Date"] = pd.to_datetime(ship_day["DateOnly"], errors="coerce")
     
-            # Combine with events
-            df_selected = pd.merge(df_selected, ship_day, on="Date", how="left")
-            df_selected["VOLUME"].fillna(0, inplace=True)
+            # Merge
+            df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
+            df_selected["VOLUME"] = pd.to_numeric(df_selected["VOLUME"], errors="coerce").fillna(0)
     
             # --- Compute Calendar Grid ---
             df_selected["Weekday"] = df_selected["Date"].dt.day_name()
             df_selected["WeekOfMonth"] = ((df_selected["Date"].dt.day - 1) // 7) + 1
-            df_selected["DayNum"] = df_selected["Date"].dt.day  # show this number in the tile
+            df_selected["DayNum"] = df_selected["Date"].dt.day
     
-            # --- Create Calendar Heatmap ---
-            fig = px.density_heatmap(
-                df_selected,
-                x="Weekday",
-                y="WeekOfMonth",
-                z="VOLUME",
-                text="DayNum",  # ✅ show day number
-                color_continuous_scale="Viridis",
-                hover_data={
-                    "Date": True,
-                    "Event / Task": True,
-                    "VOLUME": True,
-                    "DayNum": False,
-                    "Weekday": False,
-                    "WeekOfMonth": False
-                },
-                title=f"Shipment Calendar — {selected_month_name} {selected_year}"
-            )
+            # --- Build Calendar Heatmap ---
+            try:
+                fig = px.density_heatmap(
+                    df_selected,
+                    x="Weekday",
+                    y="WeekOfMonth",
+                    z="VOLUME",
+                    text="DayNum",  # show day number inside tile
+                    color_continuous_scale="Viridis",
+                    hover_data={
+                        "Date": True,
+                        "Event / Task": True,
+                        "VOLUME": True,
+                        "DayNum": False,
+                        "Weekday": False,
+                        "WeekOfMonth": False
+                    },
+                    title=f"Shipment Calendar — {selected_month_name} {selected_year}"
+                )
     
-            # --- Format Layout ---
-            fig.update_traces(
-                texttemplate="%{text}",  # show day number
-                hovertemplate="<b>%{customdata[0]}</b><br>Event: %{customdata[1]}<br>Volume: %{z}<extra></extra>"
-            )
+                # Update hover text and style
+                fig.update_traces(
+                    texttemplate="%{text}",
+                    hovertemplate="<b>%{customdata[0]}</b><br>Event: %{customdata[1]}<br>Volume: %{z}<extra></extra>"
+                )
     
-            fig.update_layout(
-                height=600,
-                width=1000,
-                template="plotly_dark",
-                xaxis_title="Day of Week",
-                yaxis_title="Week of Month",
-                yaxis=dict(autorange="reversed"),  # make weeks go top to bottom
-                coloraxis_colorbar=dict(title="Shipment Volume")
-            )
+                fig.update_layout(
+                    height=600,
+                    width=1000,
+                    template="plotly_dark",
+                    xaxis_title="Day of Week",
+                    yaxis_title="Week of Month",
+                    yaxis=dict(autorange="reversed"),
+                    coloraxis_colorbar=dict(title="Shipment Volume")
+                )
     
-            st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True)
+    
+            except Exception as e:
+                st.error(f"Error generating heatmap: {e}")
+                st.dataframe(df_selected)
+
 
         st.markdown("""
 ### **Answer:**
