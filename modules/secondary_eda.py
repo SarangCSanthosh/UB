@@ -512,7 +512,7 @@ def run():
         )
         st.plotly_chart(fig, use_container_width=True)
         display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0)
-        st.dataframe(display_df)
+        st.dataframe(display_df, width=400, height=200)
 
         
         st.markdown("""
