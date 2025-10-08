@@ -549,6 +549,8 @@ def run():
                 y=depot_volume[VOLUME_COL],
                 name="Depot Volume",
                 marker_color=depot_volume["ABC_Category"].map({"A": "green", "B": "orange", "C": "red"}),
+                hovertemplate="<b>%{x}</b><br>Volume: %{y:,.0f}<extra></extra>"
+
             )
             fig.add_trace(
                 go.Scatter(
