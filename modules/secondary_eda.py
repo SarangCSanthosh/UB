@@ -512,48 +512,7 @@ def run():
         )
         st.plotly_chart(fig, use_container_width=True)
         display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0)
-        
-        # --- Compact Bordered Summary Table ---
-        styled_html = display_df.to_html(
-            classes="styled-table",
-            border=0,
-            justify="center",
-            index=True
-        )
-        
-        st.markdown(
-            """
-            <style>
-            .styled-table {
-                border-collapse: collapse;
-                width: 100%;
-                font-size: 13px;
-                font-family: 'Inter', sans-serif;
-                background-color: #111;
-                color: #ddd;
-                border: 1px solid #444;
-            }
-            .styled-table th, .styled-table td {
-                border: 1px solid #444;
-                padding: 4px 8px !important;
-                text-align: left;
-            }
-            .styled-table th {
-                background-color: #222;
-                font-weight: 600;
-            }
-            .styled-table tr:nth-child(even) {
-                background-color: #181818;
-            }
-            .styled-table tr:hover {
-                background-color: #333;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        st.markdown(styled_html, unsafe_allow_html=True)
+        st.dataframe(display_df)
 
         
         st.markdown("""
