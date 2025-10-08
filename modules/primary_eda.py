@@ -257,33 +257,7 @@ def run():
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
 
 
-            # --- Clean and normalize event names ---
-            def clean_event_name(text):
-                if pd.isna(text):
-                    return None
-                text = str(text).strip()
-                if not text or text.lower() in ["nan", "none"]:
-                    return None
             
-                # ✅ Fix common corrupt patterns
-                text = text.replace("Against", "")
-                text = text.replace("Footll", "Football")
-                text = text.replace("Pro Ka", "Pro Kabbadi")
-                text = text.replace("C ", " ")  # remove stray 'C' after Friendly
-                text = text.replace("IND World cup", "IND World Cup")
-                text = text.replace("RCB Match", "RCB Match")
-                text = text.replace("Week end", "Weekend")
-            
-                # Remove extra spaces and normalize casing
-                text = " ".join(text.split())
-                text = text.title().replace("Ipl", "IPL").replace("Ind", "IND")
-                return text
-            
-            df_events["Event / Task"] = (
-                df_events["Event / Task"]
-                .apply(clean_event_name)
-                .dropna()
-            )
             
             # --- Aggregate by Label ---
             def summarize_events(x):
