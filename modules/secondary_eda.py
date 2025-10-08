@@ -1,3 +1,4 @@
+add this in this
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -36,15 +37,7 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
     df["YearMonth"] = df[date_col].dt.to_period("M")
     df["Quarter"] = df[date_col].dt.to_period("Q")
     return df, date_col
-    
-# ---- EVENT CALENDAR LOADER ----
-@st.cache_data
-def load_event_calendar(csv_url):
-    df_events = pd.read_excel(csv_url)
-    df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-    df_events = df_events.dropna(subset=["Event / Task"])
-    return df_events
-    
+
 # --------------------------
 # MAIN APP
 # --------------------------
@@ -60,10 +53,6 @@ def run():
     OUTLET_COL = "DBF_OUTLET_NAME"
 
     df, DATE_COL = prepare_dates(df)
-
-    # ---- Load Event Calendar ----
-    EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx" # 🔁 Replace with your published CSV link
-    df_events = load_event_calendar(EVENT_CSV_URL)
 
     # --------------------------
     # FIXED KPIs
@@ -148,27 +137,24 @@ def run():
         st.markdown("###  Question: Do shipment trends look different by year, quarter, or month?")
         st.subheader("Shipment Trends")
     
-# --- Controls ---
         # --- Controls ---
         granularity = st.radio(
-            "Granularity", ["Yearly", "Quarterly", "Monthly", "Daily"], horizontal=True, key="trend_granularity"
+            "Granularity", ["Yearly", "Quarterly", "Monthly"], horizontal=True, key="trend_granularity"
         )
         view_mode = st.radio(
             "Display Mode", ["Absolute", "Percentage"], horizontal=True, key="trend_view"
         )
-        
+    
         # --- Shipment Trend (Filtered Main Data) ---
         if granularity == "Yearly":
-            df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
+            df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)  # ✅ Convert to int first
         elif granularity == "Quarterly":
             df_filtered["Label"] = df_filtered["Quarter"].astype(str)
-        elif granularity == "Monthly":
+        else:
             df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
-        else:  # Daily granularity
-            df_filtered["Label"] = df_filtered["ACTUAL_DATE"].dt.date.astype(str)
-        
+    
         trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
-        
+    
         if view_mode == "Percentage":
             total_sum = trend_df[VOLUME_COL].sum()
             trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
@@ -176,39 +162,35 @@ def run():
         else:
             trend_df["Value"] = trend_df[VOLUME_COL]
             y_title = "Volume"
-        
+    
         # --- Load and Filter Normalised Data ---
         df_normalised = load_normalized_data(r"https://docs.google.com/spreadsheets/d/1lg0iIgKx9byQj7d2NZO-k1gKdFuNxxQe/export?format=xlsx")
-        
+    
         if filter_mode == "Year":
             if year_choice:
                 df_normalised = df_normalised[df_normalised["ACTUAL_DATE"].dt.year.isin(year_choice)]
         else:
             df_normalised = df_normalised[
-                (df_normalised["ACTUAL_DATE"].dt.date >= start_date) & 
+                (df_normalised["ACTUAL_DATE"].dt.date >= start_date) &
                 (df_normalised["ACTUAL_DATE"].dt.date <= end_date)
             ]
-        
+    
         # Add granularity columns after filtering
         df_normalised["Year"] = df_normalised["ACTUAL_DATE"].dt.year
         df_normalised["Quarter"] = df_normalised["ACTUAL_DATE"].dt.to_period("Q").astype(str)
         df_normalised["YearMonth"] = df_normalised["ACTUAL_DATE"].dt.to_period("M").astype(str)
-        df_normalised["Date"] = df_normalised["ACTUAL_DATE"].dt.date
-        
+    
         # Aggregate by granularity
         if granularity == "Yearly":
             norm_df = df_normalised.groupby("Year")["VOLUME"].sum().reset_index()
-            norm_df["Label"] = norm_df["Year"].astype(int).astype(str)
+            norm_df["Label"] = norm_df["Year"].astype(int).astype(str)  # ✅ Convert to int first
         elif granularity == "Quarterly":
             norm_df = df_normalised.groupby("Quarter")["VOLUME"].sum().reset_index()
             norm_df["Label"] = norm_df["Quarter"].astype(str)
-        elif granularity == "Monthly":
+        else:
             norm_df = df_normalised.groupby("YearMonth")["VOLUME"].sum().reset_index()
             norm_df["Label"] = norm_df["YearMonth"].astype(str)
-        else:  # Daily granularity
-            norm_df = df_normalised.groupby("Date")["VOLUME"].sum().reset_index()
-            norm_df["Label"] = norm_df["Date"].astype(str)
-        
+    
         if view_mode == "Percentage":
             total_norm = norm_df["VOLUME"].sum()
             norm_df["Normalized_Value"] = (norm_df["VOLUME"] / total_norm) * 100
@@ -216,32 +198,10 @@ def run():
         else:
             norm_df["Normalized_Value"] = norm_df["VOLUME"]
             norm_y_title = "Normalized Volume"
-        
-        # --- Load Event Calendar ---
-        EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-        df_events = load_event_calendar(EVENT_CSV_URL)
     
-        df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-        
-        # Adjust events to match granularity
-        if granularity == "Yearly":
-            df_events["Label"] = df_events["Date"].dt.year.astype(str)
-        elif granularity == "Quarterly":
-            df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
-        elif granularity == "Monthly":
-            df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
-        else:  # Daily granularity
-            df_events["Label"] = df_events["Date"].dt.date.astype(str)
-        
-        # Aggregate events per label
-        events_agg = df_events.groupby("Label")["Event / Task"].apply(lambda x: "\n".join(x.dropna())).reset_index()
-        
-        # Merge events with trend_df
-        trend_df = trend_df.merge(events_agg, on="Label", how="left")
-        
         # --- Plot both trends ---
         fig = go.Figure()
-        
+    
         fig.add_trace(
             go.Scatter(
                 x=trend_df["Label"],
@@ -249,12 +209,10 @@ def run():
                 mode="lines+markers",
                 name=f"Shipment Trend ({granularity}, {view_mode})",
                 fill="tozeroy",
-                yaxis="y1",
-                hovertext=trend_df["Event / Task"],  # Show event content on hover
-                hoverinfo="x+y+text",  # Show the label, value, and event/task on hover
+                yaxis="y1"
             )
         )
-        
+    
         fig.add_trace(
             go.Scatter(
                 x=norm_df["Label"],
@@ -262,22 +220,19 @@ def run():
                 mode="lines+markers",
                 name=f"Normalized {granularity} Volume",
                 line=dict(color="red"),
-                yaxis="y2",
-                hoverinfo="x+y",  # Only show x and y info for the normalized trend
+                yaxis="y2"
             )
         )
-        
-        # --- Customize the layout for more space ---
+    
+        # ✅ Force x-axis to categorical so labels like 2023, 2024 appear properly
         fig.update_layout(
             title=f"Shipment Trend vs Normalized Volume ({granularity})",
             xaxis=dict(title=granularity, type="category"),
             yaxis=dict(title=y_title, side="left"),
             yaxis2=dict(title=norm_y_title, overlaying="y", side="right"),
-            legend_title="Metrics",
-            height=1000,  # Increased chart height for better readability
-            width=2400,  # Increased chart width for more horizontal space
-            template="plotly_dark",  # Optional: for a dark-themed background (can be omitted)
+            legend_title="Metrics"
         )
+    
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("""
 ### **Answer:**
@@ -492,4 +447,3 @@ North Karnataka 2 region is the core volume driver, as confirmed by both the pre
 - HUBBALLI-1 (Light Blue) is the dominant sub-depot, controlling 61.4% of the Hubballi group's total volume.The Hubballi area's volume performance is primarily dependent on the performance and stability of HUBBALLI-1. Any operational issue or decline in sales at HUBBALLI-1 would severely impact the entire Hubballi group's performance.Strategic initiatives should be aimed at boosting HUBBALLI-2's volume to achieve a more even distribution, which would reduce the over-reliance on HUBBALLI-1.
 - The highest risk in this focused group lies in the BELAGAVI 1 depot. Any major operational setback or sales decline here would result in a severe, sudden drop in the overall volume for the entire Belagavi area. Focused marketing and sales investment is needed to significantly increase its volume and achieve a more diversified risk profile, perhaps aiming for a 45%-55% split over time.
 """)
-
