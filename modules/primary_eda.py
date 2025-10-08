@@ -1,4 +1,4 @@
-    import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -262,6 +262,35 @@ def run():
                 df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
             else:
                 df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
+
+            # --- Clean and aggregate events properly ---
+            df_events["Event / Task"] = (
+                df_events["Event / Task"]
+                .astype(str)
+                .str.strip()
+                .replace(["nan", "None", "", " ", "NaT"], pd.NA)
+            )
+            
+            # Keep only rows that truly have valid event names
+            df_events = df_events[df_events["Event / Task"].notna() & df_events["Event / Task"].str.len().gt(2)]
+            
+            # --- Aggregate by Label (deduplicate + count properly) ---
+            def summarize_events(x):
+                counts = x.value_counts()
+                lines = []
+                for event, count in counts.items():
+                    if count > 1:
+                        lines.append(f"{event} (x{count})")
+                    else:
+                        lines.append(event)
+                return "<br>".join(lines)
+            
+            events_agg = (
+                df_events.groupby("Label", dropna=False)["Event / Task"]
+                .apply(summarize_events)
+                .reset_index()
+            )
+
     
             
 
