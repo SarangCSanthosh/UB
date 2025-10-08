@@ -111,7 +111,7 @@ def run():
     col1.metric(
         "Total Volume",
         f"{kpi_volume:,.0f}",
-        f"{delta_volume:+.2f}%" if delta_volume is not None else None
+        f"{delta_volume:+.0f}%" if delta_volume is not None else None
     )
     col2.metric("Unique Locations", f"{kpi_outlets}")
     col3.metric(
