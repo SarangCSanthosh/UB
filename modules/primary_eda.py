@@ -203,22 +203,34 @@ def run():
         # Clean and standardize date fields
         
 
-        df_filtered["Year"] = df_filtered["SHIPMENT_DATE"].dt.year.astype(int)
-        df_filtered["Quarter"] = "Q" + df_filtered["SHIPMENT_DATE"].dt.quarter.astype(str)
-        df_filtered["YearMonth"] = df_filtered["SHIPMENT_DATE"].dt.to_period("M").astype(str)
+        # Clean date and create granular fields
+        
+
 
         
 
 
         if chart_type == "Shipment Trend":
             # --- Create Label in df_filtered based on granularity ---
+            df_filtered["SHIPMENT_DATE"] = pd.to_datetime(df_filtered["SHIPMENT_DATE"], errors="coerce")
+            df_filtered["Year"] = df_filtered["SHIPMENT_DATE"].dt.year.astype(int)
+            df_filtered["Quarter"] = "Q" + df_filtered["SHIPMENT_DATE"].dt.quarter.astype(str)
+            df_filtered["YearMonth"] = df_filtered["SHIPMENT_DATE"].dt.to_period("M").astype(str)
+            
+            # Force remove old Label if it exists
+            if "Label" in df_filtered.columns:
+                df_filtered.drop(columns=["Label"], inplace=True)
+            
+            # Assign Label based on selected granularity
             if granularity == "Yearly":
-                #df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
-                df_filtered["Label"]=df_filtered["Year"].astype(str)
+                df_filtered["Label"] = df_filtered["Year"].astype(str)
+            
             elif granularity == "Quarterly":
                 df_filtered["Label"] = df_filtered["Quarter"] + " " + df_filtered["Year"].astype(str)
-            else:
+            
+            else:  # Monthly
                 df_filtered["Label"] = df_filtered["YearMonth"]
+            
     
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
     
