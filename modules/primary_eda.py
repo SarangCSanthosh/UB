@@ -200,6 +200,15 @@ def run():
         # ===============================
         # 📈 SHIPMENT TREND
         # ===============================
+        # Clean and standardize date fields
+        df_filtered["SHIPMENT_DATE"] = pd.to_datetime(df_filtered["SHIPMENT_DATE"], errors="coerce")
+        
+        # Derive date parts cleanly
+        df_filtered["Year"] = df_filtered["SHIPMENT_DATE"].dt.year
+        df_filtered["Quarter"] = "Q" + df_filtered["SHIPMENT_DATE"].dt.quarter.astype(str)
+        df_filtered["YearMonth"] = df_filtered["SHIPMENT_DATE"].dt.to_period("M").astype(str)
+
+
         if chart_type == "Shipment Trend":
             # --- Create Label in df_filtered based on granularity ---
             if granularity == "Yearly":
