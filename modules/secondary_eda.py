@@ -598,7 +598,8 @@ def run():
             st.info("DBF_REGION column not found.")
         st.markdown("""
 ### **Insights:**
-NORTH KARNATAKA 2 is the primary driver of volume in this combined area, accounting for nearly two-thirds of the total volume.
+- NORTH KARNATAKA 2 is the primary driver of volume contributing 60% to the shipments.
+- Whereas NORTH KARNATAKA 1 is lagging by contributing the rest of 40%.
 """)
 
     # ---- Region Stacked ----
@@ -703,8 +704,6 @@ The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute 
             st.plotly_chart(fig_trend, use_container_width=True)
             st.markdown("""
 ### **Insights:**
-All four entities, particularly the top two (BELAGAVI and HUBBALLI-1), contribute a significant portion of the volume. 
-HUBBALLI-1 (Light Blue) is the dominant sub-depot, controlling 61.4% of the Hubballi group's total volume.The Hubballi area's volume performance is primarily dependent on the performance and stability of HUBBALLI-1. 
-The highest risk in this focused group lies in the BELAGAVI 1 depot. 
-
+All four entities, particularly the top two (BELAGAVI and HUBBALLI-1), contribute a significant portion of the volume - 35% and 30% respectively.
+BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respectively.
 """)
