@@ -346,40 +346,6 @@ def run():
             df_events = load_event_calendar(EVENT_XLSX_URL)
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
 
-            # --- Clean and normalize event names ---
-            def clean_event_name(text):
-                if pd.isna(text):
-                    return None
-                text = str(text).strip()
-                if not text or text.lower() in ["nan", "none"]:
-                    return None
-    
-                # Fix common corrupt patterns
-                text = text.replace("Against", "")
-                text = text.replace("Friendly", "BFC")
-                text = text.replace("Footll", "Football")
-                text = text.replace("Pro Ka", "Pro Kabbadi")
-                text = text.replace("C ", " ")
-                text = text.replace("IND World cup", "IND World Cup")
-                text = text.replace("RCB Match", "RCB Match")
-                text = text.replace("Week end", "Weekend")
-                text = text.replace("INDependence", "Independence")
-                text = text.replace("Ni8", "Night")
-    
-                # Remove extra spaces and normalize casing
-                text = " ".join(text.split())
-                text = text.title().replace("Ipl", "IPL").replace("Bfc","BFC")
-                return text
-    
-            df_events["Event / Task"] = df_events["Event / Task"].apply(clean_event_name)
-    
-            
-    
-            events_agg = (
-                df_events.groupby("Label", dropna=False)["Event / Task"]
-                .reset_index()
-            )
-
 
             
     
