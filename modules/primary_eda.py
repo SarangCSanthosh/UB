@@ -254,6 +254,7 @@ def run():
             # --- Load Event Calendar ---
             EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
             df_events = load_event_calendar(EVENT_CSV_URL)
+            st.write("Unique Events Loaded:", sorted(df_events["Event / Task"].dropna().unique().tolist()))
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
     
             if granularity == "Yearly":
