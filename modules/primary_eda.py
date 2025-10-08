@@ -1,4 +1,4 @@
-import streamlit as st
+    import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -263,16 +263,34 @@ def run():
             else:
                 df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
     
-            # ✅ Avoid duplicates, keep count
+            # --- Clean and aggregate events properly ---
+            df_events["Event / Task"] = (
+                df_events["Event / Task"]
+                .astype(str)
+                .str.strip()
+                .replace(["nan", "None", "", " ", "NaT"], pd.NA)
+            )
+            
+            # Keep only rows that truly have valid event names
+            df_events = df_events[df_events["Event / Task"].notna() & df_events["Event / Task"].str.len().gt(2)]
+            
+            # --- Aggregate by Label (deduplicate + count properly) ---
+            def summarize_events(x):
+                counts = x.value_counts()
+                lines = []
+                for event, count in counts.items():
+                    if count > 1:
+                        lines.append(f"{event} (x{count})")
+                    else:
+                        lines.append(event)
+                return "<br>".join(lines)
+            
             events_agg = (
-                df_events.groupby("Label")["Event / Task"]
-                .apply(lambda x: "<br>".join([
-                    f"{event} (x{count})" if count > 1 else event
-                    for event, count in pd.Series(x.dropna().str.strip()).value_counts().items()
-                    if isinstance(event, str) and len(event.strip()) > 2  # avoid blanks or corrupted text
-                ]))
+                df_events.groupby("Label", dropna=False)["Event / Task"]
+                .apply(summarize_events)
                 .reset_index()
             )
+
 
     
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
