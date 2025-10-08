@@ -479,8 +479,8 @@ def run():
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("""
 ### **Insights:**
-The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. 
-Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. Disruptive strategies could be implemented here to improve performance
+- The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. 
+- Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. Disruptive strategies could be implemented here to improve performance
 
 """)
 
