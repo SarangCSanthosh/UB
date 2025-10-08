@@ -296,7 +296,11 @@ The 650 ML pack size (light blue bar) is the undisputed leader. It contributed t
             hole=0.4,
             color="Pack_Type"
         )
-        fig_packtype.update_traces(textinfo="percent+label")
+        fig_packtype.update_traces(
+            texttemplate="%{label}<br>%{percent:.0%}",  # Rounded percent inside the chart
+            hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
+            insidetextorientation='auto'
+        )
         fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         st.plotly_chart(fig_packtype, use_container_width=True)
     
