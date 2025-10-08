@@ -511,7 +511,7 @@ def run():
             hovertemplate='<b>%{label}</b><br>Value: %{customdata[0]:,.0f}<extra></extra>'
         )
         st.plotly_chart(fig, use_container_width=True)
-        
+        display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0)
         st.markdown(
             """
             <style>
