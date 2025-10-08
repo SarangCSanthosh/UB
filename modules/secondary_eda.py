@@ -295,7 +295,6 @@ def run():
             )
             st.plotly_chart(fig, use_container_width=True)
     
-        import plotly.graph_objects as go
 
         # ===============================
         # 📅 IF EVENT CALENDAR SELECTED
