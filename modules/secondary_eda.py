@@ -584,6 +584,11 @@ def run():
             region_volume = df_filtered.groupby("DBF_REGION")[VOLUME_COL].sum().round(0).reset_index()
             fig = px.pie(region_volume, values=VOLUME_COL, names="DBF_REGION", hole=0.5,
                          title="Volume Distribution by Region")
+            fig.update_traces(
+                texttemplate="%{label}<br>%{percent:.0%}",
+                textinfo="label+percent",  # Show only label and percentage
+                hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>"
+            )
             st.plotly_chart(fig, use_container_width=True)
             st.dataframe(region_volume.set_index("DBF_REGION").round(0))
         else:
