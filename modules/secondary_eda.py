@@ -669,9 +669,9 @@ The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute 
             fig_pie = px.pie(comp, values=value_col, names="DBF_DEPOT",
                             title=f"Volume Distribution (Special Depots){title_suffix}", hole=0.4)
             fig_pie.update_traces(
-                texttemplate="{percent:.0%}",        # inside slice (rounded percentage)
+                texttemplate="%{label}: %{percent:.0%}",        # inside slice (rounded percentage)
                 hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",  # hover tooltip
-                insidetextorientation='horizontal'              # prevents awkward rotated text
+                insidetextorientation='auto'              # prevents awkward rotated text
             )
             
             st.plotly_chart(fig_pie, use_container_width=True)
