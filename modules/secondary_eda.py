@@ -403,7 +403,7 @@ def run():
 
 
         st.markdown("""
-### **Answer:**
+### **Insights:**
 - While the absolute volume peaked in Q2, the normalized volume hit one of its lowest points. This implies that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) was very high in Q2. In other words, the high absolute volume in Q2 did not meet expectations or capacity, resulting in a poor normalized performance.
 - Shipments in 2024 did not reach the high peaks seen in 2023, indicating a minor year-over-year volume challenge. The sharp normalized volume drop in May (2023 and 2024) is a critical recurring issue. This suggests that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) for May is either set too high or the operational system fails to cope with the demands of that specific month. The highly efficient performance seen in August 2023 was not repeated in 2024. While the absolute volume was high in May 2024, the normalized score was low, pointing to a failure to translate high volume into high efficiency in 2024.
 
@@ -441,7 +441,7 @@ def run():
         st.dataframe(display_df)
         
         st.markdown("""
-    ### **Answer:**
+    ### **Insights:**
     - The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 85% of the total volume visualized in the Top 10 list.
     - The business's volume is heavily reliant on this one outlet. Any disruption, change in operations, or loss of business from MANAGING DIRECTOR MSIL would have a massive, detrimental impact on the overall volume and stability of the entire system.
     """)
@@ -493,7 +493,7 @@ def run():
         else:
             st.info("DBF_DEPOT column not found.")
         st.markdown("""
-### **Answer:**
+### **Insights:**
  Ensure operations, supply chain, and support for KALABURAGI, BIDAR, and VIJAYAPURA are top-tier, as they are the primary drivers of volume.  Identify which of the Orange depots (KOPPAL to CHITRADURGA) have the highest growth potential to secure the next wave of A-Class contributors. Analyze the cost-to-serve for the Red depots to ensure the low volume is not resulting in disproportionately high operational costs.
 
 """)
@@ -511,7 +511,7 @@ def run():
         else:
             st.info("DBF_REGION column not found.")
         st.markdown("""
-### **Answer:**
+### **Insights:**
 NORTH KARNATAKA 2 is the primary driver of volume in this combined area, accounting for nearly two-thirds of the total volume. Resource allocation (e.g., inventory, sales support, and logistics capacity) should prioritize NORTH KARNATAKA 2 to support its dominant volume and ensure continued high performance.
 
 """)
@@ -546,7 +546,7 @@ NORTH KARNATAKA 2 is the primary driver of volume in this combined area, account
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
         with st.container():
             st.markdown("""
-### **Answer:**
+### **Insights:**
 The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute to just 40% of total shipment volume, whereas only 39% of Number of Outlets in North Karnataka 2 drive for 60% of total shipment volume, indicating that North Karnataka 2 region is the core volume driver
 
 """)
@@ -611,7 +611,7 @@ The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute 
             fig_trend.update_yaxes(title_text=y_title)
             st.plotly_chart(fig_trend, use_container_width=True)
             st.markdown("""
-### **Answer:**
+### **Insights:**
 - All four entities, particularly the top two (BELAGAVI and HUBBALLI-1), contribute a significant portion of the volume. Management should ensure dedicated support and resources are allocated proportionally to maintain their performance.
 - HUBBALLI-1 (Light Blue) is the dominant sub-depot, controlling 61.4% of the Hubballi group's total volume.The Hubballi area's volume performance is primarily dependent on the performance and stability of HUBBALLI-1. Any operational issue or decline in sales at HUBBALLI-1 would severely impact the entire Hubballi group's performance.Strategic initiatives should be aimed at boosting HUBBALLI-2's volume to achieve a more even distribution, which would reduce the over-reliance on HUBBALLI-1.
 - The highest risk in this focused group lies in the BELAGAVI 1 depot. Any major operational setback or sales decline here would result in a severe, sudden drop in the overall volume for the entire Belagavi area. Focused marketing and sales investment is needed to significantly increase its volume and achieve a more diversified risk profile, perhaps aiming for a 45%-55% split over time.
