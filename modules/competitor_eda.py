@@ -203,7 +203,9 @@ def run():
         with st.container():
             st.markdown("""
 ### **Insights:**
-All efforts must be focused on protecting, supporting, and potentially growing KFS. This brand is the core of the entire operation. Bullet and KF are the only two other brands that matter. Resources should be allocated to these two to increase their share and slightly diversify the revenue base away from the KFS dependency.
+- KFS is the brand which has the highest shipment amongst all other brands under UNITED BREWERIES.
+- It has given a strong lead comprising 72 percent of the total volume. 
+- Bullet and Lager are the other two brands contributing highly to the shipment volume. 2% of the shipment comprises various other brands like KF Ultra , KF Ultra Max etc.
 """)
 
 
@@ -259,8 +261,7 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
 ### **Insights:**
-The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immense volume, every effort should be made to optimise the production, filling, distribution, and marketing of the 650 ML pack for maximum efficiency and cost savings. Marginal improvements here will yield massive absolute returns.The reliance on a single pack size presents a high risk. Strategies to boost the 330 ML CANS and 500 ML CANS should be explored to gradually diversify the volume base, providing resilience against potential market shifts, targeting the 650 ML format.
-""")
+The 650 ML pack size (light blue bar) is the undisputed leader. It contributed to 81 percent of the total shipment volume. The 330 ml can comes 2nd with just 11% contribution followed by 550 ml can with 6%  and 330 ml with 3%.""")
 
 
     # ---- Tab 5: Bottle vs Can Distribution ----
@@ -300,8 +301,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immen
         st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
         st.markdown("""
 ### **Insights:**
-BOTTLE (light blue) is the primary packaging format, accounting for a massive 83.5% of the total volume. The business's entire supply chain, from manufacturing and filling to inventory, logistics, and recycling/returns, is overwhelmingly structured around the Bottle format. Operational efficiency efforts should naturally be centered here, as marginal improvements in the bottle process will yield the greatest overall volume impact.
-""")
+BOTTLE (light blue) is accounting for a massive 83.5% of the total volume. Whereas cans fall massively behind with just 16.5 % contribution.""")
 
   
     
@@ -343,8 +343,7 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
         st.dataframe(sku_data.set_index(SKU_COL)[["Value"]].round(0))
         st.markdown("""
 ### **Insights:**
-The company’s performance is highly dependent on the stability and success of the KFS 650ML SKU. Protecting this product from competition is required. While KFS 650ML is the leader, the three largest SKUs (KFS 650ML, Bullet 650ML, and KFS 330 ML Cans) should receive the most detailed operational focus, as they represent the foundation of the total volume.
-""")
+The company’s performance is highly dependent on the stability and success of the KF 650ML SKU. While KF 650ML is the leader with about 55% of total volume, the ones that follow closely behind are Bullet’s BSSB 650ML with 16% and KFS 330ML cans with 10%.""")
 
 
         
@@ -374,7 +373,8 @@ The company’s performance is highly dependent on the stability and success of 
         st.markdown("""
 ### **Insights:**
 - The KFS brand (yellow line) dominates all other brands in absolute volume, consistently operating at a level 2 to 3 times higher than the nearest competitor. Peaks occur in the late Spring/Early Summer reaching volumes of approximately 5,000 to 5,500 units . The 2024 season appears weaker than 2023. The 2024 peak was lower than the 2023 peak, and the post-peak declines were noticeably lower than the equivalent period in 2023.
-- The overall volume for Bullet shows no sustained growth and appears stagnant year-over-year.
+- Although BULLET had seen a rise in the year 2024 , with a spike in MAY 2024 , it has fallen down again by August 2024.
+
 """)
 
 # ===============================
