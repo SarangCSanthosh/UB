@@ -323,7 +323,7 @@ def run():
             ].copy()
     
             df_ship = df.copy()
-            df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
+            df_ship["Date"] = pd.to_datetime(df_ship["SHIPMENT_DATE"], errors="coerce")
             ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
             ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
             ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
