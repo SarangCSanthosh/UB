@@ -444,8 +444,9 @@ def run():
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("""
 ### **Insights:**
-The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. Any strategies to increase overall volume should likely focus on maintaining performance in these top three areas or identifying the factors driving the success of these locations to replicate them elsewhere. The business has a clear tiering of locations based on shipment volume.
-Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disruptive strategies could be implemented here to improve performance
+The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. 
+Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. Disruptive strategies could be implemented here to improve performance
+
 """)
 
 
@@ -466,8 +467,9 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
             st.markdown("""
 ### **Insights:**
 - There is a clear cyclical pattern across most locations. Volume tends to be highest during the middle of the year, roughly from April to July.
-- Conversely, volume is consistently lower at the beginning (Jan/Feb) and end (Oct/Dec) of the year. This seasonality is a critical factor for forecasting, inventory management, and planning marketing campaigns.
-- The most prominent feature is the massive volume spike for Vijayapura around April-May 2024. This white-hot cell indicates an extraordinary event, such as a highly successful local marketing campaign, a one-time project, or a regional event that drove volume far beyond the norm.
+- Conversely, volume is consistently lower at the beginning (Jan/Feb) and end (Oct/Dec) of the year. 
+- The most prominent feature is the massive volume spike for Vijayapura around April-May 2024. 
+
 """)
 
     # ---- Tab 4: Clustering ----
@@ -524,7 +526,6 @@ These sites have comparatively low or niche shipment patterns, possibly influenc
 
 
 The presence of four well-separated clusters indicates that shipment behaviour varies meaningfully across regions.
-Focusing capacity planning, resource allocation, and route optimization differently for each cluster can improve efficiency - especially by supporting the high-activity hubs (Cluster 1) and addressing bottlenecks in emerging markets (Cluster 2).
 """)
 
     
