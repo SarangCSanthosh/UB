@@ -475,8 +475,8 @@ def run():
         
         st.markdown("""
     ### **Insights:**
-    - The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 85% of the total volume visualized in the Top 10 list.
-    - The business's volume is heavily reliant on this one outlet. Any disruption, change in operations, or loss of business from MANAGING DIRECTOR MSIL would have a massive, detrimental impact on the overall volume and stability of the entire system.
+    The most striking feature is the overwhelming dominance of a single outlet: MANAGING DIRECTOR MSIL. This outlet takes up easily over 75% to 80% of the total volume visualized in the Top 10 list. The business's volume is heavily reliant on this one outlet. 
+
     """)
 
 
@@ -545,8 +545,7 @@ def run():
             st.info("DBF_REGION column not found.")
         st.markdown("""
 ### **Insights:**
-NORTH KARNATAKA 2 is the primary driver of volume in this combined area, accounting for nearly two-thirds of the total volume. Resource allocation (e.g., inventory, sales support, and logistics capacity) should prioritize NORTH KARNATAKA 2 to support its dominant volume and ensure continued high performance.
-
+NORTH KARNATAKA 2 is the primary driver of volume in this combined area, accounting for nearly two-thirds of the total volume.
 """)
 
     # ---- Region Stacked ----
@@ -645,7 +644,8 @@ The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute 
             st.plotly_chart(fig_trend, use_container_width=True)
             st.markdown("""
 ### **Insights:**
-- All four entities, particularly the top two (BELAGAVI and HUBBALLI-1), contribute a significant portion of the volume. Management should ensure dedicated support and resources are allocated proportionally to maintain their performance.
-- HUBBALLI-1 (Light Blue) is the dominant sub-depot, controlling 61.4% of the Hubballi group's total volume.The Hubballi area's volume performance is primarily dependent on the performance and stability of HUBBALLI-1. Any operational issue or decline in sales at HUBBALLI-1 would severely impact the entire Hubballi group's performance.Strategic initiatives should be aimed at boosting HUBBALLI-2's volume to achieve a more even distribution, which would reduce the over-reliance on HUBBALLI-1.
-- The highest risk in this focused group lies in the BELAGAVI 1 depot. Any major operational setback or sales decline here would result in a severe, sudden drop in the overall volume for the entire Belagavi area. Focused marketing and sales investment is needed to significantly increase its volume and achieve a more diversified risk profile, perhaps aiming for a 45%-55% split over time.
+All four entities, particularly the top two (BELAGAVI and HUBBALLI-1), contribute a significant portion of the volume. 
+HUBBALLI-1 (Light Blue) is the dominant sub-depot, controlling 61.4% of the Hubballi group's total volume.The Hubballi area's volume performance is primarily dependent on the performance and stability of HUBBALLI-1. 
+The highest risk in this focused group lies in the BELAGAVI 1 depot. 
+
 """)
