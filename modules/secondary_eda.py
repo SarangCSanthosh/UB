@@ -505,7 +505,7 @@ def run():
             title_suffix = ""
         
         # Treemap
-        fig = px.treemap(top_outlets, path=[OUTLET_COL], values=value_col, 
+        fig = px.treemap(top_outlets, path=[OUTLET_COL], values=value_col.round(0), 
                          title=f"Top {top_n} Outlets Treemap{title_suffix}")
         st.plotly_chart(fig, use_container_width=True)
         
