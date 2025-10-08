@@ -288,7 +288,7 @@ def run():
                     x=trend_df["Label"],
                     y=trend_df["Value"],
                     mode="lines+markers",
-                    name=f"Shipment Trend ({granularity}, {view_mode})",
+                    name=f"Shipment Trend ({granularity}, {value_type})",
                     fill="tozeroy",
                     yaxis="y1",
                     hovertext=trend_df["Event / Task"],
