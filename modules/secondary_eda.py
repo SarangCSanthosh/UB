@@ -295,41 +295,43 @@ def run():
             )
             st.plotly_chart(fig, use_container_width=True)
     
+        import plotly.graph_objects as go
+
         # ===============================
-    # 📅 IF EVENT CALENDAR SELECTED
-    # ===============================
+        # 📅 IF EVENT CALENDAR SELECTED
+        # ===============================
         else:
             st.subheader("Event Calendar (Month & Year Selector)")
-    
+        
             # --- Load Event Data ---
             EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
             df_events = load_event_calendar(EVENT_CSV_URL)
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-    
+        
             # --- Ensure columns exist ---
             for col in ["Event / Task", "Remarks"]:
                 if col not in df_events.columns:
                     df_events[col] = ""
-    
-            # Add time breakdowns
+        
+            # Add breakdowns
             df_events["Year"] = df_events["Date"].dt.year
             df_events["Month"] = df_events["Date"].dt.month
             df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
             df_events["Day"] = df_events["Date"].dt.day
-    
+        
             # --- User Selection ---
             selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
             selected_month_name = st.selectbox(
                 "Select Month",
                 sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
             )
-    
+        
             # --- Filter selected month ---
             df_selected = df_events[
                 (df_events["Year"] == selected_year) &
                 (df_events["MonthName"] == selected_month_name)
             ].copy()
-    
+        
             # --- Merge with shipment data ---
             df_ship = df.copy()
             df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
@@ -337,57 +339,49 @@ def run():
             ship_day = df_ship.groupby("DateOnly")[VOLUME_COL].sum().reset_index()
             ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
             ship_day["Date"] = pd.to_datetime(ship_day["DateOnly"], errors="coerce")
-    
-            # Merge
+        
             df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
             df_selected["VOLUME"] = pd.to_numeric(df_selected["VOLUME"], errors="coerce").fillna(0)
-    
+        
             # --- Compute Calendar Grid ---
             df_selected["Weekday"] = df_selected["Date"].dt.day_name()
             df_selected["WeekOfMonth"] = ((df_selected["Date"].dt.day - 1) // 7) + 1
             df_selected["DayNum"] = df_selected["Date"].dt.day
-    
-            # --- Build Calendar Heatmap ---
-            try:
-                fig = px.density_heatmap(
-                    df_selected,
-                    x="Weekday",
-                    y="WeekOfMonth",
-                    z="VOLUME",
-                    text="DayNum",  # show day number inside tile
-                    color_continuous_scale="Viridis",
-                    hover_data={
-                        "Date": True,
-                        "Event / Task": True,
-                        "VOLUME": True,
-                        "DayNum": False,
-                        "Weekday": False,
-                        "WeekOfMonth": False
-                    },
-                    title=f"Shipment Calendar — {selected_month_name} {selected_year}"
-                )
-    
-                # Update hover text and style
-                fig.update_traces(
-                    texttemplate="%{text}",
-                    hovertemplate="<b>%{customdata[0]}</b><br>Event: %{customdata[1]}<br>Volume: %{z}<extra></extra>"
-                )
-    
-                fig.update_layout(
-                    height=600,
-                    width=1000,
-                    template="plotly_dark",
-                    xaxis_title="Day of Week",
-                    yaxis_title="Week of Month",
-                    yaxis=dict(autorange="reversed"),
-                    coloraxis_colorbar=dict(title="Shipment Volume")
-                )
-    
-                st.plotly_chart(fig, use_container_width=True)
-    
-            except Exception as e:
-                st.error(f"Error generating heatmap: {e}")
-                st.dataframe(df_selected)
+        
+            # Prepare pivot for heatmap
+            pivot = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="VOLUME")
+            text_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="DayNum")
+        
+            # Reorder weekdays (Sunday first)
+            ordered_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+            pivot = pivot.reindex(columns=ordered_days)
+            text_matrix = text_matrix.reindex(columns=ordered_days)
+        
+            # --- Build Heatmap ---
+            fig = go.Figure(data=go.Heatmap(
+                z=pivot.values,
+                x=pivot.columns,
+                y=pivot.index,
+                text=text_matrix.values,
+                texttemplate="%{text}",
+                colorscale="Viridis",
+                hovertemplate="<b>Date:</b> %{y}-th Week, %{x}<br>"
+                              "<b>Day:</b> %{text}<br>"
+                              "<b>Volume:</b> %{z}<extra></extra>"
+            ))
+        
+            fig.update_layout(
+                title=f"Shipment Calendar — {selected_month_name} {selected_year}",
+                xaxis_title="Day of Week",
+                yaxis_title="Week of Month",
+                yaxis=dict(autorange="reversed"),
+                height=600,
+                width=1000,
+                template="plotly_dark",
+                coloraxis_colorbar=dict(title="Shipment Volume")
+            )
+        
+            st.plotly_chart(fig, use_container_width=True)
 
 
         st.markdown("""
