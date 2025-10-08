@@ -99,7 +99,7 @@ def run():
     def pct_delta(cur, prev):
         if prev is None or prev == 0:
             return None
-        return ((cur - prev) / prev) * 100
+        return (((cur - prev) / prev) * 100).round(0)
 
     if prev_year:
         kpi_volume = yearly_data.loc[latest_year, "Total_Volume"]
@@ -114,7 +114,7 @@ def run():
         delta_volume = delta_outlets = delta_shipments = None
 
     def format_delta(val):
-        return f"{val:+.2f}%" if val is not None and pd.notna(val) else "N/A"
+        return f"{val:+.0f}%" if val is not None and pd.notna(val) else "N/A"
 
     # --------------------------
     # SHOW FIXED KPIs
