@@ -358,6 +358,12 @@ def run():
             pivot_volume = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="VOLUME")
             text_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="DayNum")
             hover_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="Tooltip")
+
+            # --- Replace NaN with blanks or zeros ---
+            pivot_volume = pivot_volume.fillna(0)          # Show 0 for missing shipment volumes
+            text_matrix = text_matrix.fillna("")           # Show empty day cells
+            hover_matrix = hover_matrix.fillna("")         # Avoid NaN in hover text
+
         
             # Reorder weekdays
             ordered_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
