@@ -348,10 +348,10 @@ def run():
         
             # --- Tooltip text (Event + Remarks) ---
             df_selected["Tooltip"] = (
-                "📅 <b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
-                "🎯 Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
-                "📝 Remarks: " + df_selected["Remarks"].fillna("") + "<br>" +
-                "📦 Volume: " + df_selected["VOLUME"].astype(str)
+                "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
+                "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
+                "Remarks: " + df_selected["Remarks"].fillna("") + "<br>" +
+                "Volume: " + df_selected["VOLUME"].astype(str)
             )
         
             # --- Pivot tables for grid display ---
