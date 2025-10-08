@@ -276,7 +276,7 @@ def run():
     
                 # Remove extra spaces and normalize casing
                 text = " ".join(text.split())
-                text = text.title().replace("Ipl", "IPL").replace("Ind", "IND")
+                text = text.title().replace("Ipl", "IPL").replace("Bfc","BFC")
                 return text
     
             df_events["Event / Task"] = df_events["Event / Task"].apply(clean_event_name)
