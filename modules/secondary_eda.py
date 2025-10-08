@@ -587,7 +587,7 @@ def run():
             fig.update_traces(
                 texttemplate="%{label}: %{percent:.0%}",
                 textinfo="label+percent",
-                hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>"
+                hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
                 insidetextorientation='auto'
             )
 
