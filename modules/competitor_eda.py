@@ -202,7 +202,7 @@ def run():
        
         with st.container():
             st.markdown("""
-### **Answer:**
+### **Insights:**
 All efforts must be focused on protecting, supporting, and potentially growing KFS. This brand is the core of the entire operation. Bullet and KF are the only two other brands that matter. Resources should be allocated to these two to increase their share and slightly diversify the revenue base away from the KFS dependency.
 """)
 
@@ -258,7 +258,7 @@ All efforts must be focused on protecting, supporting, and potentially growing K
         st.plotly_chart(fig_pack, use_container_width=True)
         st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
-### **Answer:**
+### **Insights:**
 The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immense volume, every effort should be made to optimise the production, filling, distribution, and marketing of the 650 ML pack for maximum efficiency and cost savings. Marginal improvements here will yield massive absolute returns.The reliance on a single pack size presents a high risk. Strategies to boost the 330 ML CANS and 500 ML CANS should be explored to gradually diversify the volume base, providing resilience against potential market shifts, targeting the 650 ML format.
 """)
 
@@ -299,7 +299,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. Due to its immen
         # Data table below the chart
         st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
         st.markdown("""
-### **Answer:**
+### **Insights:**
 BOTTLE (light blue) is the primary packaging format, accounting for a massive 83.5% of the total volume. The business's entire supply chain, from manufacturing and filling to inventory, logistics, and recycling/returns, is overwhelmingly structured around the Bottle format. Operational efficiency efforts should naturally be centered here, as marginal improvements in the bottle process will yield the greatest overall volume impact.
 """)
 
@@ -342,7 +342,7 @@ BOTTLE (light blue) is the primary packaging format, accounting for a massive 83
         st.plotly_chart(fig_sku, use_container_width=True)
         st.dataframe(sku_data.set_index(SKU_COL)[["Value"]].round(0))
         st.markdown("""
-### **Answer:**
+### **Insights:**
 The company’s performance is highly dependent on the stability and success of the KFS 650ML SKU. Protecting this product from competition is required. While KFS 650ML is the leader, the three largest SKUs (KFS 650ML, Bullet 650ML, and KFS 330 ML Cans) should receive the most detailed operational focus, as they represent the foundation of the total volume.
 """)
 
@@ -372,7 +372,7 @@ The company’s performance is highly dependent on the stability and success of 
         fig_trend.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         st.plotly_chart(fig_trend, use_container_width=True)
         st.markdown("""
-### **Answer:**
+### **Insights:**
 - The KFS brand (yellow line) dominates all other brands in absolute volume, consistently operating at a level 2 to 3 times higher than the nearest competitor. Peaks occur in the late Spring/Early Summer reaching volumes of approximately 5,000 to 5,500 units . The 2024 season appears weaker than 2023. The 2024 peak was lower than the 2023 peak, and the post-peak declines were noticeably lower than the equivalent period in 2023.
 - The overall volume for Bullet shows no sustained growth and appears stagnant year-over-year.
 """)
