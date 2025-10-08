@@ -302,71 +302,79 @@ def run():
         else:
             st.subheader("Event Calendar (Month & Year Selector)")
         
-            # --- Load Event Data ---
-            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-            df_events = load_event_calendar(EVENT_CSV_URL)
+            # --- Load Event Calendar from Google Sheet ---
+            EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+            df_events = load_event_calendar(EVENT_XLSX_URL)
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
         
-            # --- Ensure columns exist ---
+            # --- Ensure expected columns exist ---
             for col in ["Event / Task", "Remarks"]:
                 if col not in df_events.columns:
                     df_events[col] = ""
         
-            # Add breakdowns
+            # --- Extract date components ---
             df_events["Year"] = df_events["Date"].dt.year
             df_events["Month"] = df_events["Date"].dt.month
             df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
             df_events["Day"] = df_events["Date"].dt.day
         
-            # --- User Selection ---
+            # --- User selections ---
             selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
             selected_month_name = st.selectbox(
                 "Select Month",
                 sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
             )
         
-            # --- Filter selected month ---
+            # --- Filter data for chosen month ---
             df_selected = df_events[
                 (df_events["Year"] == selected_year) &
                 (df_events["MonthName"] == selected_month_name)
             ].copy()
         
-            # --- Merge with shipment data ---
+            # --- Merge with shipment data (optional) ---
             df_ship = df.copy()
             df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
-            df_ship["DateOnly"] = df_ship["Date"].dt.date
-            ship_day = df_ship.groupby("DateOnly")[VOLUME_COL].sum().reset_index()
+            ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
             ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
-            ship_day["Date"] = pd.to_datetime(ship_day["DateOnly"], errors="coerce")
+            ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
         
             df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
             df_selected["VOLUME"] = pd.to_numeric(df_selected["VOLUME"], errors="coerce").fillna(0)
         
-            # --- Compute Calendar Grid ---
+            # --- Calendar Grid ---
             df_selected["Weekday"] = df_selected["Date"].dt.day_name()
             df_selected["WeekOfMonth"] = ((df_selected["Date"].dt.day - 1) // 7) + 1
             df_selected["DayNum"] = df_selected["Date"].dt.day
         
-            # Prepare pivot for heatmap
-            pivot = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="VOLUME")
+            # --- Tooltip text (Event + Remarks) ---
+            df_selected["Tooltip"] = (
+                "📅 <b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
+                "🎯 Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
+                "📝 Remarks: " + df_selected["Remarks"].fillna("") + "<br>" +
+                "📦 Volume: " + df_selected["VOLUME"].astype(str)
+            )
+        
+            # --- Pivot tables for grid display ---
+            pivot_volume = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="VOLUME")
             text_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="DayNum")
+            hover_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="Tooltip")
         
-            # Reorder weekdays (Sunday first)
+            # Reorder weekdays
             ordered_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-            pivot = pivot.reindex(columns=ordered_days)
+            pivot_volume = pivot_volume.reindex(columns=ordered_days)
             text_matrix = text_matrix.reindex(columns=ordered_days)
+            hover_matrix = hover_matrix.reindex(columns=ordered_days)
         
-            # --- Build Heatmap ---
+            # --- Plotly Heatmap ---
             fig = go.Figure(data=go.Heatmap(
-                z=pivot.values,
-                x=pivot.columns,
-                y=pivot.index,
+                z=pivot_volume.values,
+                x=pivot_volume.columns,
+                y=pivot_volume.index,
                 text=text_matrix.values,
                 texttemplate="%{text}",
                 colorscale="Viridis",
-                hovertemplate="<b>Date:</b> %{y}-th Week, %{x}<br>"
-                              "<b>Day:</b> %{text}<br>"
-                              "<b>Volume:</b> %{z}<extra></extra>"
+                hoverinfo="text",
+                hovertext=hover_matrix.values
             ))
         
             fig.update_layout(
@@ -374,7 +382,7 @@ def run():
                 xaxis_title="Day of Week",
                 yaxis_title="Week of Month",
                 yaxis=dict(autorange="reversed"),
-                height=600,
+                height=650,
                 width=1000,
                 template="plotly_dark",
                 coloraxis_colorbar=dict(title="Shipment Volume")
