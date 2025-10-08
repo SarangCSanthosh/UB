@@ -171,9 +171,10 @@ def run():
     ])
 
     # ---- Tab 1: Trends ----
+    # ---- Tab 1: Trends ----
     with tab1:
         st.markdown("###  Question: What trends do we see in shipments across months, quarters, or years?")
-        st.subheader("Shipment Trends and Event Calender")
+        st.subheader("Shipment Trends and Event Calendar")
     
         # --- Chart Selection ---
         chart_type = st.radio(
@@ -181,13 +182,14 @@ def run():
             ["Shipment Trend", "Event Calendar"],
             horizontal=True
         )
-        
+    
         granularity = st.radio(
             "Select Granularity", 
             ["Yearly", "Quarterly", "Monthly"], 
             horizontal=True, 
             key="granularity_radio"
         )
+    
         value_type = st.radio(
             "Value Type (Trends)", 
             ["Absolute", "Percentage"], 
@@ -199,16 +201,17 @@ def run():
         # 📈 SHIPMENT TREND
         # ===============================
         if chart_type == "Shipment Trend":
-            # --- Shipment Trend (Filtered Main Data) ---
+            # --- Create Label in df_filtered based on granularity ---
             if granularity == "Yearly":
                 df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
             elif granularity == "Quarterly":
-                df_filtered["Label"] = df_filtered["Quarter"].astype(str)
+                df_filtered["Label"] = df_filtered["Quarter"].astype(str) + " " + df_filtered["Year"].astype(str)
             else:
                 df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
     
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
     
+            # --- Convert to percentage if needed ---
             if value_type == "Percentage":
                 total_sum = trend_df[VOLUME_COL].sum()
                 trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
@@ -217,49 +220,44 @@ def run():
                 trend_df["Value"] = trend_df[VOLUME_COL]
                 y_title = "Volume"
     
-            if granularity == "Yearly":
-                trend = df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
-                if value_type == "Percentage":
-                    trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
-                    y_title = "Volume (%)"
-                else:
-                    y_title = "Volume"
-                trend["Year"] = trend["Year"].astype(int).astype(str)
-                fig = px.line(trend, x="Year", y=VOLUME_COL, markers=True, title="Yearly Shipment Volume")
-                fig.update_xaxes(type="category")
-                fig.update_yaxes(title_text=y_title)
-    
-            elif granularity == "Quarterly":
-                trend = df_filtered.groupby("Quarter")[VOLUME_COL].sum().reset_index()
-                trend["Quarter"] = trend["Quarter"].astype(str)
-                if value_type == "Percentage":
-                    trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
-                    y_title = "Volume (%)"
-                else:
-                    y_title = "Volume"
-                fig = px.line(trend, x="Quarter", y=VOLUME_COL, markers=True, title="Quarterly Shipment Volume")
-                fig.update_yaxes(title_text=y_title)
-    
-            else:  # Monthly
-                trend = df_filtered.groupby("YearMonth")[VOLUME_COL].sum().reset_index()
-                trend["YearMonth"] = trend["YearMonth"].astype(str)
-                if value_type == "Percentage":
-                    trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
-                    y_title = "Volume (%)"
-                else:
-                    y_title = "Volume"
-                fig = px.line(trend, x="YearMonth", y=VOLUME_COL, markers=True, title="Monthly Shipment Volume")
-                fig.update_yaxes(title_text=y_title)
-    
             # --- Load Event Calendar ---
             EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
             df_events = load_event_calendar(EVENT_CSV_URL)
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-
-
-            
-            
-            # --- Aggregate by Label ---
+    
+            # --- Create Label column in df_events based on granularity ---
+            if granularity == "Yearly":
+                df_events["Label"] = df_events["Date"].dt.year.astype(str)
+            elif granularity == "Quarterly":
+                df_events["Label"] = "Q" + df_events["Date"].dt.quarter.astype(str) + " " + df_events["Date"].dt.year.astype(str)
+            else:  # Monthly
+                df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
+    
+            # --- Clean and normalize event names ---
+            def clean_event_name(text):
+                if pd.isna(text):
+                    return None
+                text = str(text).strip()
+                if not text or text.lower() in ["nan", "none"]:
+                    return None
+    
+                # Fix common corrupt patterns
+                text = text.replace("Against", "")
+                text = text.replace("Footll", "Football")
+                text = text.replace("Pro Ka", "Pro Kabbadi")
+                text = text.replace("C ", " ")
+                text = text.replace("IND World cup", "IND World Cup")
+                text = text.replace("RCB Match", "RCB Match")
+                text = text.replace("Week end", "Weekend")
+    
+                # Remove extra spaces and normalize casing
+                text = " ".join(text.split())
+                text = text.title().replace("Ipl", "IPL").replace("Ind", "IND")
+                return text
+    
+            df_events["Event / Task"] = df_events["Event / Task"].apply(clean_event_name)
+    
+            # --- Aggregate events by Label ---
             def summarize_events(x):
                 counts = x.value_counts()
                 lines = []
@@ -269,20 +267,17 @@ def run():
                     else:
                         lines.append(event)
                 return "<br>".join(lines)
-            
+    
             events_agg = (
                 df_events.groupby("Label", dropna=False)["Event / Task"]
                 .apply(summarize_events)
                 .reset_index()
             )
-
-
     
-            
-
-    
+            # --- Merge trend with events ---
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
     
+            # --- Plot Shipment Trend with Events ---
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
@@ -297,110 +292,113 @@ def run():
                 )
             )
     
+            fig.update_yaxes(title_text=y_title)
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(trend.round(0))
+            st.dataframe(trend_df.round(0))
     
-            st.markdown("""
-            ### **Insights: Shipment Volume Analysis (2023–2024)**
-            - There has been a substantial decrease in the yearly shipment volume between 2023 and 2024.  
-            - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years.  
-            - The shipment volume is highly unstable on a monthly basis, showing recovery in Q4 2024 but still below peak levels.
-            """)
     
-        # ===============================
-        # 📅 EVENT CALENDAR HEATMAP
-        # ===============================
-        else:
-            st.subheader("Monthly Event Heatmap")
-    
-            EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-            df_events = load_event_calendar(EVENT_XLSX_URL)
-            df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-    
-            df_events["Year"] = df_events["Date"].dt.year
-            df_events["Month"] = df_events["Date"].dt.month
-            df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
-            df_events["Day"] = df_events["Date"].dt.day
-    
-            selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
-            selected_month_name = st.selectbox(
-                "Select Month",
-                sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
-            )
-    
-            df_selected = df_events[
-                (df_events["Year"] == selected_year) &
-                (df_events["MonthName"] == selected_month_name)
-            ].copy()
-    
-            df_ship = df.copy()
-            df_ship["Date"] = pd.to_datetime(df_ship["SHIPMENT_DATE"], errors="coerce")
-            ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
-            ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
-            ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
-    
-            df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
-            df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
-    
-            month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
-            month_end = month_start + pd.offsets.MonthEnd(1)
-            start_day = month_start - pd.Timedelta(days=month_start.weekday())
-            end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))
-            full_range = pd.date_range(start_day, end_day, freq="D")
-    
-            calendar_df = pd.DataFrame({"Date": full_range})
-            calendar_df["Day"] = calendar_df["Date"].dt.day
-            calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
-            calendar_df["Month"] = calendar_df["Date"].dt.month
-            calendar_df["Week"] = ((calendar_df["Date"] - start_day).dt.days // 7) + 1
-            calendar_df["VOLUME"] = calendar_df["Date"].map(df_selected.set_index("Date")["VOLUME"]).fillna(0)
-    
-            calendar_df.loc[calendar_df["Month"] != month_start.month, "VOLUME"] = None
-            calendar_df.loc[calendar_df["Month"] != month_start.month, "Day"] = ""
-    
-            ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-            pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")[ordered_days]
-            text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")[ordered_days]
-    
-            df_selected["Tooltip"] = (
-                "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
-                "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
-                "Volume: " + df_selected["VOLUME"].round(0).astype(int).astype(str)
-            )
-    
-            calendar_df["Tooltip"] = calendar_df["Date"].map(df_selected.set_index("Date")["Tooltip"])
-            calendar_df.loc[calendar_df["Month"] != month_start.month, "Tooltip"] = None
-            hover_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Tooltip")[ordered_days]
-    
-            fig = go.Figure(
-                data=go.Heatmap(
-                    z=pivot_volume.values,
-                    x=pivot_volume.columns,
-                    y=pivot_volume.index,
-                    text=text_matrix.values,
-                    texttemplate="%{text}",
-                    hovertext=hover_matrix.values,
-                    hoverinfo="text",
-                    colorscale="RdPu",
-                    showscale=True
+        
+                st.markdown("""
+                ### **Insights: Shipment Volume Analysis (2023–2024)**
+                - There has been a substantial decrease in the yearly shipment volume between 2023 and 2024.  
+                - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years.  
+                - The shipment volume is highly unstable on a monthly basis, showing recovery in Q4 2024 but still below peak levels.
+                """)
+        
+            # ===============================
+            # 📅 EVENT CALENDAR HEATMAP
+            # ===============================
+            else:
+                st.subheader("Monthly Event Heatmap")
+        
+                EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+                df_events = load_event_calendar(EVENT_XLSX_URL)
+                df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+        
+                df_events["Year"] = df_events["Date"].dt.year
+                df_events["Month"] = df_events["Date"].dt.month
+                df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
+                df_events["Day"] = df_events["Date"].dt.day
+        
+                selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+                selected_month_name = st.selectbox(
+                    "Select Month",
+                    sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
                 )
-            )
+        
+                df_selected = df_events[
+                    (df_events["Year"] == selected_year) &
+                    (df_events["MonthName"] == selected_month_name)
+                ].copy()
+        
+                df_ship = df.copy()
+                df_ship["Date"] = pd.to_datetime(df_ship["SHIPMENT_DATE"], errors="coerce")
+                ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
+                ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
+                ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
+        
+                df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
+                df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
+        
+                month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
+                month_end = month_start + pd.offsets.MonthEnd(1)
+                start_day = month_start - pd.Timedelta(days=month_start.weekday())
+                end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))
+                full_range = pd.date_range(start_day, end_day, freq="D")
+        
+                calendar_df = pd.DataFrame({"Date": full_range})
+                calendar_df["Day"] = calendar_df["Date"].dt.day
+                calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
+                calendar_df["Month"] = calendar_df["Date"].dt.month
+                calendar_df["Week"] = ((calendar_df["Date"] - start_day).dt.days // 7) + 1
+                calendar_df["VOLUME"] = calendar_df["Date"].map(df_selected.set_index("Date")["VOLUME"]).fillna(0)
+        
+                calendar_df.loc[calendar_df["Month"] != month_start.month, "VOLUME"] = None
+                calendar_df.loc[calendar_df["Month"] != month_start.month, "Day"] = ""
+        
+                ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")[ordered_days]
+                text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")[ordered_days]
+        
+                df_selected["Tooltip"] = (
+                    "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
+                    "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
+                    "Volume: " + df_selected["VOLUME"].round(0).astype(int).astype(str)
+                )
+        
+                calendar_df["Tooltip"] = calendar_df["Date"].map(df_selected.set_index("Date")["Tooltip"])
+                calendar_df.loc[calendar_df["Month"] != month_start.month, "Tooltip"] = None
+                hover_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Tooltip")[ordered_days]
+        
+                fig = go.Figure(
+                    data=go.Heatmap(
+                        z=pivot_volume.values,
+                        x=pivot_volume.columns,
+                        y=pivot_volume.index,
+                        text=text_matrix.values,
+                        texttemplate="%{text}",
+                        hovertext=hover_matrix.values,
+                        hoverinfo="text",
+                        colorscale="RdPu",
+                        showscale=True
+                    )
+                )
+        
+                fig.update_layout(
+                    title=f"{selected_month_name} {selected_year} — Shipment Heatmap",
+                    xaxis=dict(title="", side="top"),
+                    yaxis=dict(title="", autorange="reversed"),
+                    width=600,
+                    height=450,
+                    template="simple_white",
+                    margin=dict(l=20, r=20, t=80, b=20),
+                    coloraxis_colorbar=dict(title="Volume")
+                )
+        
+                st.plotly_chart(fig, use_container_width=True)
     
-            fig.update_layout(
-                title=f"{selected_month_name} {selected_year} — Shipment Heatmap",
-                xaxis=dict(title="", side="top"),
-                yaxis=dict(title="", autorange="reversed"),
-                width=600,
-                height=450,
-                template="simple_white",
-                margin=dict(l=20, r=20, t=80, b=20),
-                coloraxis_colorbar=dict(title="Volume")
-            )
-    
-            st.plotly_chart(fig, use_container_width=True)
-
-      
-                    
+          
+                        
         st.markdown("""
 ### **Insights: Shipment Volume Analysis (2023–2024)**
 
