@@ -204,7 +204,7 @@ def run():
             # --- Create Label in df_filtered based on granularity ---
             if granularity == "Yearly":
                 #df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
-                df_filtered["Label"]=df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
+                df_filtered["Label"]=df_filtered["Year"].astype(int).astype(str)
             elif granularity == "Quarterly":
                 df_filtered["Label"] = df_filtered["Quarter"].astype(str) + " " + df_filtered["Year"].astype(str)
             else:
