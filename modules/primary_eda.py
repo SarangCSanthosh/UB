@@ -227,7 +227,7 @@ def run():
     
             # --- Create Label column in df_events based on granularity ---
             if granularity == "Yearly":
-                df_events["Label"] = df_events["Date"].dt.year.astype(str)
+                df_events["Label"] = df_events["Date"].dt.year.astype(int).astype(str)
             elif granularity == "Quarterly":
                 df_events["Label"] = "Q" + df_events["Date"].dt.quarter.astype(str) + " " + df_events["Date"].dt.year.astype(str)
             else:  # Monthly
