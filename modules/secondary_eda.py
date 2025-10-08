@@ -337,34 +337,37 @@ def run():
             df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
         
             # --- Prepare calendar grid ---
-            # --- Properly aligned calendar grid ---
+                # --- Properly aligned calendar grid (fixed week numbering) ---
             month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
             month_end = (month_start + pd.offsets.MonthEnd(1))
-            all_days = pd.date_range(month_start, month_end)
         
-            # Fill from Monday of first week to Sunday of last week
-            start_day = month_start - pd.Timedelta(days=month_start.weekday())
-            end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))
+            # Create continuous range covering full calendar view (Mon–Sun)
+            start_day = month_start - pd.Timedelta(days=month_start.weekday())   # Monday of first week
+            end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))   # Sunday of last week
             full_range = pd.date_range(start_day, end_day, freq="D")
         
             calendar_df = pd.DataFrame({"Date": full_range})
             calendar_df["Day"] = calendar_df["Date"].dt.day
             calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
-            calendar_df["Week"] = calendar_df["Date"].dt.isocalendar().week
             calendar_df["Month"] = calendar_df["Date"].dt.month
         
-            # Merge volume data
+            # Compute week number *relative to this calendar view* (0-based)
+            calendar_df["Week"] = ((calendar_df["Date"] - start_day).dt.days // 7) + 1
+        
+            # Merge shipment volume
             calendar_df["VOLUME"] = calendar_df["Date"].map(
                 df_selected.set_index("Date")["VOLUME"]
             ).fillna(0)
         
-            # Mask days not in selected month (so they appear blank)
+            # Hide days outside selected month
             calendar_df.loc[calendar_df["Month"] != month_start.month, "VOLUME"] = None
             calendar_df.loc[calendar_df["Month"] != month_start.month, "Day"] = ""
         
-            # Pivot by week and weekday
-            pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")
-            text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")
+            # Pivot into heatmap grid
+            ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")[ordered_days]
+            text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")[ordered_days]
+
         
             # Reorder weekdays Monday→Sunday
             ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
