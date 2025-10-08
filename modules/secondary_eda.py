@@ -505,8 +505,11 @@ def run():
             title_suffix = ""
         
         # Treemap
-        fig = px.treemap(top_outlets, path=[OUTLET_COL], values=value_col.round(0), 
-                         title=f"Top {top_n} Outlets Treemap{title_suffix}")
+        fig = px.treemap(top_outlets, path=[OUTLET_COL], values=value_col, 
+                         title=f"Top {top_n} Outlets Treemap{title_suffix}",custom_data=[value_col])
+        fig.update_traces(
+            hovertemplate='<b>%{label}</b><br>Value: %{customdata[0]:,.0f}<extra></extra>'
+        )
         st.plotly_chart(fig, use_container_width=True)
         
         # Dataframe
