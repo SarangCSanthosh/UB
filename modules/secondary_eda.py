@@ -543,7 +543,7 @@ NORTH KARNATAKA 2 is the primary driver of volume in this combined area, account
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
         st.markdown("""
 ### **Answer:**
-North Karnataka 2 region is the core volume driver, as confirmed by both the previous donut chart (60.2% volume share) and this efficiency chart. It generates significantly more volume per outlet than its counterpart. NORTH KARNATAKA 1 has a low return on its outlet footprint. The volume is diluted across a large number of outlets. 
+The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute to just 40% of total shipment volume, whereas only 39% of Number of Outlets in North Karnataka 2 drive for 60% of total shipment volume, indicating that North Karnataka 2 region is the core volume driver
 
 """)
 
