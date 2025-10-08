@@ -32,6 +32,34 @@ def prepare_dates(df, date_col="SHIPMENT_DATE"):
     df["Quarter"] = df[date_col].dt.to_period("Q")
     return df, date_col
 
+@st.cache_data
+def load_event_calendar(sheet_id: str):
+    """
+    Loads the event calendar from a public Google Sheet.
+    Input: Google Sheet ID
+    Output: DataFrame
+    """
+    try:
+        # Build a direct download link
+        download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+
+        df = pd.read_excel(download_url)
+
+        # Clean and standardize columns
+        df.columns = df.columns.str.strip()
+        if "Date" in df.columns:
+            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+
+        # Drop rows without valid dates
+        df = df.dropna(subset=["Date"])
+
+        return df
+
+    except Exception as e:
+        st.error(f"❌ Could not load event calendar: {e}")
+        return pd.DataFrame(columns=["Date", "Day", "Month", "Week Number", "Event / Task", "Remarks"])
+
+
 def _pct_change(curr, prev):
     if prev is None or pd.isna(prev) or prev == 0:
         return None
@@ -143,7 +171,15 @@ def run():
     # ---- Tab 1: Trends ----
     with tab1:
         st.markdown("###  Question: What trends do we see in shipments across months, quarters, or years?")
-        st.subheader("Shipment Trends")
+        st.subheader("Shipment Trends and Event Calender")
+
+        # --- Chart Selection ---
+        chart_type = st.radio(
+            "Select Chart Type:",
+            ["Shipment Trend", "Event Calendar"],
+            horizontal=True
+        )
+        
         granularity = st.radio(
             "Select Granularity", 
             ["Yearly", "Quarterly", "Monthly"], 
@@ -157,52 +193,106 @@ def run():
             key="trend_value_type"
         )
 
-        if granularity == "Yearly":
-            trend = df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
+        if chart_type == "Shipment Trend":
+            # --- Shipment Trend (Filtered Main Data) ---
+            if granularity == "Yearly":
+                df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
+            elif granularity == "Quarterly":
+                df_filtered["Label"] = df_filtered["Quarter"].astype(str)
+            else:  # Monthly granularity
+                df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
+    
+            trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
+    
+            if view_mode == "Percentage":
+                total_sum = trend_df[VOLUME_COL].sum()
+                trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
+                y_title = "Percentage (%)"
+            else:
+                trend_df["Value"] = trend_df[VOLUME_COL]
+                y_title = "Volume"
+        
+
+            if granularity == "Yearly":
+                trend = df_filtered.groupby("Year")[VOLUME_COL].sum().reset_index()
+                
+                if value_type == "Percentage":
+                    trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
+                    y_title = "Volume (%)"
+                else:
+                    y_title = "Volume"
             
-            if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
-                y_title = "Volume (%)"
+                # Convert Year to string
+                trend["Year"] = trend["Year"].astype(int).astype(str)
+            
+                fig = px.line(
+                    trend,
+                    x="Year",
+                    y=VOLUME_COL,
+                    markers=True,
+                    title="Yearly Shipment Volume"
+                )
+                # Force x-axis to be categorical
+                fig.update_xaxes(type="category")
+                fig.update_yaxes(title_text=y_title)
+    
+    
+    
+            elif granularity == "Quarterly":
+                trend = df_filtered.groupby("Quarter")[VOLUME_COL].sum().reset_index()
+                trend["Quarter"] = trend["Quarter"].astype(str)
+                if value_type == "Percentage":
+                    trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
+                    y_title = "Volume (%)"
+                else:
+                    y_title = "Volume"
+                fig = px.line(trend, x="Quarter", y=VOLUME_COL, markers=True, title="Quarterly Shipment Volume")
+                fig.update_yaxes(title_text=y_title)
+    
+            else:  # Monthly
+                trend = df_filtered.groupby("YearMonth")[VOLUME_COL].sum().reset_index()
+                trend["YearMonth"] = trend["YearMonth"].astype(str)
+                if value_type == "Percentage":
+                    trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
+                    y_title = "Volume (%)"
+                else:
+                    y_title = "Volume"
+                fig = px.line(trend, x="YearMonth", y=VOLUME_COL, markers=True, title="Monthly Shipment Volume")
+                fig.update_yaxes(title_text=y_title)
+
+            # --- Load Event Calendar ---
+            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+            df_events = load_event_calendar(EVENT_CSV_URL)
+            df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+    
+            if granularity == "Yearly":
+                df_events["Label"] = df_events["Date"].dt.year.astype(str)
+            elif granularity == "Quarterly":
+                df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
             else:
-                y_title = "Volume"
-        
-            # Convert Year to string
-            trend["Year"] = trend["Year"].astype(int).astype(str)
-        
-            fig = px.line(
-                trend,
-                x="Year",
-                y=VOLUME_COL,
-                markers=True,
-                title="Yearly Shipment Volume"
+                df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
+    
+            events_agg = (
+                df_events.groupby("Label")["Event / Task"]
+                .apply(lambda x: "<br>".join(sorted(set(x.dropna()))))
+                .reset_index()
             )
-            # Force x-axis to be categorical
-            fig.update_xaxes(type="category")
-            fig.update_yaxes(title_text=y_title)
 
-
-
-        elif granularity == "Quarterly":
-            trend = df_filtered.groupby("Quarter")[VOLUME_COL].sum().reset_index()
-            trend["Quarter"] = trend["Quarter"].astype(str)
-            if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
-                y_title = "Volume (%)"
-            else:
-                y_title = "Volume"
-            fig = px.line(trend, x="Quarter", y=VOLUME_COL, markers=True, title="Quarterly Shipment Volume")
-            fig.update_yaxes(title_text=y_title)
-
-        else:  # Monthly
-            trend = df_filtered.groupby("YearMonth")[VOLUME_COL].sum().reset_index()
-            trend["YearMonth"] = trend["YearMonth"].astype(str)
-            if value_type == "Percentage":
-                trend[VOLUME_COL] = (trend[VOLUME_COL] / trend[VOLUME_COL].sum() * 100).round(2)
-                y_title = "Volume (%)"
-            else:
-                y_title = "Volume"
-            fig = px.line(trend, x="YearMonth", y=VOLUME_COL, markers=True, title="Monthly Shipment Volume")
-            fig.update_yaxes(title_text=y_title)
+            trend_df = trend_df.merge(events_agg, on="Label", how="left")
+    
+            fig = go.Figure()
+            fig.add_trace(
+                go.Scatter(
+                    x=trend_df["Label"],
+                    y=trend_df["Value"],
+                    mode="lines+markers",
+                    name=f"Shipment Trend ({granularity}, {view_mode})",
+                    fill="tozeroy",
+                    yaxis="y1",
+                    hovertext=trend_df["Event / Task"],
+                    hoverinfo="x+y+text",
+                )
+            )
 
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(trend.round(0))
