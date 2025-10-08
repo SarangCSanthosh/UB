@@ -117,7 +117,7 @@ def run():
         delta_volume = delta_outlets = delta_shipments = None
 
     def format_delta(val):
-        return f"{val:+.2f}%" if val is not None and pd.notna(val) else "N/A"
+        return f"{val:+.0f}%" if val is not None and pd.notna(val) else "N/A"
 
     # --------------------------
     # SHOW FIXED KPIs
