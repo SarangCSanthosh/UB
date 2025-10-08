@@ -183,19 +183,7 @@ def run():
             horizontal=True
         )
     
-        granularity = st.radio(
-            "Select Granularity", 
-            ["Yearly", "Quarterly", "Monthly"], 
-            horizontal=True, 
-            key="granularity_radio"
-        )
-    
-        value_type = st.radio(
-            "Value Type (Trends)", 
-            ["Absolute", "Percentage"], 
-            horizontal=True, 
-            key="trend_value_type"
-        )
+        
     
         # ===============================
         # 📈 SHIPMENT TREND
@@ -204,6 +192,19 @@ def run():
 
 
         if chart_type == "Shipment Trend":
+            granularity = st.radio(
+                "Select Granularity", 
+                ["Yearly", "Quarterly", "Monthly"], 
+                horizontal=True, 
+                key="granularity_radio"
+            )
+        
+            value_type = st.radio(
+                "Value Type (Trends)", 
+                ["Absolute", "Percentage"], 
+                horizontal=True, 
+                key="trend_value_type"
+            )
             # --- Create Label in df_filtered based on granularity ---
             df_filtered["SHIPMENT_DATE"] = pd.to_datetime(df_filtered["SHIPMENT_DATE"], errors="coerce")
             df_filtered["Year"] = df_filtered["SHIPMENT_DATE"].dt.year.astype(int)
