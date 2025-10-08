@@ -204,7 +204,7 @@ def run():
     
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
     
-            if view_mode == "Percentage":
+            if value_type == "Percentage":
                 total_sum = trend_df[VOLUME_COL].sum()
                 trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
                 y_title = "Percentage (%)"
