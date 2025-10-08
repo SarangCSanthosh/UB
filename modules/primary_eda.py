@@ -233,6 +233,7 @@ def run():
             
     
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
+            st.write(df_filtered["Label"].unique())
     
             # --- Convert to percentage if needed ---
             if value_type == "Percentage":
