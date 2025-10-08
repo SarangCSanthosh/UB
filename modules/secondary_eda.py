@@ -477,9 +477,8 @@ def run():
 
         st.markdown("""
 ### **Insights:**
-- While the absolute volume peaked in Q2, the normalized volume hit one of its lowest points. This implies that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) was very high in Q2. In other words, the high absolute volume in Q2 did not meet expectations or capacity, resulting in a poor normalized performance.
-- Shipments in 2024 did not reach the high peaks seen in 2023, indicating a minor year-over-year volume challenge. The sharp normalized volume drop in May (2023 and 2024) is a critical recurring issue. This suggests that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) for May is either set too high or the operational system fails to cope with the demands of that specific month. The highly efficient performance seen in August 2023 was not repeated in 2024. While the absolute volume was high in May 2024, the normalized score was low, pointing to a failure to translate high volume into high efficiency in 2024.
-
+- There has been a huge dip in the shipment in the month of May-2023. Which is explained by the events that took place during the time period.
+- The same dip has been observed in the year 2024 as well but the absolute shipment volume has seen a spike.
 """)
 
 
