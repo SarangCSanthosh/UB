@@ -622,7 +622,7 @@ NORTH KARNATAKA 2 is the primary driver of volume in this combined area, account
             fig = px.bar(melted, x="DBF_REGION", y="Percent", color="Metric",
                          barmode="stack", text=melted["Percent"].round(0),
                          title="Outlets vs Volume % by Region")
-            fig.update_traces(texttemplate="%{text:.2f}%", textposition="inside")
+            fig.update_traces(texttemplate="%{text:.0f}%", textposition="inside")
             st.plotly_chart(fig, use_container_width=True)
             st.dataframe(region_stats.set_index("DBF_REGION").round(0))
         else:
