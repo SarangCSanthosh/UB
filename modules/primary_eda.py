@@ -315,6 +315,14 @@ def run():
                     hoverinfo="x+y+text",
                 )
             )
+
+            fig.update_layout(
+                xaxis=dict(type='category'),
+                yaxis=dict(title=y_title),
+                title=f"Shipment Trend ({granularity}, {value_type})",
+                template="plotly_white"
+            )
+
     
             fig.update_yaxes(title_text=y_title)
             st.plotly_chart(fig, use_container_width=True)
