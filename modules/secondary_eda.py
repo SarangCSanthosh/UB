@@ -374,6 +374,28 @@ def run():
                     ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
                     pivot_volume = pivot_volume.reindex(columns=ordered_days)
                     text_matrix = text_matrix.reindex(columns=ordered_days)
+
+
+
+                    # --- Tooltip text (Event + Remarks + Volume) ---
+                    df_selected["Tooltip"] = (
+                        "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
+                        "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
+                        "Remarks: " + df_selected["Remarks"].fillna("") + "<br>" +
+                        "Volume: " + df_selected["VOLUME"].astype(str)
+                    )
+                    
+                    # Merge tooltip into calendar_df
+                    calendar_df["Tooltip"] = calendar_df["Date"].map(
+                        df_selected.set_index("Date")["Tooltip"]
+                    )
+                    
+                    # Hide tooltips for days outside selected month
+                    calendar_df.loc[calendar_df["Month"] != month_start.month, "Tooltip"] = None
+                    
+                    # Pivot tooltip matrix
+                    hover_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Tooltip")[ordered_days]
+                    hover_matrix = hover_matrix.reindex(columns=ordered_days)
                 
                     # --- Plotly heatmap ---
                     fig = go.Figure(
@@ -383,8 +405,10 @@ def run():
                             y=pivot_volume.index,
                             text=text_matrix.values,
                             texttemplate="%{text}",
+                            hovertext=hover_matrix.values,
+                            hoverinfo="text",
                             colorscale="RdPu",  # 🔥 Similar gradient to example
-                            hovertemplate="Day %{text}<br>Volume: %{z}<extra></extra>",
+                            #hovertemplate="Day %{text}<br>Volume: %{z}<extra></extra>",
                             showscale=True
                         )
                     )
