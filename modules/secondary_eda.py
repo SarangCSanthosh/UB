@@ -188,7 +188,8 @@ def run():
     with tab1:
         st.markdown("###  Question: Do shipment trends look different by year, quarter, or month?")
         st.subheader("Shipment Trends and Event Calendar")
-    
+
+
         # --- Chart Selection ---
         chart_type = st.radio(
             "Select Chart Type:",
@@ -198,7 +199,7 @@ def run():
     
         # --- Controls (Granularity and View Mode) ---
         granularity = st.radio(
-            "Granularity", ["Yearly", "Quarterly", "Monthly"],  # ✅ Removed "Daily"
+            "Granularity", ["Yearly", "Quarterly", "Monthly"],
             horizontal=True, key="trend_granularity"
         )
         view_mode = st.radio(
@@ -215,7 +216,7 @@ def run():
                 df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
             elif granularity == "Quarterly":
                 df_filtered["Label"] = df_filtered["Quarter"].astype(str)
-            else:  # Monthly granularity
+            else:
                 df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
     
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
@@ -276,9 +277,26 @@ def run():
             else:
                 df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
     
-            events_agg = df_events.groupby("Label")["Event / Task"].apply(lambda x: "<br>".join(x.dropna())).reset_index()
+            # 🧠 Clean Event Aggregation (remove duplicates + show counts)
+            from collections import Counter
+    
+            def summarize_events(events, max_events=6):
+                ev_list = [e.strip() for e in events.dropna() if e.strip()]
+                counter = Counter(ev_list)
+                summarized = [f"{ev} (×{cnt})" if cnt > 1 else ev for ev, cnt in counter.items()]
+                if len(summarized) > max_events:
+                    summarized = summarized[:max_events] + ["+ more..."]
+                return "<br>".join(summarized)
+    
+            events_agg = (
+                df_events.groupby("Label")["Event / Task"]
+                .apply(summarize_events)
+                .reset_index()
+            )
+    
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
     
+            # --- Plotly Figure ---
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
@@ -290,7 +308,7 @@ def run():
                     yaxis="y1",
                     hovertext=trend_df["Event / Task"],
                     hoverinfo="x+y+text",
-                    hoverlabel=dict(align="left"),  # 👈 ensures proper line alignment
+                    hoverlabel=dict(align="left"),  # ✅ neat line breaks
                 )
             )
             fig.add_trace(
@@ -317,7 +335,7 @@ def run():
                 hovermode="x unified",
             )
             st.plotly_chart(fig, use_container_width=True)
-    
+
 
         # ===============================
         # 📅 IF EVENT CALENDAR SELECTED
