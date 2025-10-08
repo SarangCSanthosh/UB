@@ -170,13 +170,13 @@ def run():
         # --- Chart Selection ---
         chart_type = st.radio(
             "Select Chart Type:",
-            ["Shipment Trend", "Event Calendar (Heatmap)"],
+            ["Shipment Trend", "Event Calendar"],
             horizontal=True
         )
     
         # --- Controls (Granularity and View Mode) ---
         granularity = st.radio(
-            "Granularity", ["Yearly", "Quarterly", "Monthly", "Daily"],
+            "Granularity", ["Yearly", "Quarterly", "Monthly"],  # ✅ Removed "Daily"
             horizontal=True, key="trend_granularity"
         )
         view_mode = st.radio(
@@ -193,10 +193,8 @@ def run():
                 df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
             elif granularity == "Quarterly":
                 df_filtered["Label"] = df_filtered["Quarter"].astype(str)
-            elif granularity == "Monthly":
+            else:  # Monthly granularity
                 df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
-            else:  # Daily granularity
-                df_filtered["Label"] = df_filtered["ACTUAL_DATE"].dt.date.astype(str)
     
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
     
@@ -225,20 +223,16 @@ def run():
             df_normalised["Year"] = df_normalised["ACTUAL_DATE"].dt.year
             df_normalised["Quarter"] = df_normalised["ACTUAL_DATE"].dt.to_period("Q").astype(str)
             df_normalised["YearMonth"] = df_normalised["ACTUAL_DATE"].dt.to_period("M").astype(str)
-            df_normalised["Date"] = df_normalised["ACTUAL_DATE"].dt.date
     
             if granularity == "Yearly":
                 norm_df = df_normalised.groupby("Year")["VOLUME"].sum().reset_index()
-                norm_df["Label"] = norm_df["Year"].astype(int).astype(str)
+                norm_df["Label"] = norm_df["Year"].astype(str)
             elif granularity == "Quarterly":
                 norm_df = df_normalised.groupby("Quarter")["VOLUME"].sum().reset_index()
                 norm_df["Label"] = norm_df["Quarter"].astype(str)
-            elif granularity == "Monthly":
+            else:
                 norm_df = df_normalised.groupby("YearMonth")["VOLUME"].sum().reset_index()
                 norm_df["Label"] = norm_df["YearMonth"].astype(str)
-            else:
-                norm_df = df_normalised.groupby("Date")["VOLUME"].sum().reset_index()
-                norm_df["Label"] = norm_df["Date"].astype(str)
     
             if view_mode == "Percentage":
                 total_norm = norm_df["VOLUME"].sum()
@@ -257,10 +251,8 @@ def run():
                 df_events["Label"] = df_events["Date"].dt.year.astype(str)
             elif granularity == "Quarterly":
                 df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
-            elif granularity == "Monthly":
-                df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
             else:
-                df_events["Label"] = df_events["Date"].dt.date.astype(str)
+                df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
     
             events_agg = df_events.groupby("Label")["Event / Task"].apply(lambda x: "\n".join(x.dropna())).reset_index()
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
@@ -307,39 +299,69 @@ def run():
         # 📅 IF EVENT CALENDAR SELECTED
         # ===============================
         else:
-            st.subheader("Event Calendar Heatmap")
+            st.subheader("Event Calendar (Month & Year Selector)")
     
+            # --- User selects month and year ---
             EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
             df_events = load_event_calendar(EVENT_CSV_URL)
-    
-            # Extract Year-Month-Day
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+    
+            # Add Year and Month columns
             df_events["Year"] = df_events["Date"].dt.year
-            df_events["Month"] = df_events["Date"].dt.month_name()
+            df_events["Month"] = df_events["Date"].dt.month
+            df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
             df_events["Day"] = df_events["Date"].dt.day
     
-            # Count events per day
-            event_counts = df_events.groupby(["Year", "Month", "Day"]).size().reset_index(name="Event Count")
-    
-            # Sort months in calendar order
-            month_order = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
-            ]
-            event_counts["Month"] = pd.Categorical(event_counts["Month"], categories=month_order, ordered=True)
-    
-            # Create heatmap
-            fig = px.density_heatmap(
-                event_counts,
-                x="Month",
-                y="Day",
-                z="Event Count",
-                facet_col="Year",
-                color_continuous_scale="Viridis",
-                title="Event Calendar Heatmap (Events per Day)",
+            # Year and Month selectors
+            selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+            selected_month_name = st.selectbox(
+                "Select Month",
+                sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
             )
-            fig.update_layout(height=700, width=1400, template="plotly_dark")
+    
+            # Filter based on selections
+            df_selected = df_events[
+                (df_events["Year"] == selected_year) &
+                (df_events["MonthName"] == selected_month_name)
+            ]
+    
+            # Merge shipment data (volume per day)
+            df_ship = df.copy()
+            df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"])
+            df_ship["DateOnly"] = df_ship["Date"].dt.date
+            ship_day = df_ship.groupby("DateOnly")[VOLUME_COL].sum().reset_index()
+            ship_day["Date"] = pd.to_datetime(ship_day["DateOnly"])
+    
+            # Combine with events
+            df_selected = pd.merge(df_selected, ship_day, on="Date", how="left")
+            df_selected["VOLUME"].fillna(0, inplace=True)
+    
+            # Create heatmap calendar
+            df_selected["Weekday"] = df_selected["Date"].dt.day_name()
+            df_selected["WeekOfMonth"] = ((df_selected["Date"].dt.day - 1) // 7) + 1
+    
+            # Create calendar heatmap
+            fig = px.density_heatmap(
+                df_selected,
+                x="Weekday",
+                y="WeekOfMonth",
+                z="VOLUME",
+                text_auto=True,
+                color_continuous_scale="Viridis",
+                hover_data={"Date": True, "Event / Task": True, "VOLUME": True},
+                title=f"Shipment Calendar — {selected_month_name} {selected_year}"
+            )
+    
+            fig.update_layout(
+                height=600,
+                width=1000,
+                template="plotly_dark",
+                xaxis_title="Day of Week",
+                yaxis_title="Week of Month",
+            )
+    
             st.plotly_chart(fig, use_container_width=True)
+
         st.markdown("""
 ### **Answer:**
 - While the absolute volume peaked in Q2, the normalized volume hit one of its lowest points. This implies that the normalizing factor (e.g., number of workdays, capacity, or seasonal adjustment) was very high in Q2. In other words, the high absolute volume in Q2 did not meet expectations or capacity, resulting in a poor normalized performance.
