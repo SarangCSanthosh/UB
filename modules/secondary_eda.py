@@ -512,7 +512,7 @@ def run():
         )
         st.plotly_chart(fig, use_container_width=True)
         display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0)
-        st.dataframe(display_df, width=400, height=200)
+        st.dataframe(display_df)
 
         
         st.markdown("""
@@ -566,7 +566,7 @@ def run():
                 yaxis2=dict(title="Cumulative %", overlaying="y", side="right", range=[0, 110]),
             )
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(depot_volume.round(0),width=400, height=200)
+            st.dataframe(depot_volume.round(0))
         else:
             st.info("DBF_DEPOT column not found.")
         st.markdown("""
@@ -591,7 +591,7 @@ def run():
             )
 
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(region_volume.set_index("DBF_REGION").round(0), width=400, height=200)
+            st.dataframe(region_volume.set_index("DBF_REGION").round(0))
         else:
             st.info("DBF_REGION column not found.")
         st.markdown("""
@@ -624,7 +624,7 @@ NORTH KARNATAKA 2 is the primary driver of volume in this combined area, account
                          title="Outlets vs Volume % by Region")
             fig.update_traces(texttemplate="%{text:.0f}%", textposition="inside")
             st.plotly_chart(fig, use_container_width=True)
-            st.table(region_stats.set_index("DBF_REGION").round(0))
+            st.dataframe(region_stats.set_index("DBF_REGION").round(0))
         else:
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
         with st.container():
