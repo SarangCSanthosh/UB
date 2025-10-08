@@ -264,6 +264,7 @@ def run():
     
                 # Fix common corrupt patterns
                 text = text.replace("Against", "")
+                text = text.replace("Friendly", "BFC")
                 text = text.replace("Footll", "Football")
                 text = text.replace("Pro Ka", "Pro Kabbadi")
                 text = text.replace("C ", " ")
