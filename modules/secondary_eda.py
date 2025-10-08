@@ -511,28 +511,7 @@ def run():
             hovertemplate='<b>%{label}</b><br>Value: %{customdata[0]:,.0f}<extra></extra>'
         )
         st.plotly_chart(fig, use_container_width=True)
-        display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0)
-        st.markdown(
-            """
-            <style>
-            /* Remove extra padding & spacing from dataframe cells */
-            [data-testid="stDataFrame"] div[data-testid="stVerticalBlock"] {
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
-                margin-top: 0 !important;
-                margin-bottom: 0 !important;
-            }
-            [data-testid="stDataFrame"] td, [data-testid="stDataFrame"] th {
-                padding-top: 2px !important;
-                padding-bottom: 2px !important;
-                padding-left: 4px !important;
-                padding-right: 4px !important;
-                font-size: 13px !important;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
+        display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0).astype(str)
         
         st.dataframe(display_df, use_container_width=True, height=300)
         
