@@ -240,7 +240,7 @@ def run():
             # --- Load Event Calendar ---
             EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
             df_events = load_event_calendar(EVENT_CSV_URL)
-            st.write("Events Aggregated by Label", events_agg)
+            st.write("Events Aggregated by Label", df_events)
 
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
     
@@ -292,6 +292,8 @@ def run():
                 .apply(summarize_events)
                 .reset_index()
             )
+
+            st.write("Events Aggregated by Label", events_agg)
     
             # --- Merge trend with events ---
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
