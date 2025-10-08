@@ -123,7 +123,7 @@ def run():
     # SHOW FIXED KPIs
     # --------------------------
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Volume", f"{kpi_volume:,}", format_delta(delta_volume))
+    col1.metric("Total Volume", f"{int(kpi_volume):,}", format_delta(delta_volume))
     col2.metric("Unique Outlets", f"{kpi_outlets}", format_delta(delta_outlets))
     col3.metric("Total Shipments", f"{kpi_shipments}", format_delta(delta_shipments))
     st.caption(f"YoY change: {latest_year} vs {prev_year}")
