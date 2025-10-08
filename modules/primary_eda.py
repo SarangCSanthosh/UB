@@ -266,9 +266,14 @@ def run():
             # ✅ Avoid duplicates, keep count
             events_agg = (
                 df_events.groupby("Label")["Event / Task"]
-                .apply(lambda x: "<br>".join(f"{e} (x{list(x).count(e)})" if list(x).count(e) > 1 else e for e in sorted(set(x.dropna()))))
+                .apply(lambda x: "<br>".join([
+                    f"{event} (x{count})" if count > 1 else event
+                    for event, count in pd.Series(x.dropna().str.strip()).value_counts().items()
+                    if isinstance(event, str) and len(event.strip()) > 2  # avoid blanks or corrupted text
+                ]))
                 .reset_index()
             )
+
     
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
     
