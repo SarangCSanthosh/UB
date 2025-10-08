@@ -538,7 +538,7 @@ Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. Disruptive
 
                 fig_scatter = px.scatter(comp_df, x="PC1", y="PC2", color="Cluster", hover_name=LOCATION_COL)
                 st.plotly_chart(fig_scatter, use_container_width=True)
-                st.table(comp_df[[LOCATION_COL, "Cluster"]].round(0))
+                st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(0), width=400, height=200)
                 st.markdown("""
 ### **Insights:**
 The clustering reveals four distinct groups of locations based on their shipment activity patterns:
