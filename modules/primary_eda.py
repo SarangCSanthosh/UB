@@ -5,6 +5,8 @@ import plotly.express as px
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
+import plotly.graph_objects as go
+from collections import Counter
 
 # ===============================
 # Utility functions
