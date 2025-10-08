@@ -359,17 +359,24 @@ def run():
             text_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="DayNum")
             hover_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="Tooltip")
 
-            # --- Replace NaN with blanks or zeros ---
-            pivot_volume = pivot_volume.fillna(0)          # Show 0 for missing shipment volumes
-            text_matrix = text_matrix.fillna("")           # Show empty day cells
-            hover_matrix = hover_matrix.fillna("")         # Avoid NaN in hover text
-
-        
-            # Reorder weekdays
+            # --- Remove rows and columns that are completely NaN ---
+            pivot_volume = pivot_volume.dropna(how="all")        # Drop empty weeks
+            pivot_volume = pivot_volume.dropna(axis=1, how="all")  # Drop empty weekdays
+            
+            text_matrix = text_matrix.loc[pivot_volume.index, pivot_volume.columns]
+            hover_matrix = hover_matrix.loc[pivot_volume.index, pivot_volume.columns]
+            
+            # Reorder weekdays (optional, only keeps existing days)
             ordered_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-            pivot_volume = pivot_volume.reindex(columns=ordered_days)
-            text_matrix = text_matrix.reindex(columns=ordered_days)
-            hover_matrix = hover_matrix.reindex(columns=ordered_days)
+            pivot_volume = pivot_volume.reindex(columns=[d for d in ordered_days if d in pivot_volume.columns])
+            text_matrix = text_matrix.reindex(columns=[d for d in ordered_days if d in text_matrix.columns])
+            hover_matrix = hover_matrix.reindex(columns=[d for d in ordered_days if d in hover_matrix.columns])
+                    
+            # Reorder weekdays
+            #ordered_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+            #pivot_volume = pivot_volume.reindex(columns=ordered_days)
+            #text_matrix = text_matrix.reindex(columns=ordered_days)
+            #hover_matrix = hover_matrix.reindex(columns=ordered_days)
         
             # --- Plotly Heatmap ---
             fig = go.Figure(data=go.Heatmap(
