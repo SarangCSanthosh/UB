@@ -254,7 +254,7 @@ def run():
             else:
                 df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
     
-            events_agg = df_events.groupby("Label")["Event / Task"].apply(lambda x: "\n".join(x.dropna())).reset_index()
+            events_agg = df_events.groupby("Label")["Event / Task"].apply(lambda x: "<br>".join(x.dropna())).reset_index()
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
     
             fig = go.Figure()
