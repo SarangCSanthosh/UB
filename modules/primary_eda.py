@@ -207,7 +207,7 @@ def run():
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(trend.round(0))
         st.markdown("""
-### **Answer: Shipment Volume Analysis (2023–2024)**
+### **Insights: Shipment Volume Analysis (2023–2024)**
 
 - There has been a substantial decrease in its yearly shipment volume between 2023 and 2024. This indicates a contraction in shipping activity or demand.
 - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years (though much more severe in 2024). The period from 2024 Q2 to 2024 Q3 represents a major performance concern due to the unprecedented low volume.
@@ -250,7 +250,7 @@ def run():
                 fig.update_layout(yaxis=dict(categoryorder="total descending"))
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("""
-### **Answer:**
+### **Insights:**
 The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. Any strategies to increase overall volume should likely focus on maintaining performance in these top three areas or identifying the factors driving the success of these locations to replicate them elsewhere. The business has a clear tiering of locations based on shipment volume.
 Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disruptive strategies could be implemented here to improve performance
 """)
@@ -271,7 +271,7 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
             fig_hm = px.imshow(pivot.T, aspect="auto", labels=dict(color="Volume"))
             st.plotly_chart(fig_hm, use_container_width=True)
             st.markdown("""
-### **Answer:**
+### **Insights:**
 - There is a clear cyclical pattern across most locations. Volume tends to be highest during the middle of the year, roughly from April to July.
 - Conversely, volume is consistently lower at the beginning (Jan/Feb) and end (Oct/Dec) of the year. This seasonality is a critical factor for forecasting, inventory management, and planning marketing campaigns.
 - The most prominent feature is the massive volume spike for Vijayapura around April-May 2024. This white-hot cell indicates an extraordinary event, such as a highly successful local marketing campaign, a one-time project, or a regional event that drove volume far beyond the norm.
@@ -310,7 +310,7 @@ Cities with the lowest shipment volumes are Gokak, Jamkhandi, and Haveri. Disrup
                 st.plotly_chart(fig_scatter, use_container_width=True)
                 st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(0))
                 st.markdown("""
-### **Answer:**
+### **Insights:**
 The clustering reveals four distinct groups of locations based on their shipment activity patterns:
 
 - Cluster 0 - Moderate, steady performers:
