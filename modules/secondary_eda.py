@@ -337,23 +337,36 @@ def run():
             df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
         
             # --- Prepare calendar grid ---
+            # --- Properly aligned calendar grid ---
             month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
             month_end = (month_start + pd.offsets.MonthEnd(1))
             all_days = pd.date_range(month_start, month_end)
         
-            calendar_df = pd.DataFrame({"Date": all_days})
+            # Fill from Monday of first week to Sunday of last week
+            start_day = month_start - pd.Timedelta(days=month_start.weekday())
+            end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))
+            full_range = pd.date_range(start_day, end_day, freq="D")
+        
+            calendar_df = pd.DataFrame({"Date": full_range})
+            calendar_df["Day"] = calendar_df["Date"].dt.day
+            calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
+            calendar_df["Week"] = calendar_df["Date"].dt.isocalendar().week
+            calendar_df["Month"] = calendar_df["Date"].dt.month
+        
+            # Merge volume data
             calendar_df["VOLUME"] = calendar_df["Date"].map(
                 df_selected.set_index("Date")["VOLUME"]
             ).fillna(0)
-            calendar_df["Week"] = (calendar_df["Date"].dt.day - 1) // 7 + 1
-            calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
-            calendar_df["Day"] = calendar_df["Date"].dt.day
         
-            # --- Pivot for heatmap ---
+            # Mask days not in selected month (so they appear blank)
+            calendar_df.loc[calendar_df["Month"] != month_start.month, "VOLUME"] = None
+            calendar_df.loc[calendar_df["Month"] != month_start.month, "Day"] = ""
+        
+            # Pivot by week and weekday
             pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")
             text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")
         
-            # --- Reorder weekdays ---
+            # Reorder weekdays Monday→Sunday
             ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
             pivot_volume = pivot_volume.reindex(columns=ordered_days)
             text_matrix = text_matrix.reindex(columns=ordered_days)
