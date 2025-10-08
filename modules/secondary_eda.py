@@ -382,7 +382,7 @@ def run():
                         "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
                         "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
                         #"Remarks: " + df_selected["Remarks"].fillna("") + "<br>" +
-                        "Volume: " + df_selected["VOLUME"].round(0).astype(str)
+                        "Volume: " + df_selected["VOLUME"].round(0).astype(int).astype(str)
                     )
                     
                     # Merge tooltip into calendar_df
