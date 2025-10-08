@@ -541,6 +541,7 @@ NORTH KARNATAKA 2 is the primary driver of volume in this combined area, account
             st.dataframe(region_stats.set_index("DBF_REGION").round(0))
         else:
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
+        st.container():
         st.markdown("""
 ### **Answer:**
 The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute to just 40% of total shipment volume, whereas only 39% of Number of Outlets in North Karnataka 2 drive for 60% of total shipment volume, indicating that North Karnataka 2 region is the core volume driver
