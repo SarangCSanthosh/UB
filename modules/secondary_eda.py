@@ -65,26 +65,7 @@ def load_event_calendar(sheet_id: str):
         st.error(f"❌ Could not load event calendar: {e}")
         return pd.DataFrame(columns=["Date", "Day", "Month", "Week Number", "Event / Task", "Remarks"])
 
-def summarize_events(events, max_events=6):
-    # Remove NaN and count occurrences
-    ev_list = [e.strip() for e in events.dropna() if e.strip()]
-    counter = Counter(ev_list)
-    
-    # Format as "Event (×count)" if count > 1
-    summarized = [f"{ev} (×{cnt})" if cnt > 1 else ev for ev, cnt in counter.items()]
-    
-    # Limit number of events shown
-    if len(summarized) > max_events:
-        summarized = summarized[:max_events] + ["+ more..."]
-    
-    # Join with HTML line breaks for Plotly hover
-    return "<br>".join(summarized)
 
-events_agg = (
-    df_events.groupby("Label")["Event / Task"]
-    .apply(summarize_events)
-    .reset_index()
-)
 
 
 # --------------------------
