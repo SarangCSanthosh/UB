@@ -37,6 +37,34 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
     df["Quarter"] = df[date_col].dt.to_period("Q")
     return df, date_col
 
+@st.cache_data
+def load_event_calendar(sheet_id: str):
+    """
+    Loads the event calendar from a public Google Sheet.
+    Input: Google Sheet ID
+    Output: DataFrame
+    """
+    try:
+        # Build a direct download link
+        download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+
+        df = pd.read_excel(download_url)
+
+        # Clean and standardize columns
+        df.columns = df.columns.str.strip()
+        if "Date" in df.columns:
+            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+
+        # Drop rows without valid dates
+        df = df.dropna(subset=["Date"])
+
+        return df
+
+    except Exception as e:
+        st.error(f"❌ Could not load event calendar: {e}")
+        return pd.DataFrame(columns=["Date", "Day", "Month", "Week Number", "Event / Task", "Remarks"])
+
+
 # --------------------------
 # MAIN APP
 # --------------------------
@@ -48,6 +76,9 @@ def run():
     # --------------------------
     default_path = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
     df = load_excel(default_path)
+    SHEET_ID = "1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO"
+    df_events = load_event_calendar(SHEET_ID)
+
     VOLUME_COL = "VOLUME"
     OUTLET_COL = "DBF_OUTLET_NAME"
 
