@@ -271,6 +271,7 @@ def run():
                 text = text.replace("IND World cup", "IND World Cup")
                 text = text.replace("RCB Match", "RCB Match")
                 text = text.replace("Week end", "Weekend")
+                text = text.replace("INDependence", "Independence")
     
                 # Remove extra spaces and normalize casing
                 text = " ".join(text.split())
