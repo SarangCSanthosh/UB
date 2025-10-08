@@ -588,6 +588,7 @@ def run():
                 texttemplate="%{label}: %{percent:.0%}",
                 textinfo="label+percent",
                 hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>"
+                insidetextorientation='auto'
             )
 
             st.plotly_chart(fig, use_container_width=True)
