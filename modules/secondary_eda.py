@@ -300,17 +300,12 @@ def run():
         # 📅 IF EVENT CALENDAR SELECTED
         # ===============================
         else:
-            st.subheader("Event Calendar (Month & Year Selector)")
+            st.subheader("📅 Monthly Event Heatmap")
         
-            # --- Load Event Calendar from Google Sheet ---
+            # --- Load Event Calendar ---
             EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
             df_events = load_event_calendar(EVENT_XLSX_URL)
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-        
-            # --- Ensure expected columns exist ---
-            for col in ["Event / Task", "Remarks"]:
-                if col not in df_events.columns:
-                    df_events[col] = ""
         
             # --- Extract date components ---
             df_events["Year"] = df_events["Date"].dt.year
@@ -325,13 +320,13 @@ def run():
                 sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
             )
         
-            # --- Filter data for chosen month ---
+            # --- Filter for month ---
             df_selected = df_events[
                 (df_events["Year"] == selected_year) &
                 (df_events["MonthName"] == selected_month_name)
             ].copy()
         
-            # --- Merge with shipment data (optional) ---
+            # --- Merge with shipment data ---
             df_ship = df.copy()
             df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
             ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
@@ -339,66 +334,53 @@ def run():
             ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
         
             df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
-            df_selected["VOLUME"] = pd.to_numeric(df_selected["VOLUME"], errors="coerce").fillna(0)
+            df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
         
-            # --- Calendar Grid ---
-            df_selected["Weekday"] = df_selected["Date"].dt.day_name()
-            df_selected["WeekOfMonth"] = ((df_selected["Date"].dt.day - 1) // 7) + 1
-            df_selected["DayNum"] = df_selected["Date"].dt.day
+            # --- Prepare calendar grid ---
+            month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
+            month_end = (month_start + pd.offsets.MonthEnd(1))
+            all_days = pd.date_range(month_start, month_end)
         
-            # --- Tooltip text (Event + Remarks) ---
-            df_selected["Tooltip"] = (
-                "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
-                "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
-                "Remarks: " + df_selected["Remarks"].fillna("") + "<br>" +
-                "Volume: " + df_selected["VOLUME"].astype(str)
+            calendar_df = pd.DataFrame({"Date": all_days})
+            calendar_df["VOLUME"] = calendar_df["Date"].map(
+                df_selected.set_index("Date")["VOLUME"]
+            ).fillna(0)
+            calendar_df["Week"] = (calendar_df["Date"].dt.day - 1) // 7 + 1
+            calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
+            calendar_df["Day"] = calendar_df["Date"].dt.day
+        
+            # --- Pivot for heatmap ---
+            pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")
+            text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")
+        
+            # --- Reorder weekdays ---
+            ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            pivot_volume = pivot_volume.reindex(columns=ordered_days)
+            text_matrix = text_matrix.reindex(columns=ordered_days)
+        
+            # --- Plotly heatmap ---
+            fig = go.Figure(
+                data=go.Heatmap(
+                    z=pivot_volume.values,
+                    x=pivot_volume.columns,
+                    y=pivot_volume.index,
+                    text=text_matrix.values,
+                    texttemplate="%{text}",
+                    colorscale="RdPu",  # 🔥 Similar gradient to example
+                    hovertemplate="Day %{text}<br>Volume: %{z}<extra></extra>",
+                    showscale=True
+                )
             )
         
-            # --- Pivot tables for grid display ---
-            pivot_volume = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="VOLUME")
-            text_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="DayNum")
-            hover_matrix = df_selected.pivot(index="WeekOfMonth", columns="Weekday", values="Tooltip")
-
-            # --- Remove rows and columns that are completely NaN ---
-            pivot_volume = pivot_volume.dropna(how="all")        # Drop empty weeks
-            pivot_volume = pivot_volume.dropna(axis=1, how="all")  # Drop empty weekdays
-            
-            text_matrix = text_matrix.loc[pivot_volume.index, pivot_volume.columns]
-            hover_matrix = hover_matrix.loc[pivot_volume.index, pivot_volume.columns]
-            
-            # Reorder weekdays (optional, only keeps existing days)
-            ordered_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-            pivot_volume = pivot_volume.reindex(columns=[d for d in ordered_days if d in pivot_volume.columns])
-            text_matrix = text_matrix.reindex(columns=[d for d in ordered_days if d in text_matrix.columns])
-            hover_matrix = hover_matrix.reindex(columns=[d for d in ordered_days if d in hover_matrix.columns])
-                    
-            # Reorder weekdays
-            #ordered_days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-            #pivot_volume = pivot_volume.reindex(columns=ordered_days)
-            #text_matrix = text_matrix.reindex(columns=ordered_days)
-            #hover_matrix = hover_matrix.reindex(columns=ordered_days)
-        
-            # --- Plotly Heatmap ---
-            fig = go.Figure(data=go.Heatmap(
-                z=pivot_volume.values,
-                x=pivot_volume.columns,
-                y=pivot_volume.index,
-                text=text_matrix.values,
-                texttemplate="%{text}",
-                colorscale="Viridis",
-                hoverinfo="text",
-                hovertext=hover_matrix.values
-            ))
-        
             fig.update_layout(
-                title=f"Shipment Calendar — {selected_month_name} {selected_year}",
-                xaxis_title="Day of Week",
-                yaxis_title="Week of Month",
-                yaxis=dict(autorange="reversed"),
-                height=650,
-                width=1000,
-                template="plotly_dark",
-                coloraxis_colorbar=dict(title="Shipment Volume")
+                title=f"{selected_month_name} {selected_year} — Shipment Heatmap",
+                xaxis=dict(title="", side="top"),
+                yaxis=dict(title="", autorange="reversed"),
+                width=600,
+                height=450,
+                template="simple_white",
+                margin=dict(l=20, r=20, t=80, b=20),
+                coloraxis_colorbar=dict(title="Volume")
             )
         
             st.plotly_chart(fig, use_container_width=True)
