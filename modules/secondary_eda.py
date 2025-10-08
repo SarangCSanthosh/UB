@@ -301,7 +301,7 @@ def run():
         # ===============================
         
         else:
-                    st.subheader("📅 Monthly Event Heatmap")
+                    st.subheader("Monthly Event Heatmap")
                 
                     # --- Load Event Calendar ---
                     EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
@@ -407,7 +407,7 @@ def run():
                             texttemplate="%{text}",
                             hovertext=hover_matrix.values,
                             hoverinfo="text",
-                            colorscale="RdPu",  # 🔥 Similar gradient to example
+                            colorscale="RdPu",  
                             #hovertemplate="Day %{text}<br>Volume: %{z}<extra></extra>",
                             showscale=True
                         )
