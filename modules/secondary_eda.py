@@ -752,11 +752,11 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             center_lat = depot_volume_map["Latitude"].mean()
             center_lon = depot_volume_map["Longitude"].mean()
         
-            # --- Hover text ---
+                       # --- Hover text ---
             depot_volume_map["HoverText"] = depot_volume_map.apply(
-                lambda row: f"<b>{row['DBF_DEPOT']}</b><br>📦 Volume: {row[VOLUME_COL]:,.0f}", axis=1
+                lambda row: f"<b>Location:</b> {row['DBF_DEPOT']}<br><b>Volume:</b> {row[VOLUME_COL]:,.0f}", axis=1
             )
-        
+            
             # --- Plot advanced map ---
             fig = px.scatter_mapbox(
                 depot_volume_map,
@@ -764,28 +764,25 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 lon="Longitude",
                 size=VOLUME_COL,
                 color=VOLUME_COL,
-                hover_name="DBF_DEPOT",
-                hover_data={
-                    "DBF_DEPOT": False,
-                    VOLUME_COL: True,  # ✅ Show volume in hover
-                    "Latitude": False,
-                    "Longitude": False
-                },
+                hover_name=None,  # remove default hover_name
+                hover_data=False,  # remove other hover data
                 color_continuous_scale="Viridis",
                 size_max=55,
                 zoom=6,
                 mapbox_style="carto-positron",
             )
-        
-            # --- Styling (no marker.line — bubble effect via opacity/size) ---
+            
+            # --- Styling ---
             fig.update_traces(
                 marker=dict(
                     opacity=0.85,
                     sizemode="area",
                     sizeref=2.0 * max(depot_volume_map[VOLUME_COL]) / (55**2),
                 ),
-                hovertemplate="%{customdata}<extra></extra>",
+                hovertemplate="%{customdata}<extra></extra>",  # use customdata for hover
+                customdata=depot_volume_map["HoverText"]
             )
+
         
             # --- Layout polish ---
             fig.update_layout(
