@@ -748,16 +748,16 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             depot_volume_map["Longitude"] = depot_volume_map["DBF_DEPOT"].map(lambda x: DEPOT_COORDS.get(x, (None, None))[1])
             depot_volume_map = depot_volume_map.dropna(subset=["Latitude", "Longitude"])
     
-            # --- Compute center for the map ---
+            # --- Map center ---
             center_lat = depot_volume_map["Latitude"].mean()
             center_lon = depot_volume_map["Longitude"].mean()
     
-            # --- Create a formatted hover text ---
+            # --- Hover text ---
             depot_volume_map["HoverText"] = depot_volume_map.apply(
                 lambda row: f"<b>{row['DBF_DEPOT']}</b><br>📦 Volume: {row[VOLUME_COL]:,.0f}", axis=1
             )
     
-            # --- Plot advanced interactive map ---
+            # --- Plot advanced map ---
             fig = px.scatter_mapbox(
                 depot_volume_map,
                 lat="Latitude",
@@ -769,20 +769,20 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 color_continuous_scale="Viridis",
                 size_max=55,
                 zoom=6,
-                title="🌍 Depot Shipment Volume Heat Map (Interactive View)",
-                mapbox_style="carto-darkmatter"
+                mapbox_style="carto-darkmatter",
             )
     
-            # --- Styling upgrades ---
+            # --- Styling (no marker.line — bubble effect via opacity/size) ---
             fig.update_traces(
-                hovertemplate="%{customdata[0]}<extra></extra>",
                 marker=dict(
                     opacity=0.85,
                     sizemode="area",
-                    line=dict(width=1.2, color="white"),
-                )
+                    sizeref=2.0 * max(depot_volume_map[VOLUME_COL]) / (55**2),
+                ),
+                hovertemplate="%{hovertext}<extra></extra>",
             )
     
+            # --- Layout polish ---
             fig.update_layout(
                 mapbox_center={"lat": center_lat, "lon": center_lon},
                 coloraxis_colorbar=dict(
@@ -790,18 +790,17 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                     tickprefix="₹",
                     thickness=15,
                     len=0.75,
-                    bgcolor="rgba(0,0,0,0)",
                 ),
                 margin=dict(l=0, r=0, t=60, b=0),
                 font=dict(size=13),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
+                title="🌍 Depot Shipment Volume Heat Map (Bubble Chart View)",
             )
     
-            # --- Show map ---
             st.plotly_chart(fig, use_container_width=True)
     
-            # --- Add data table ---
+            # --- Data table ---
             st.markdown("#### 📊 Depot-wise Shipment Summary")
             st.dataframe(
                 depot_volume_map[["DBF_DEPOT", VOLUME_COL, "Latitude", "Longitude"]]
@@ -810,13 +809,12 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 .round(0)
             )
     
-            # --- Insight box ---
             st.markdown("""
             ### 💡 **Insights:**
-            - The **bubble size** represents total shipment volume per depot.
-            - The **color intensity** highlights shipment concentration — brighter indicates higher activity.
-            - Use zoom and pan to explore depot clusters or regional density.
-            - The **dark map style** enhances spatial contrast for volume hotspots.
+            - Larger bubbles = higher shipment volume per depot.
+            - Bright color = higher shipment concentration.
+            - The dark map theme improves visibility of high-density regions.
+            - Zoom or hover to explore regional shipment intensity interactively.
             """)
         else:
             st.warning("⚠️ The column 'DBF_DEPOT' was not found in the dataset.")
