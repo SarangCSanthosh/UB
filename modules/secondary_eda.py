@@ -794,8 +794,6 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
     
             # Render in Streamlit
             st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("⚠️ Column 'DBF_DEPOT' not found in the dataset.")
     
             # --- Data table ---
             #st.markdown("#### 📊 Depot-wise Shipment Summary")
@@ -806,15 +804,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 #.round(0)
             #)
     
-            st.markdown("""
-            ### 💡 **Insights:**
-            - Larger bubbles = higher shipment volume per depot.
-            - Bright color = higher shipment concentration.
-            - The dark map theme improves visibility of high-density regions.
-            - Zoom or hover to explore regional shipment intensity interactively.
-            """)
-        else:
-            st.warning("⚠️ The column 'DBF_DEPOT' was not found in the dataset.")
+            
 
 # ===============================
 # Entry Point
