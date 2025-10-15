@@ -786,3 +786,9 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             )
         else:
             st.warning("⚠️ The column 'DBF_DEPOT' was not found in the dataset.")
+
+# ===============================
+# Entry Point
+# ===============================
+if __name__ == "__main__":
+    run()
