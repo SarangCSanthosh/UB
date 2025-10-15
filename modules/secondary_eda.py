@@ -769,7 +769,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 color_continuous_scale="Viridis",
                 size_max=55,
                 zoom=6,
-                mapbox_style="carto-darkmatter",
+                mapbox_style="carto-positron",
             )
     
             # --- Styling (no marker.line — bubble effect via opacity/size) ---
