@@ -742,62 +742,51 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
         }
     
         if "DBF_DEPOT" in df_filtered.columns:
-            # --- Aggregate shipment volume ---
-            depot_volume_map = df_filtered.groupby("DBF_DEPOT")[VOLUME_COL].sum().reset_index()
+            depot_volume_map = (
+                df_filtered.groupby("DBF_DEPOT")[VOLUME_COL]
+                .sum()
+                .reset_index()
+            )
+    
             depot_volume_map["Latitude"] = depot_volume_map["DBF_DEPOT"].map(lambda x: DEPOT_COORDS.get(x, (None, None))[0])
             depot_volume_map["Longitude"] = depot_volume_map["DBF_DEPOT"].map(lambda x: DEPOT_COORDS.get(x, (None, None))[1])
             depot_volume_map = depot_volume_map.dropna(subset=["Latitude", "Longitude"])
     
-            # --- Map center ---
+            # Dynamic map centering
             center_lat = depot_volume_map["Latitude"].mean()
             center_lon = depot_volume_map["Longitude"].mean()
     
-            # --- Hover text ---
-            depot_volume_map["HoverText"] = depot_volume_map.apply(
-                lambda row: f"<b>{row['DBF_DEPOT']}</b><br>📦 Volume: {row[VOLUME_COL]:,.0f}", axis=1
-            )
-    
-            # --- Plot advanced map ---
+            # --------------------------
+            # Bright, high-contrast, animated map
+            # --------------------------
             fig = px.scatter_mapbox(
                 depot_volume_map,
                 lat="Latitude",
                 lon="Longitude",
                 size=VOLUME_COL,
                 color=VOLUME_COL,
-                hover_name="DBF_DEPOT",
-                hover_data={VOLUME_COL: True, "Latitude": False, "Longitude": False},
-                color_continuous_scale="Viridis",
+                color_continuous_scale="YlOrRd",  # warm and vivid
                 size_max=55,
                 zoom=6,
-                mapbox_style="carto-positron",
+                opacity=0.9,
+                mapbox_style="carto-positron",  # ✅ bright, high-contrast base map
+                hover_name="DBF_DEPOT",
+                hover_data={VOLUME_COL: ":,.0f"},
             )
     
-            # --- Styling (no marker.line — bubble effect via opacity/size) ---
-            fig.update_traces(
-                marker=dict(
-                    opacity=0.85,
-                    sizemode="area",
-                    sizeref=2.0 * max(depot_volume_map[VOLUME_COL]) / (55**2),
-                ),
-                hovertemplate="%{hovertext}<extra></extra>",
-            )
-    
-            # --- Layout polish ---
+            # Smooth animation effect
             fig.update_layout(
                 mapbox_center={"lat": center_lat, "lon": center_lon},
-                coloraxis_colorbar=dict(
-                    title="Shipment<br>Volume",
-                    tickprefix="₹",
-                    thickness=15,
-                    len=0.75,
-                ),
-                margin=dict(l=0, r=0, t=60, b=0),
-                font=dict(size=13),
+                mapbox_zoom=6,
+                transition_duration=800,  # ✅ smooth zoom transitions
+                title="🗺️ Depot-wise Shipment Volume (Interactive Map)",
+                margin=dict(l=0, r=0, t=50, b=0),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                title="🌍 Depot Shipment Volume Heat Map (Bubble Chart View)",
+                font=dict(size=13),
             )
     
+            # Render
             st.plotly_chart(fig, use_container_width=True)
         
             # --- Data table ---
