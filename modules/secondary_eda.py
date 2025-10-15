@@ -765,7 +765,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 size=VOLUME_COL,
                 color=VOLUME_COL,
                 hover_name=None,  # remove default hover_name
-                hover_data=False,  # remove other hover data
+                hover_data=None,  # remove other hover data
                 color_continuous_scale="Viridis",
                 size_max=55,
                 zoom=6,
