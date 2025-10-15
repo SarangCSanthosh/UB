@@ -535,10 +535,33 @@ def run():
                 comp_df = pd.DataFrame({LOCATION_COL: pivot.index, "PC1": comps[:, 0],
                                         "PC2": comps[:, 1], "Cluster": labels})
 
-                fig_scatter = px.scatter(comp_df, x="PC1", y="PC2", color="Cluster", hover_name=LOCATION_COL)
-                st.plotly_chart(fig_scatter, use_container_width=True)
-                df_display = comp_df[[LOCATION_COL, "Cluster"]].round(0).astype(str)
-                st.dataframe(df_display, width=400, height=200)
+                # --- Add total shipment volume for bubble size ---
+                comp_df["Total_Volume"] = pivot.sum(axis=1).values
+    
+                # --- Bubble Chart ---
+                fig_bubble = px.scatter(
+                    comp_df,
+                    x="PC1",
+                    y="PC2",
+                    size="Total_Volume",
+                    color="Cluster",
+                    hover_name=LOCATION_COL,
+                    size_max=45,
+                    color_continuous_scale="Turbo",
+                    title="Clustering of Locations (Bubble Size = Total Shipment Volume)"
+                )
+                fig_bubble.update_traces(marker=dict(opacity=0.8, line=dict(width=1, color='DarkSlateGrey')))
+                st.plotly_chart(fig_bubble, use_container_width=True)
+    
+                # --- Display Cluster Table ---
+                st.dataframe(
+                    comp_df[[LOCATION_COL, "Cluster", "Total_Volume"]]
+                    .sort_values("Cluster")
+                    .round(0)
+                    .set_index(LOCATION_COL),
+                    use_container_width=True,
+                    height=250
+                )
                 #st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(0), width=400, height=200)
                 st.markdown("""
 ### **Insights:**
