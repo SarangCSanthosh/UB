@@ -713,9 +713,9 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
         # ---- TAB 7: Depot Map View ----
     with tab7:
         st.markdown("### 🚛 Question: What is the geographic spread of shipment volumes?")
-        st.subheader("Depot-wise Shipment Volume Map")
-
-        # --- Approximate and refined latitude/longitude of Karnataka depots ---
+        st.subheader("📍 Advanced Depot Shipment Volume Map")
+    
+        # --- Approximate and refined coordinates for Karnataka depots ---
         DEPOT_COORDS = {
             "BIDAR": (17.9133, 77.5301),
             "KALABURAGI": (17.3297, 76.8343),
@@ -740,24 +740,24 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             "DAVANGERE": (14.4663, 75.9238),
             "CHITRADURGA": (14.2290, 76.3980),
         }
-
-        # --- Ensure depot column exists ---
+    
         if "DBF_DEPOT" in df_filtered.columns:
-            # Aggregate shipment volume by depot
+            # --- Aggregate shipment volume ---
             depot_volume_map = df_filtered.groupby("DBF_DEPOT")[VOLUME_COL].sum().reset_index()
-
-            # Add coordinates
             depot_volume_map["Latitude"] = depot_volume_map["DBF_DEPOT"].map(lambda x: DEPOT_COORDS.get(x, (None, None))[0])
             depot_volume_map["Longitude"] = depot_volume_map["DBF_DEPOT"].map(lambda x: DEPOT_COORDS.get(x, (None, None))[1])
-
-            # Remove rows without coordinates
             depot_volume_map = depot_volume_map.dropna(subset=["Latitude", "Longitude"])
-
-            # Calculate dynamic center
+    
+            # --- Compute center for the map ---
             center_lat = depot_volume_map["Latitude"].mean()
             center_lon = depot_volume_map["Longitude"].mean()
-
-            # --- Create interactive map ---
+    
+            # --- Create a formatted hover text ---
+            depot_volume_map["HoverText"] = depot_volume_map.apply(
+                lambda row: f"<b>{row['DBF_DEPOT']}</b><br>📦 Volume: {row[VOLUME_COL]:,.0f}", axis=1
+            )
+    
+            # --- Plot advanced interactive map ---
             fig = px.scatter_mapbox(
                 depot_volume_map,
                 lat="Latitude",
@@ -765,25 +765,59 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 size=VOLUME_COL,
                 color=VOLUME_COL,
                 hover_name="DBF_DEPOT",
+                hover_data={VOLUME_COL: True, "Latitude": False, "Longitude": False},
                 color_continuous_scale="Viridis",
-                size_max=45,
+                size_max=55,
                 zoom=6,
-                mapbox_style="carto-positron",
-                title="Depot Shipment Volume Distribution"
+                title="🌍 Depot Shipment Volume Heat Map (Interactive View)",
+                mapbox_style="carto-darkmatter"
             )
-
-            # Center the map dynamically
-            fig.update_layout(mapbox_center={"lat": center_lat, "lon": center_lon})
-            fig.update_traces(marker=dict(opacity=0.8))
-
+    
+            # --- Styling upgrades ---
+            fig.update_traces(
+                hovertemplate="%{customdata[0]}<extra></extra>",
+                marker=dict(
+                    opacity=0.85,
+                    sizemode="area",
+                    line=dict(width=1.2, color="white"),
+                )
+            )
+    
+            fig.update_layout(
+                mapbox_center={"lat": center_lat, "lon": center_lon},
+                coloraxis_colorbar=dict(
+                    title="Shipment<br>Volume",
+                    tickprefix="₹",
+                    thickness=15,
+                    len=0.75,
+                    bgcolor="rgba(0,0,0,0)",
+                ),
+                margin=dict(l=0, r=0, t=60, b=0),
+                font=dict(size=13),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+            )
+    
+            # --- Show map ---
             st.plotly_chart(fig, use_container_width=True)
-
-            # Display underlying data table
+    
+            # --- Add data table ---
+            st.markdown("#### 📊 Depot-wise Shipment Summary")
             st.dataframe(
                 depot_volume_map[["DBF_DEPOT", VOLUME_COL, "Latitude", "Longitude"]]
                 .set_index("DBF_DEPOT")
+                .sort_values(VOLUME_COL, ascending=False)
                 .round(0)
             )
+    
+            # --- Insight box ---
+            st.markdown("""
+            ### 💡 **Insights:**
+            - The **bubble size** represents total shipment volume per depot.
+            - The **color intensity** highlights shipment concentration — brighter indicates higher activity.
+            - Use zoom and pan to explore depot clusters or regional density.
+            - The **dark map style** enhances spatial contrast for volume hotspots.
+            """)
         else:
             st.warning("⚠️ The column 'DBF_DEPOT' was not found in the dataset.")
 
