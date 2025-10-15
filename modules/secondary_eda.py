@@ -154,13 +154,14 @@ def run():
     # --------------------------
     # VISUALIZATIONS (tabs)
     # --------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "Shipment Trends",
         "Top Outlets",
         "Depot Analysis",
         "Region Donut",
         "Region Stacked",
         "Special Outlets",
+        "Map"
     ])
 
     # ---- Shipment Trends ----
@@ -707,3 +708,81 @@ The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute 
 All four entities, particularly the top two (BELAGAVI and HUBBALLI-1), contribute a significant portion of the volume - 35% and 30% respectively.
 BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respectively.
 """)
+
+
+        # ---- TAB 7: Depot Map View ----
+    with tab7:
+        st.markdown("### 🚛 Question: What is the geographic spread of shipment volumes?")
+        st.subheader("Depot-wise Shipment Volume Map")
+
+        # --- Approximate and refined latitude/longitude of Karnataka depots ---
+        DEPOT_COORDS = {
+            "BIDAR": (17.9133, 77.5301),
+            "KALABURAGI": (17.3297, 76.8343),
+            "SEDAM": (17.1794, 77.2830),
+            "YADHAGIRI": (16.7666, 77.1376),
+            "RAICHUR": (16.2046, 77.3555),
+            "SINDHANUR": (15.7689, 76.7557),
+            "BALLARI": (15.1394, 76.9214),
+            "HOSAPETE": (15.2843, 76.3771),
+            "KOPPAL": (15.3452, 76.1545),
+            "BAGALKOT": (16.1867, 75.6962),
+            "JAMAKHANDI": (16.5048, 75.2911),
+            "VIJAYAPURA": (16.8302, 75.7100),
+            "BELAGAVI": (15.8497, 74.4977),
+            "BELAGAVI-2": (15.8497, 74.4977),
+            "CHIKODI": (16.4295, 74.6005),
+            "GOKAK": (16.1691, 74.8231),
+            "HUBBALLI-1": (15.3647, 75.1239),
+            "HUBBALLI-2": (15.3647, 75.1239),
+            "GADAG": (15.4310, 75.6297),
+            "HAVERI": (14.7951, 75.3979),
+            "DAVANGERE": (14.4663, 75.9238),
+            "CHITRADURGA": (14.2290, 76.3980),
+        }
+
+        # --- Ensure depot column exists ---
+        if "DBF_DEPOT" in df_filtered.columns:
+            # Aggregate shipment volume by depot
+            depot_volume_map = df_filtered.groupby("DBF_DEPOT")[VOLUME_COL].sum().reset_index()
+
+            # Add coordinates
+            depot_volume_map["Latitude"] = depot_volume_map["DBF_DEPOT"].map(lambda x: DEPOT_COORDS.get(x, (None, None))[0])
+            depot_volume_map["Longitude"] = depot_volume_map["DBF_DEPOT"].map(lambda x: DEPOT_COORDS.get(x, (None, None))[1])
+
+            # Remove rows without coordinates
+            depot_volume_map = depot_volume_map.dropna(subset=["Latitude", "Longitude"])
+
+            # Calculate dynamic center
+            center_lat = depot_volume_map["Latitude"].mean()
+            center_lon = depot_volume_map["Longitude"].mean()
+
+            # --- Create interactive map ---
+            fig = px.scatter_mapbox(
+                depot_volume_map,
+                lat="Latitude",
+                lon="Longitude",
+                size=VOLUME_COL,
+                color=VOLUME_COL,
+                hover_name="DBF_DEPOT",
+                color_continuous_scale="Viridis",
+                size_max=45,
+                zoom=6,
+                mapbox_style="carto-positron",
+                title="Depot Shipment Volume Distribution"
+            )
+
+            # Center the map dynamically
+            fig.update_layout(mapbox_center={"lat": center_lat, "lon": center_lon})
+            fig.update_traces(marker=dict(opacity=0.8))
+
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Display underlying data table
+            st.dataframe(
+                depot_volume_map[["DBF_DEPOT", VOLUME_COL, "Latitude", "Longitude"]]
+                .set_index("DBF_DEPOT")
+                .round(0)
+            )
+        else:
+            st.warning("⚠️ The column 'DBF_DEPOT' was not found in the dataset.")
