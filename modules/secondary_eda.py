@@ -155,14 +155,15 @@ def run():
     # --------------------------
     # VISUALIZATIONS (tabs)
     # --------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8 = st.tabs([
         "Shipment Trends",
         "Top Outlets",
         "Depot Analysis",
         "Region Donut",
         "Region Stacked",
         "Special Outlets",
-        "Map"
+        "Map",
+        "Depot YoY Change"
     ])
 
     # ---- Shipment Trends ----
@@ -877,6 +878,52 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 #.round(0)
             #)
     
+    with tab8:
+        st.markdown("### Question: How has depot volume changed YoY?")
+        st.subheader("Depot-wise YoY Volume Change")
+    
+        if "DBF_DEPOT" in df_filtered.columns and "Date" in df_filtered.columns:
+            # Ensure Date is datetime
+            df_filtered["Date"] = pd.to_datetime(df_filtered["Date"], errors="coerce")
+            df_filtered["Year"] = df_filtered["Date"].dt.year
+    
+            # Aggregate volume by depot and year
+            depot_yearly = df_filtered.groupby(["DBF_DEPOT", "Year"])[VOLUME_COL].sum().reset_index()
+    
+            # Pivot to have years as columns
+            pivot_df = depot_yearly.pivot(index="DBF_DEPOT", columns="Year", values=VOLUME_COL).fillna(0)
+    
+            # Compute YoY change for the last two years
+            if len(pivot_df.columns) >= 2:
+                last_year, prev_year = sorted(pivot_df.columns)[-2:]
+                pivot_df["YoY_Change"] = pivot_df[last_year] - pivot_df[prev_year]
+    
+                # Sort depots by YoY change for waterfall
+                pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
+    
+                # Waterfall chart
+                fig = go.Figure(go.Waterfall(
+                    name="YoY Change",
+                    orientation="v",
+                    measure=["relative"] * len(pivot_df),
+                    x=pivot_df.index,
+                    y=pivot_df["YoY_Change"],
+                    text=pivot_df["YoY_Change"].apply(lambda x: f"{x:,.0f}"),
+                    textposition="outside",
+                    connector={"line":{"color":"rgb(63, 63, 63)"}},
+                ))
+    
+                fig.update_layout(
+                    title=f"Depot-wise YoY Volume Change ({prev_year} → {last_year})",
+                    yaxis=dict(title="Volume Change"),
+                )
+    
+                st.plotly_chart(fig, use_container_width=True)
+                st.dataframe(pivot_df[[prev_year, last_year, "YoY_Change"]].round(0))
+            else:
+                st.info("Not enough yearly data for YoY calculation.")
+        else:
+            st.info("DBF_DEPOT or Date column not found.")
             
 
 # ===============================
