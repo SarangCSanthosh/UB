@@ -610,7 +610,8 @@ def run():
             df_pci["Location"] = df_pci["Location"].replace({
                 "HUBBALLI-1": "HUBBALLI",
                 "HUBBALLI-2": "HUBBALLI",
-                "BELAGAVI-2": "BELAGAVI"
+                "BELAGAVI-2": "BELAGAVI",
+                "CHIKODI" : "CHIKKODI"
             })
     
             # --- Aggregate PCI values after merging ---
