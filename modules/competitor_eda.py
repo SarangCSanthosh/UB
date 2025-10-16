@@ -226,8 +226,25 @@ def run():
             return segment
     
         df["Segment"] = df[SKU_COL].apply(extract_segment)
+        df["Date"] = pd.to_datetime(df[DATE_COL])
     
-        # --- Brand selection ---
+        # --- Time granularity selector ---
+        time_granularity = st.radio(
+            "Select Time Granularity", 
+            ["Yearly", "Quarterly", "Monthly", "Weekly"], 
+            horizontal=True
+        )
+    
+        if time_granularity == "Yearly":
+            df["Period"] = df["Date"].dt.to_period("Y").astype(str)
+        elif time_granularity == "Quarterly":
+            df["Period"] = df["Date"].dt.to_period("Q").astype(str)
+        elif time_granularity == "Monthly":
+            df["Period"] = df["Date"].dt.to_period("M").astype(str)
+        elif time_granularity == "Weekly":
+            df["Period"] = df["Date"].dt.to_period("W").astype(str)
+    
+        # --- Brand filter ---
         brands = ["All"] + sorted(df["Brand"].unique())
         selected_brand = st.radio("Select Brand", options=brands, index=0, horizontal=True)
     
@@ -236,28 +253,10 @@ def run():
         else:
             df_brand = df[df["Brand"] == selected_brand]
     
-        # --- Time granularity selection ---
-        time_granularity = st.radio(
-            "Select Time Granularity", 
-            ["Yearly", "Quarterly", "Monthly", "Weekly"], 
-            horizontal=True, 
-            key="time_granularity_tab2"
-        )
+        # --- Aggregate for all brands first to compute total per period ---
+        total_by_period = df.groupby("Period")[VOLUME_COL].sum().rename("TotalVolume").reset_index()
     
-        # Ensure date column is in datetime format
-        df_brand["Date"] = pd.to_datetime(df_brand[DATE_COL])
-    
-        # --- Resample based on granularity ---
-        if time_granularity == "Yearly":
-            df_brand["Period"] = df_brand["Date"].dt.to_period("Y").astype(str)
-        elif time_granularity == "Quarterly":
-            df_brand["Period"] = df_brand["Date"].dt.to_period("Q").astype(str)
-        elif time_granularity == "Monthly":
-            df_brand["Period"] = df_brand["Date"].dt.to_period("M").astype(str)
-        elif time_granularity == "Weekly":
-            df_brand["Period"] = df_brand["Date"].dt.to_period("W").astype(str)
-    
-        # --- Aggregate volume by Segment and Period ---
+        # --- Aggregate brand-level data ---
         pack_sales_time = (
             df_brand.groupby(["Period", "Segment"])[VOLUME_COL]
             .sum()
@@ -265,11 +264,15 @@ def run():
             .sort_values(by=["Period", "Segment"])
         )
     
-        # --- Granularity toggle for Absolute / Percentage ---
-        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
+        # Merge with total to keep consistent denominator
+        pack_sales_time = pack_sales_time.merge(total_by_period, on="Period", how="left")
+    
+        # --- Granularity for Absolute / Percentage ---
+        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True)
+    
         if granularity == "Percentage":
             pack_sales_time["Percentage"] = (
-                pack_sales_time.groupby("Period")[VOLUME_COL].apply(lambda x: x / x.sum() * 100).reset_index(drop=True)
+                pack_sales_time[VOLUME_COL] / pack_sales_time["TotalVolume"] * 100
             )
             y_col = "Percentage"
             y_title = "Volume Share (%)"
@@ -277,29 +280,40 @@ def run():
             y_col = VOLUME_COL
             y_title = "Volume"
     
-        # --- Line chart visualization ---
-        fig_pack_line = px.line(
-            pack_sales_time,
-            x="Period",
-            y=y_col,
-            color="Segment",
-            markers=True,
-            title=f"{selected_brand} Pack Size Trend ({time_granularity})",
-            labels={y_col: y_title, "Period": time_granularity},
-        )
+        # --- Visualization ---
+        if granularity == "Percentage":
+            fig = px.area(  # stacked area chart for better clarity
+                pack_sales_time,
+                x="Period",
+                y=y_col,
+                color="Segment",
+                groupnorm="percent",
+                title=f"{selected_brand} Pack Size Share Over Time ({time_granularity})",
+                labels={y_col: y_title, "Period": time_granularity},
+            )
+        else:
+            fig = px.line(
+                pack_sales_time,
+                x="Period",
+                y=y_col,
+                color="Segment",
+                markers=True,
+                title=f"{selected_brand} Pack Size Volume Trend ({time_granularity})",
+                labels={y_col: y_title, "Period": time_granularity},
+            )
     
-        fig_pack_line.update_layout(
+        fig.update_layout(
             height=600,
             margin=dict(t=100, b=100, l=50, r=50),
             legend_title_text="Segment",
-            hovermode="x unified"
+            hovermode="x unified",
         )
     
-        st.plotly_chart(fig_pack_line, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
     
-        # --- Display data ---
+        # --- Display Summary ---
         summary = (
-            pack_sales_time.groupby("Segment")[VOLUME_COL]
+            df_brand.groupby("Segment")[VOLUME_COL]
             .sum()
             .reset_index()
             .sort_values(by=VOLUME_COL, ascending=False)
