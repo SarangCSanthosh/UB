@@ -1045,13 +1045,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
                 df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
     
-                # Clean up variant names
-                df_pci["Location"] = df_pci["Location"].replace({
-                    "HUBBALLI-1": "HUBBALLI",
-                    "HUBBALLI-2": "HUBBALLI",
-                    "BELAGAVI-2": "BELAGAVI",
-                    "CHIKODI": "CHIKKODI"
-                })
+                
     
                 # Calculate YoY change in PCI
                 if "Per capita - 2022-23" in df_pci.columns and "per capita - 2023-24" in df_pci.columns:
