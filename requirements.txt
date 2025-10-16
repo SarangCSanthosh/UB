@@ -1,8 +1,10 @@
 streamlit
+streamlit-plotly-events
 pandas
 numpy
 plotly
 scikit-learn
 openpyxl
 gdown
+
 
