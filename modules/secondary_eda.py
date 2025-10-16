@@ -154,6 +154,26 @@ def run():
         )
         df_filtered = df_filtered.loc[mask]
 
+        # --------------------------------------------
+    # Apply the same sidebar filters to df_events
+    # --------------------------------------------
+    df_events_filtered = df_events.copy()
+    
+    # Ensure Date column is datetime
+    df_events_filtered["Date"] = pd.to_datetime(df_events_filtered["Date"], errors="coerce")
+    df_events_filtered = df_events_filtered.dropna(subset=["Date"])
+    
+    if filter_mode == "Year":
+        if year_choice:
+            df_events_filtered = df_events_filtered[df_events_filtered["Date"].dt.year.isin(year_choice)]
+    else:
+        mask_events = (
+            (df_events_filtered["Date"].dt.date >= start_date)
+            & (df_events_filtered["Date"].dt.date <= end_date)
+        )
+        df_events_filtered = df_events_filtered.loc[mask_events]
+
+
     # --------------------------
     # VISUALIZATIONS (tabs)
     # --------------------------
@@ -361,7 +381,7 @@ def run():
                 bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
                 
                 # Aggregate counts for each bin
-                bubble_counts = df_events[bin_cols].sum().reset_index()
+                bubble_counts = df_events_filtered[bin_cols].sum().reset_index()
                 bubble_counts.columns = ["Event_Type", "Count"]
                 
                 # Filter zero counts
