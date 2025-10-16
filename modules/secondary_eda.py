@@ -350,131 +350,165 @@ def run():
         # ===============================
         
         else:
-                    st.subheader("Monthly Event Heatmap")
-                
-                    # --- Load Event Calendar ---
-                    EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-                    df_events = load_event_calendar(EVENT_XLSX_URL)
-
-                    df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-                
-                    # --- Extract date components ---
-                    df_events["Year"] = df_events["Date"].dt.year
-                    df_events["Month"] = df_events["Date"].dt.month
-                    df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
-                    df_events["Day"] = df_events["Date"].dt.day
-                
-                    # --- User selections ---
-                    selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
-                    selected_month_name = st.selectbox(
-                        "Select Month",
-                        sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
-                    )
-                
-                    # --- Filter for month ---
-                    df_selected = df_events[
-                        (df_events["Year"] == selected_year) &
-                        (df_events["MonthName"] == selected_month_name)
-                    ].copy()
-                
-                    # --- Merge with shipment data ---
-                    df_ship = df.copy()
-                    df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
-                    ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
-                    ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
-                    ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
-                
-                    df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
-                    df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
-                
-                    # --- Prepare calendar grid ---
-                        # --- Properly aligned calendar grid (fixed week numbering) ---
-                    month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
-                    month_end = (month_start + pd.offsets.MonthEnd(1))
-                
-                    # Create continuous range covering full calendar view (Mon–Sun)
-                    start_day = month_start - pd.Timedelta(days=month_start.weekday())   # Monday of first week
-                    end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))   # Sunday of last week
-                    full_range = pd.date_range(start_day, end_day, freq="D")
-                
-                    calendar_df = pd.DataFrame({"Date": full_range})
-                    calendar_df["Day"] = calendar_df["Date"].dt.day
-                    calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
-                    calendar_df["Month"] = calendar_df["Date"].dt.month
-                
-                    # Compute week number *relative to this calendar view* (0-based)
-                    calendar_df["Week"] = ((calendar_df["Date"] - start_day).dt.days // 7) + 1
-                
-                    # Merge shipment volume
-                    calendar_df["VOLUME"] = calendar_df["Date"].map(
-                        df_selected.set_index("Date")["VOLUME"]
-                    ).fillna(0)
-                
-                    # Hide days outside selected month
-                    calendar_df.loc[calendar_df["Month"] != month_start.month, "VOLUME"] = None
-                    calendar_df.loc[calendar_df["Month"] != month_start.month, "Day"] = ""
-                
-                    # Pivot into heatmap grid
-                    ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                    pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")[ordered_days]
-                    text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")[ordered_days]
+            st.subheader("📆 Event-Based Shipment Visualization")
         
-                
-                    # Reorder weekdays Monday→Sunday
-                    ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                    pivot_volume = pivot_volume.reindex(columns=ordered_days)
-                    text_matrix = text_matrix.reindex(columns=ordered_days)
-
-
-
-                    # --- Tooltip text (Event + Remarks + Volume) ---
-                    df_selected["Tooltip"] = (
-                        "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
-                        "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
-                        #"Remarks: " + df_selected["Remarks"].fillna("") + "<br>" +
-                        "Volume: " + df_selected["VOLUME"].round(0).astype(int).astype(str)
+            # --- Load Event Calendar ---
+            EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+            df_events = load_event_calendar(EVENT_XLSX_URL)
+        
+            df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+            df_events["Year"] = df_events["Date"].dt.year
+            df_events["Month"] = df_events["Date"].dt.month
+            df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
+            df_events["Week"] = df_events["Date"].dt.isocalendar().week
+        
+            # --- Granularity Selector ---
+            granularity = st.radio("Select Granularity", ["Monthly", "Weekly"], horizontal=True)
+        
+            # --- Shipment Data ---
+            df_ship = df.copy()
+            df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
+        
+            if granularity == "Monthly":
+                # -------------------- MONTHLY HEATMAP --------------------
+                st.subheader("🗓️ Monthly Event Heatmap")
+        
+                # --- Month & Year selection ---
+                selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+                selected_month_name = st.selectbox(
+                    "Select Month",
+                    sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
+                )
+        
+                # --- Filter for selected month ---
+                df_selected = df_events[
+                    (df_events["Year"] == selected_year) &
+                    (df_events["MonthName"] == selected_month_name)
+                ].copy()
+        
+                # --- Shipment Volume Aggregation ---
+                ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
+                ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
+                ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
+        
+                # Merge events with shipments
+                df_selected = pd.merge(df_selected, ship_day, on="Date", how="left")
+                df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
+        
+                # --- Calendar Grid Setup ---
+                month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
+                month_end = month_start + pd.offsets.MonthEnd(1)
+                start_day = month_start - pd.Timedelta(days=month_start.weekday())
+                end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))
+                full_range = pd.date_range(start_day, end_day, freq="D")
+        
+                calendar_df = pd.DataFrame({"Date": full_range})
+                calendar_df["Day"] = calendar_df["Date"].dt.day
+                calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
+                calendar_df["Month"] = calendar_df["Date"].dt.month
+                calendar_df["Week"] = ((calendar_df["Date"] - start_day).dt.days // 7) + 1
+        
+                # Merge volume + event tooltip
+                calendar_df["VOLUME"] = calendar_df["Date"].map(df_selected.set_index("Date")["VOLUME"]).fillna(0)
+        
+                df_selected["Tooltip"] = (
+                    "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
+                    "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
+                    "Volume: " + df_selected["VOLUME"].round(0).astype(int).astype(str)
+                )
+                calendar_df["Tooltip"] = calendar_df["Date"].map(df_selected.set_index("Date")["Tooltip"])
+        
+                # Hide days outside current month
+                calendar_df.loc[calendar_df["Month"] != month_start.month, ["VOLUME", "Day", "Tooltip"]] = [None, "", None]
+        
+                ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")[ordered_days]
+                text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")[ordered_days]
+                hover_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Tooltip")[ordered_days]
+        
+                # --- Plotly Heatmap ---
+                fig = go.Figure(
+                    data=go.Heatmap(
+                        z=pivot_volume.values,
+                        x=pivot_volume.columns,
+                        y=pivot_volume.index,
+                        text=text_matrix.values,
+                        texttemplate="%{text}",
+                        hovertext=hover_matrix.values,
+                        hoverinfo="text",
+                        colorscale="RdPu",
+                        showscale=True
                     )
-                    
-                    # Merge tooltip into calendar_df
-                    calendar_df["Tooltip"] = calendar_df["Date"].map(
-                        df_selected.set_index("Date")["Tooltip"]
-                    )
-                    
-                    # Hide tooltips for days outside selected month
-                    calendar_df.loc[calendar_df["Month"] != month_start.month, "Tooltip"] = None
-                    
-                    # Pivot tooltip matrix
-                    hover_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Tooltip")[ordered_days]
-                    hover_matrix = hover_matrix.reindex(columns=ordered_days)
-                
-                    # --- Plotly heatmap ---
-                    fig = go.Figure(
-                        data=go.Heatmap(
-                            z=pivot_volume.values,
-                            x=pivot_volume.columns,
-                            y=pivot_volume.index,
-                            text=text_matrix.values,
-                            texttemplate="%{text}",
-                            hovertext=hover_matrix.values,
-                            hoverinfo="text",
-                            colorscale="RdPu",  
-                            #hovertemplate="Day %{text}<br>Volume: %{z}<extra></extra>",
-                            showscale=True
-                        )
-                    )
-                
-                    fig.update_layout(
-                        title=f"{selected_month_name} {selected_year} — Shipment Heatmap",
-                        xaxis=dict(title="", side="top"),
-                        yaxis=dict(title="", autorange="reversed"),
-                        width=600,
-                        height=450,
-                        template="simple_white",
-                        margin=dict(l=20, r=20, t=80, b=20),
-                        coloraxis_colorbar=dict(title="Volume")
-                    )
-                
-                    st.plotly_chart(fig, use_container_width=True)
+                )
+                fig.update_layout(
+                    title=f"{selected_month_name} {selected_year} — Shipment Heatmap",
+                    xaxis=dict(title="", side="top"),
+                    yaxis=dict(title="", autorange="reversed"),
+                    width=700,
+                    height=450,
+                    template="simple_white",
+                    margin=dict(l=20, r=20, t=80, b=20),
+                    coloraxis_colorbar=dict(title="Volume")
+                )
+                st.plotly_chart(fig, use_container_width=True)
+        
+            else:
+                # -------------------- WEEKLY VIEW --------------------
+                st.subheader("📊 Weekly Event Trend")
+        
+                selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+        
+                # --- Aggregate shipment volume weekly ---
+                df_ship["Year"] = df_ship["Date"].dt.year
+                df_ship["Week"] = df_ship["Date"].dt.isocalendar().week
+                weekly_ship = (
+                    df_ship[df_ship["Year"] == selected_year]
+                    .groupby("Week")[VOLUME_COL]
+                    .sum()
+                    .reset_index()
+                    .rename(columns={VOLUME_COL: "VOLUME"})
+                )
+        
+                # --- Merge with events (combine events that fall in same week) ---
+                df_events_week = (
+                    df_events[df_events["Year"] == selected_year]
+                    .groupby("Week")["Event / Task"]
+                    .apply(lambda x: ", ".join(x.dropna().unique()))
+                    .reset_index()
+                )
+        
+                df_weekly = pd.merge(weekly_ship, df_events_week, on="Week", how="left")
+        
+                # --- Tooltip ---
+                df_weekly["Tooltip"] = (
+                    "<b>Week " + df_weekly["Week"].astype(str) + "</b><br>" +
+                    "Volume: " + df_weekly["VOLUME"].astype(int).astype(str) + "<br>" +
+                    "Events: " + df_weekly["Event / Task"].fillna("None")
+                )
+        
+                # --- Plotly Weekly Chart ---
+                fig_week = go.Figure()
+                fig_week.add_trace(go.Bar(
+                    x=df_weekly["Week"],
+                    y=df_weekly["VOLUME"],
+                    text=df_weekly["VOLUME"],
+                    hovertext=df_weekly["Tooltip"],
+                    hoverinfo="text",
+                    marker_color="mediumvioletred",
+                    name="Weekly Volume"
+                ))
+        
+                fig_week.update_layout(
+                    title=f"{selected_year} — Weekly Shipment Volume & Events",
+                    xaxis_title="Week Number",
+                    yaxis_title="Volume",
+                    template="simple_white",
+                    height=450,
+                    width=800,
+                    margin=dict(l=40, r=40, t=80, b=40)
+                )
+        
+                st.plotly_chart(fig_week, use_container_width=True)
 
         
 
