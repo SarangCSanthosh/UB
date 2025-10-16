@@ -351,7 +351,7 @@ def run():
         
         else:
         # -------------------- WEEKLY VIEW --------------------
-            st.subheader("📊 Weekly Event Trend")
+            st.subheader("Weekly Event Trend")
     
             # --- Ensure Date fields exist and derive components ---
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
