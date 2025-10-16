@@ -629,6 +629,13 @@ def run():
             )
     
             df_merged.rename(columns={pci_col: "Per Capita Income"}, inplace=True)
+
+            if value_type == "Percentage":
+                total_volume = df_merged[VOLUME_COL].sum()
+                total_pci = df_merged["Per Capita Income"].sum()
+            
+                df_merged[VOLUME_COL] = (df_merged[VOLUME_COL] / total_volume * 100).round(1)
+                df_merged["Per Capita Income"] = (df_merged["Per Capita Income"] / total_pci * 100).round(1)
     
             # --- Melt for bar chart ---
             df_melted = df_merged.melt(
