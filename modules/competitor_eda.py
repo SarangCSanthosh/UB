@@ -223,14 +223,14 @@ def run():
             segment = match.group(1) if match else "Other Segment"
             segment = segment.replace(".", "").replace("CANS", "CAN").strip()
             return segment
-
+    
         df["Segment"] = df[SKU_COL].apply(extract_segment)
         df["Date"] = pd.to_datetime(df[DATE_COL])
     
-        # --- Time granularity selection ---
+        # --- Time Granularity ---
         time_granularity = st.radio(
-            "Select Time Granularity", 
-            ["Yearly", "Quarterly", "Monthly", "Weekly"], 
+            "Select Time Granularity",
+            ["Yearly", "Quarterly", "Monthly", "Weekly"],
             horizontal=True
         )
     
@@ -243,7 +243,7 @@ def run():
         else:
             df["Period"] = df["Date"].dt.to_period("W").astype(str)
     
-        # --- Brand filter ---
+        # --- Brand Filter ---
         brands = ["All"] + sorted(df["Brand"].unique())
         selected_brand = st.radio("Select Brand", options=brands, index=0, horizontal=True)
     
@@ -252,16 +252,25 @@ def run():
         else:
             df_brand = df[df["Brand"] == selected_brand]
     
+        # --- Pack Size Filter (NEW) ---
+        pack_sizes = ["All"] + sorted(df_brand["Segment"].unique())
+        selected_pack = st.radio("Select Pack Size", options=pack_sizes, index=0, horizontal=True)
+    
+        if selected_pack == "All":
+            df_filtered = df_brand.copy()
+        else:
+            df_filtered = df_brand[df_brand["Segment"] == selected_pack]
+    
         # --- Aggregate by Period + Segment ---
         pack_sales_time = (
-            df_brand.groupby(["Period", "Segment"])[VOLUME_COL]
+            df_filtered.groupby(["Period", "Segment"])[VOLUME_COL]
             .sum()
             .reset_index()
         )
     
-        # --- Ensure all combinations of Period × Segment exist (fill 0s) ---
+        # --- Fill missing combinations (to avoid spikes) ---
         all_periods = sorted(df["Period"].unique())
-        all_segments = sorted(df_brand["Segment"].unique())
+        all_segments = sorted(df_filtered["Segment"].unique())
         full_index = pd.MultiIndex.from_product([all_periods, all_segments], names=["Period", "Segment"])
         pack_sales_time = (
             pack_sales_time.set_index(["Period", "Segment"])
@@ -269,11 +278,11 @@ def run():
             .reset_index()
         )
     
-        # --- Compute total volume per period ---
+        # --- Compute total per period ---
         period_totals = pack_sales_time.groupby("Period")[VOLUME_COL].sum().rename("Total").reset_index()
         pack_sales_time = pack_sales_time.merge(period_totals, on="Period", how="left")
     
-        # --- Granularity toggle (Absolute / Percentage) ---
+        # --- View Mode Toggle ---
         granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True)
     
         if granularity == "Percentage":
@@ -282,7 +291,7 @@ def run():
             ).fillna(0)
             y_col = "Share"
             y_title = "Volume Share (%)"
-            chart_type = "area"  # stacked area
+            chart_type = "area"
         else:
             y_col = VOLUME_COL
             y_title = "Volume"
@@ -295,7 +304,7 @@ def run():
                 x="Period",
                 y=y_col,
                 color="Segment",
-                title=f"{selected_brand} Pack Size Share Over Time ({time_granularity})",
+                title=f"{selected_brand} {selected_pack} Pack Size Share Over Time ({time_granularity})",
                 labels={y_col: y_title, "Period": time_granularity},
             )
         else:
@@ -305,7 +314,7 @@ def run():
                 y=y_col,
                 color="Segment",
                 markers=True,
-                title=f"{selected_brand} Pack Size Volume Trend ({time_granularity})",
+                title=f"{selected_brand} {selected_pack} Pack Size Volume Trend ({time_granularity})",
                 labels={y_col: y_title, "Period": time_granularity},
             )
     
@@ -313,14 +322,14 @@ def run():
             height=600,
             margin=dict(t=100, b=100, l=50, r=50),
             legend_title_text="Segment",
-            hovermode="x unified"
+            hovermode="x unified",
         )
     
         st.plotly_chart(fig, use_container_width=True)
     
-        # --- Summary table ---
+        # --- Summary Table ---
         summary = (
-            df_brand.groupby("Segment")[VOLUME_COL]
+            df_filtered.groupby("Segment")[VOLUME_COL]
             .sum()
             .reset_index()
             .sort_values(by=VOLUME_COL, ascending=False)
