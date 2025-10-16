@@ -350,80 +350,94 @@ def run():
         # ===============================
         
         else:
-            # -------------------- WEEKLY VIEW --------------------
+        # -------------------- WEEKLY VIEW --------------------
             st.subheader("📊 Weekly Event Trend")
     
-            selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+            # --- Ensure Date fields exist and derive components ---
+            df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+            df_events["Year"] = df_events["Date"].dt.year
+            df_events["Week"] = df_events["Date"].dt.isocalendar().week
+            df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
     
-            # --- Aggregate shipment volume weekly ---
-            df_ship["Year"] = df_ship["Date"].dt.year
-            df_ship["Week"] = df_ship["Date"].dt.isocalendar().week
+            # --- Year Selection ---
+            if "Year" not in df_events.columns or df_events["Year"].dropna().empty:
+                st.warning("No valid event dates available to display weekly data.")
+            else:
+                selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
     
-            weekly_ship = (
-                df_ship[df_ship["Year"] == selected_year]
-                .groupby("Week")[VOLUME_COL]
-                .sum()
-                .reset_index()
-                .rename(columns={VOLUME_COL: "VOLUME"})
-            )
+                # --- Aggregate shipment volume weekly ---
+                df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
+                df_ship["Year"] = df_ship["Date"].dt.year
+                df_ship["Week"] = df_ship["Date"].dt.isocalendar().week
     
-            # --- Compute start & end date for each week ---
-            def get_week_range(year, week):
-                # ISO weeks: Monday as the first day
-                first_day = pd.Timestamp.fromisocalendar(year, week, 1)
-                last_day = pd.Timestamp.fromisocalendar(year, week, 7)
-                return first_day, last_day
+                weekly_ship = (
+                    df_ship[df_ship["Year"] == selected_year]
+                    .groupby("Week")[VOLUME_COL]
+                    .sum()
+                    .reset_index()
+                    .rename(columns={VOLUME_COL: "VOLUME"})
+                )
     
-            weekly_ship["Start_Date"], weekly_ship["End_Date"] = zip(*weekly_ship.apply(
-                lambda x: get_week_range(selected_year, int(x["Week"])), axis=1
-            ))
+                # --- Compute week start and end dates ---
+                def get_week_range(year, week):
+                    try:
+                        start = pd.Timestamp.fromisocalendar(year, int(week), 1)
+                        end = pd.Timestamp.fromisocalendar(year, int(week), 7)
+                        return start, end
+                    except Exception:
+                        return pd.NaT, pd.NaT
     
-            weekly_ship["WeekRange"] = (
-                weekly_ship["Start_Date"].dt.strftime("%d %b") + " – " +
-                weekly_ship["End_Date"].dt.strftime("%d %b")
-            )
+                weekly_ship["Start_Date"], weekly_ship["End_Date"] = zip(*weekly_ship.apply(
+                    lambda x: get_week_range(selected_year, int(x["Week"])), axis=1
+                ))
     
-            # --- Merge with events (combine multiple events per week) ---
-            df_events_week = (
-                df_events[df_events["Year"] == selected_year]
-                .groupby("Week")["Event / Task"]
-                .apply(lambda x: ", ".join(x.dropna().unique()))
-                .reset_index()
-            )
+                weekly_ship["WeekRange"] = (
+                    weekly_ship["Start_Date"].dt.strftime("%d %b") + " – " +
+                    weekly_ship["End_Date"].dt.strftime("%d %b")
+                )
     
-            df_weekly = pd.merge(weekly_ship, df_events_week, on="Week", how="left")
+                # --- Merge with event descriptions ---
+                df_events_week = (
+                    df_events[df_events["Year"] == selected_year]
+                    .groupby("Week")["Event / Task"]
+                    .apply(lambda x: ", ".join(x.dropna().unique()))
+                    .reset_index()
+                )
     
-            # --- Tooltip ---
-            df_weekly["Tooltip"] = (
-                "<b>Week " + df_weekly["Week"].astype(str) + "</b><br>" +
-                df_weekly["WeekRange"] + "<br>" +
-                "Volume: " + df_weekly["VOLUME"].astype(int).astype(str) + "<br>" +
-                "Events: " + df_weekly["Event / Task"].fillna("None")
-            )
+                df_weekly = pd.merge(weekly_ship, df_events_week, on="Week", how="left")
     
-            # --- Plotly Weekly Chart ---
-            fig_week = go.Figure()
-            fig_week.add_trace(go.Bar(
-                x=df_weekly["Week"],
-                y=df_weekly["VOLUME"],
-                text=df_weekly["VOLUME"],
-                hovertext=df_weekly["Tooltip"],
-                hoverinfo="text",
-                marker_color="mediumvioletred",
-                name="Weekly Volume"
-            ))
+                # --- Tooltip (includes week range) ---
+                df_weekly["Tooltip"] = (
+                    "<b>Week " + df_weekly["Week"].astype(str) + "</b><br>" +
+                    df_weekly["WeekRange"] + "<br>" +
+                    "Volume: " + df_weekly["VOLUME"].astype(int).astype(str) + "<br>" +
+                    "Events: " + df_weekly["Event / Task"].fillna("None")
+                )
     
-            fig_week.update_layout(
-                title=f"{selected_year} — Weekly Shipment Volume & Events",
-                xaxis_title="Week Number",
-                yaxis_title="Volume",
-                template="simple_white",
-                height=450,
-                width=800,
-                margin=dict(l=40, r=40, t=80, b=40)
-            )
+                # --- Plotly Weekly Chart ---
+                fig_week = go.Figure()
+                fig_week.add_trace(go.Bar(
+                    x=df_weekly["Week"],
+                    y=df_weekly["VOLUME"],
+                    text=df_weekly["VOLUME"],
+                    hovertext=df_weekly["Tooltip"],
+                    hoverinfo="text",
+                    marker_color="mediumvioletred",
+                    name="Weekly Volume"
+                ))
     
-            st.plotly_chart(fig_week, use_container_width=True)
+                fig_week.update_layout(
+                    title=f"{selected_year} — Weekly Shipment Volume & Events",
+                    xaxis_title="Week Number",
+                    yaxis_title="Volume",
+                    template="simple_white",
+                    height=450,
+                    width=800,
+                    margin=dict(l=40, r=40, t=80, b=40)
+                )
+    
+                st.plotly_chart(fig_week, use_container_width=True)
+
 
 
         
