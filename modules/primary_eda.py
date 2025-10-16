@@ -43,7 +43,9 @@ def load_event_calendar(sheet_id: str):
     """
     try:
         # Build a direct download link
-        download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+        #download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+        
+        download_url = f"https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
 
         df = pd.read_excel(download_url)
 
@@ -239,7 +241,9 @@ def run():
                 y_title = "Volume"
     
             # --- Load Event Calendar ---
-            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+            #EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+            
+            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
             df_events = load_event_calendar(EVENT_CSV_URL)
             df_events.drop(columns=["Remark"], inplace=True, errors="ignore")
 
