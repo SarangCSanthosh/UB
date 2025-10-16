@@ -359,20 +359,43 @@ def run():
             # RIGHT: Bubble Chart of Event Bins
             # ------------------------
             with col2:
+                
                 bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
-                
-                # Aggregate counts for each bin
-                bubble_counts = df_events[bin_cols].sum().reset_index()
+            
+                # Ensure df_events has a datetime column named 'Date' (or similar)
+                if "Date" in df_events.columns:
+                    df_events["Date"] = pd.to_datetime(df_events["Date"])
+            
+                    # Aggregate by chosen granularity
+                    if granularity.lower() == "daily":
+                        df_events["Period"] = df_events["Date"].dt.date
+                    elif granularity.lower() == "weekly":
+                        df_events["Period"] = df_events["Date"].dt.to_period("W").apply(lambda r: r.start_time)
+                    elif granularity.lower() == "monthly":
+                        df_events["Period"] = df_events["Date"].dt.to_period("M").apply(lambda r: r.start_time)
+                    else:
+                        df_events["Period"] = df_events["Date"]
+            
+                    # Aggregate event counts for the selected granularity
+                    bubble_counts = df_events.groupby("Period")[bin_cols].sum().reset_index()
+            
+                    # Get the last (most recent) period for visualization
+                    latest_period = bubble_counts["Period"].max()
+                    bubble_data = bubble_counts[bubble_counts["Period"] == latest_period]
+                else:
+                    # If no date column, fallback to overall count
+                    bubble_data = df_events[bin_cols].sum().to_frame().T
+            
+                # Prepare data for bubble chart
+                bubble_counts = bubble_data[bin_cols].sum().reset_index()
                 bubble_counts.columns = ["Event_Type", "Count"]
-                
-                # Filter zero counts
                 bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
-                
+            
                 # Bubble chart
                 fig_bubble = go.Figure(
                     go.Scatter(
                         x=bubble_counts["Event_Type"],
-                        y=[1]*len(bubble_counts),  # same y-level for all bubbles
+                        y=[1]*len(bubble_counts),
                         mode="markers+text",
                         marker=dict(
                             size=bubble_counts["Count"]*10,  # scale bubble size
@@ -387,11 +410,11 @@ def run():
                         hovertemplate="<b>%{x}</b><br>Count: %{text}<extra></extra>"
                     )
                 )
-                
+            
                 fig_bubble.update_layout(
-                    title="Event Type Distribution",
+                    title=f"Event Type Distribution ({granularity})",
                     xaxis_title="Event Type",
-                    yaxis=dict(visible=False),  # hide y-axis
+                    yaxis=dict(visible=False),
                     height=500,
                     template="plotly_dark",
                     margin=dict(t=50)
