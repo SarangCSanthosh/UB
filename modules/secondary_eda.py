@@ -363,51 +363,57 @@ def run():
             
                 bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
             
-                # Validate presence of date column
+                # Detect a valid date column
                 date_col = None
                 for c in df_events.columns:
                     if c.lower() in ["date", "timestamp", "event_date"]:
                         date_col = c
                         break
             
+                # Default empty DataFrame
+                bubble_counts = pd.DataFrame(columns=["Event_Type", "Count"])
+            
                 if date_col is None:
-                    st.warning("⚠️ No date column found in df_events — showing overall counts.")
+                    st.warning("⚠️ No date column found — showing overall event counts.")
                     bubble_counts = df_events[bin_cols].sum().reset_index()
                     bubble_counts.columns = ["Event_Type", "Count"]
-            
                 else:
                     df_events[date_col] = pd.to_datetime(df_events[date_col], errors="coerce")
-            
-                    # Drop missing dates
                     df_events = df_events.dropna(subset=[date_col])
             
-                    # Derive period based on granularity
-                    if granularity.lower() == "daily":
-                        df_events["Period"] = df_events[date_col].dt.date
-                    elif granularity.lower() == "weekly":
-                        df_events["Period"] = df_events[date_col].dt.to_period("W").apply(lambda r: r.start_time)
-                    elif granularity.lower() == "monthly":
-                        df_events["Period"] = df_events[date_col].dt.to_period("M").apply(lambda r: r.start_time)
-                    else:
-                        df_events["Period"] = df_events[date_col]
+                    if not df_events.empty:
+                        # Determine period based on granularity
+                        if granularity.lower() == "daily":
+                            df_events["Period"] = df_events[date_col].dt.date
+                        elif granularity.lower() == "weekly":
+                            df_events["Period"] = df_events[date_col].dt.to_period("W").apply(lambda r: r.start_time)
+                        elif granularity.lower() == "monthly":
+                            df_events["Period"] = df_events[date_col].dt.to_period("M").apply(lambda r: r.start_time)
+                        else:
+                            df_events["Period"] = df_events[date_col]
             
-                    # Group and aggregate
-                    grouped = df_events.groupby("Period")[bin_cols].sum().reset_index()
+                        grouped = df_events.groupby("Period")[bin_cols].sum().reset_index()
             
-                    if grouped.empty:
-                        st.warning("⚠️ No event data found for selected granularity.")
-                        bubble_counts = pd.DataFrame(columns=["Event_Type", "Count"])
-                    else:
-                        latest_period = grouped["Period"].max()
-                        bubble_data = grouped[grouped["Period"] == latest_period]
-                        bubble_counts = bubble_data[bin_cols].sum().reset_index()
-                        bubble_counts.columns = ["Event_Type", "Count"]
+                        if not grouped.empty:
+                            latest_period = grouped["Period"].max()
+                            bubble_data = grouped[grouped["Period"] == latest_period]
+                            bubble_counts = bubble_data[bin_cols].sum().reset_index()
+                            bubble_counts.columns = ["Event_Type", "Count"]
             
-                # Filter nonzero counts
+                # Filter only nonzero counts
                 bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
             
+                # Always define fig_bubble
                 if bubble_counts.empty:
-                    st.info("ℹ️ No events found for the selected period.")
+                    st.info("ℹ️ No events found for the selected granularity or period.")
+                    fig_bubble = go.Figure()
+                    fig_bubble.update_layout(
+                        title=f"No Data Available for {granularity}",
+                        xaxis=dict(visible=False),
+                        yaxis=dict(visible=False),
+                        height=400,
+                        template="plotly_dark"
+                    )
                 else:
                     fig_bubble = go.Figure(
                         go.Scatter(
@@ -436,7 +442,7 @@ def run():
                         template="plotly_dark",
                         margin=dict(t=50)
                     )
-
+            
                 st.plotly_chart(fig_bubble, use_container_width=True)
 
 
