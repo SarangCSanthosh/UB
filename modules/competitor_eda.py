@@ -217,18 +217,17 @@ def run():
         st.markdown("###  Question: What are the top-selling SKUs?")
         st.subheader("Pack Size Wise Volume Distribution")
     
-        # Extract segment including packaging
         def extract_segment(sku):
             sku = str(sku).upper().strip()
             match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
             segment = match.group(1) if match else "Other Segment"
             segment = segment.replace(".", "").replace("CANS", "CAN").strip()
             return segment
-    
+
         df["Segment"] = df[SKU_COL].apply(extract_segment)
         df["Date"] = pd.to_datetime(df[DATE_COL])
     
-        # --- Time granularity selector ---
+        # --- Time granularity selection ---
         time_granularity = st.radio(
             "Select Time Granularity", 
             ["Yearly", "Quarterly", "Monthly", "Weekly"], 
@@ -241,7 +240,7 @@ def run():
             df["Period"] = df["Date"].dt.to_period("Q").astype(str)
         elif time_granularity == "Monthly":
             df["Period"] = df["Date"].dt.to_period("M").astype(str)
-        elif time_granularity == "Weekly":
+        else:
             df["Period"] = df["Date"].dt.to_period("W").astype(str)
     
         # --- Brand filter ---
@@ -253,41 +252,49 @@ def run():
         else:
             df_brand = df[df["Brand"] == selected_brand]
     
-        # --- Aggregate for all brands first to compute total per period ---
-        total_by_period = df.groupby("Period")[VOLUME_COL].sum().rename("TotalVolume").reset_index()
-    
-        # --- Aggregate brand-level data ---
+        # --- Aggregate by Period + Segment ---
         pack_sales_time = (
             df_brand.groupby(["Period", "Segment"])[VOLUME_COL]
             .sum()
             .reset_index()
-            .sort_values(by=["Period", "Segment"])
         )
     
-        # Merge with total to keep consistent denominator
-        pack_sales_time = pack_sales_time.merge(total_by_period, on="Period", how="left")
+        # --- Ensure all combinations of Period × Segment exist (fill 0s) ---
+        all_periods = sorted(df["Period"].unique())
+        all_segments = sorted(df_brand["Segment"].unique())
+        full_index = pd.MultiIndex.from_product([all_periods, all_segments], names=["Period", "Segment"])
+        pack_sales_time = (
+            pack_sales_time.set_index(["Period", "Segment"])
+            .reindex(full_index, fill_value=0)
+            .reset_index()
+        )
     
-        # --- Granularity for Absolute / Percentage ---
+        # --- Compute total volume per period ---
+        period_totals = pack_sales_time.groupby("Period")[VOLUME_COL].sum().rename("Total").reset_index()
+        pack_sales_time = pack_sales_time.merge(period_totals, on="Period", how="left")
+    
+        # --- Granularity toggle (Absolute / Percentage) ---
         granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True)
     
         if granularity == "Percentage":
-            pack_sales_time["Percentage"] = (
-                pack_sales_time[VOLUME_COL] / pack_sales_time["TotalVolume"] * 100
-            )
-            y_col = "Percentage"
+            pack_sales_time["Share"] = (
+                (pack_sales_time[VOLUME_COL] / pack_sales_time["Total"]) * 100
+            ).fillna(0)
+            y_col = "Share"
             y_title = "Volume Share (%)"
+            chart_type = "area"  # stacked area
         else:
             y_col = VOLUME_COL
             y_title = "Volume"
+            chart_type = "line"
     
         # --- Visualization ---
-        if granularity == "Percentage":
-            fig = px.area(  # stacked area chart for better clarity
+        if chart_type == "area":
+            fig = px.area(
                 pack_sales_time,
                 x="Period",
                 y=y_col,
                 color="Segment",
-                groupnorm="percent",
                 title=f"{selected_brand} Pack Size Share Over Time ({time_granularity})",
                 labels={y_col: y_title, "Period": time_granularity},
             )
@@ -306,12 +313,12 @@ def run():
             height=600,
             margin=dict(t=100, b=100, l=50, r=50),
             legend_title_text="Segment",
-            hovermode="x unified",
+            hovermode="x unified"
         )
     
         st.plotly_chart(fig, use_container_width=True)
     
-        # --- Display Summary ---
+        # --- Summary table ---
         summary = (
             df_brand.groupby("Segment")[VOLUME_COL]
             .sum()
@@ -321,6 +328,7 @@ def run():
         summary["Percentage"] = (summary[VOLUME_COL] / summary[VOLUME_COL].sum() * 100).round(0)
     
         st.dataframe(summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
+        #st.dataframe(summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
 ### **Insights:**
 The 650 ML pack size (light blue bar) is the undisputed leader. It contributed to 81 percent of the total shipment volume. The 330 ml can comes 2nd with just 11% contribution followed by 550 ml can with 6%  and 330 ml with 3%.""")
