@@ -339,13 +339,13 @@ def run():
         if selected_pack != "All":
             # Highlight only selected pack, but show all for context
             summary = summary_base.copy()
-            summary["Highlight"] = summary["Segment"].apply(lambda x: "✅ Selected" if x == selected_pack else "")
+            #summary["Highlight"] = summary["Segment"].apply(lambda x: "✅ Selected" if x == selected_pack else "")
         else:
             summary = summary_base.copy()
-            summary["Highlight"] = ""
+            #summary["Highlight"] = ""
     
         st.dataframe(
-            summary.set_index("Segment")[[VOLUME_COL, "Percentage", "Highlight"]].round(0),
+            summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0),
             use_container_width=True
         )
 
