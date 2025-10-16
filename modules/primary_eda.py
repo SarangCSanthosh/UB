@@ -554,7 +554,14 @@ def run():
         st.markdown("###  Question: Where are shipments highest and where are they lagging?")
         st.subheader("Top/Bottom Locations")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
-            location_volume = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().round(0).reset_index()
+
+        # --- Group shipments by location ---
+            location_volume = (
+                df_filtered.groupby(LOCATION_COL)[VOLUME_COL]
+                .sum()
+                .round(0)
+                .reset_index()
+            )
     
             choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
             value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
@@ -569,18 +576,35 @@ def run():
                 total_volume = df_filtered[VOLUME_COL].sum().round(0)
                 locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
     
-            # Merge with PCI data
+            # --- Determine which PCI column to use based on selected year(s) ---
+            selected_years = year_choice  # From your sidebar filter
+    
+            if set(selected_years) == {2023}:
+                pci_col = "Per capita - 2022-23"
+            elif set(selected_years) == {2024}:
+                pci_col = "per capita - 2023-24"
+            else:
+                pci_col = "Grand Total"
+    
+            # --- Prepare PCI dataframe ---
+            df_pci_clean = df_pci.copy()
+            df_pci_clean.columns = [c.strip() for c in df_pci_clean.columns]
+            df_pci_clean.rename(columns={"Row Labels": "Location"}, inplace=True)
+            df_pci_clean["Location"] = df_pci_clean["Location"].str.strip().str.upper()
+    
+            # --- Merge with shipment data ---
             locs["Location_upper"] = locs[LOCATION_COL].str.strip().str.upper()
             df_merged = pd.merge(
                 locs,
-                df_pci[["Location", "Grand Total"]],
+                df_pci_clean[["Location", pci_col]],
                 left_on="Location_upper",
                 right_on="Location",
                 how="left"
             )
-            df_merged.rename(columns={"Grand Total": "Per Capita Income"}, inplace=True)
     
-            # Melt for comparison
+            df_merged.rename(columns={pci_col: "Per Capita Income"}, inplace=True)
+    
+            # --- Melt for stacked bar ---
             df_melted = df_merged.melt(
                 id_vars=[LOCATION_COL],
                 value_vars=[VOLUME_COL, "Per Capita Income"],
@@ -588,6 +612,7 @@ def run():
                 value_name="Value"
             )
     
+            # --- Plot ---
             fig = px.bar(
                 df_melted,
                 x="Value",
@@ -600,18 +625,20 @@ def run():
             )
     
             fig.update_traces(textposition="outside")
+    
             if choice == "Top":
                 fig.update_layout(yaxis=dict(categoryorder="total ascending"))
             else:
                 fig.update_layout(yaxis=dict(categoryorder="total descending"))
     
             fig.update_layout(
-                title="Shipment Volume vs Per Capita Income by Location",
+                title=f"Shipment Volume vs Per Capita Income ({pci_col})",
                 xaxis_title="Value",
                 yaxis_title="Location",
                 legend_title="Metric",
                 template="plotly_dark",
-                height=600
+                height=600,
+                margin=dict(t=80)
             )
     
             st.plotly_chart(fig, use_container_width=True)
