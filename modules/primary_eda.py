@@ -35,6 +35,21 @@ def prepare_dates(df, date_col="SHIPMENT_DATE"):
     return df, date_col
 
 @st.cache_data
+def load_pci_from_gsheet(gsheet_url: str, sheet_name: str = "PCI") -> pd.DataFrame:
+    # The gsheet_url you gave is already the export-to-xlsx URL
+    df = pd.read_excel(gsheet_url, sheet_name=sheet_name)
+    # Clean up names
+    df.columns = [c.strip() for c in df.columns]
+    if "Row Labels" in df.columns:
+        df.rename(columns={"Row Labels": "Location"}, inplace=True)
+    df["Location"] = df["Location"].astype(str).str.strip().str.upper()
+    return df
+
+# Use the URL you provided
+gsheet_url = "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx"
+df_pci = load_pci_from_gsheet(gsheet_url, sheet_name="PCI")
+
+@st.cache_data
 def load_event_calendar(sheet_id: str):
     """
     Loads the event calendar from a public Google Sheet.
@@ -540,32 +555,65 @@ def run():
         st.subheader("Top/Bottom Locations")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
             location_volume = df_filtered.groupby(LOCATION_COL)[VOLUME_COL].sum().round(0).reset_index()
-
+    
             choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
             value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
             n_locations = st.slider("Number of Locations", 5, 25, 10)
-
+    
             if choice == "Top":
                 locs = location_volume.sort_values(by=VOLUME_COL, ascending=False).head(n_locations)
             else:
                 locs = location_volume.sort_values(by=VOLUME_COL, ascending=True).head(n_locations)
-
+    
             if value_type == "Percentage":
                 total_volume = df_filtered[VOLUME_COL].sum().round(0)
                 locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
-
-            fig = px.bar(
+    
+            # Merge with PCI data
+            locs["Location_upper"] = locs[LOCATION_COL].str.strip().str.upper()
+            df_merged = pd.merge(
                 locs,
-                x=VOLUME_COL,
-                y=LOCATION_COL,
-                orientation="h",
-                text=locs[VOLUME_COL].round(0)
+                df_pci[["Location", "Grand Total"]],
+                left_on="Location_upper",
+                right_on="Location",
+                how="left"
             )
+            df_merged.rename(columns={"Grand Total": "Per Capita Income"}, inplace=True)
+    
+            # Melt for comparison
+            df_melted = df_merged.melt(
+                id_vars=[LOCATION_COL],
+                value_vars=[VOLUME_COL, "Per Capita Income"],
+                var_name="Metric",
+                value_name="Value"
+            )
+    
+            fig = px.bar(
+                df_melted,
+                x="Value",
+                y=LOCATION_COL,
+                color="Metric",
+                orientation="h",
+                text=df_melted["Value"].round(0),
+                barmode="stack",
+                color_discrete_sequence=px.colors.qualitative.Set2
+            )
+    
             fig.update_traces(textposition="outside")
             if choice == "Top":
                 fig.update_layout(yaxis=dict(categoryorder="total ascending"))
             else:
                 fig.update_layout(yaxis=dict(categoryorder="total descending"))
+    
+            fig.update_layout(
+                title="Shipment Volume vs Per Capita Income by Location",
+                xaxis_title="Value",
+                yaxis_title="Location",
+                legend_title="Metric",
+                template="plotly_dark",
+                height=600
+            )
+    
             st.plotly_chart(fig, use_container_width=True)
             st.markdown("""
 ### **Insights:**
