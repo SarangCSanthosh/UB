@@ -363,85 +363,72 @@ def run():
             
                 bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
             
-                # Detect a valid date column
-                date_col = None
-                for c in df_events.columns:
-                    if c.lower() in ["date", "timestamp", "event_date"]:
-                        date_col = c
-                        break
+                # Convert Date column to datetime
+                df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+                df_events = df_events.dropna(subset=["Date"])
             
-                # Default empty DataFrame
-                bubble_counts = pd.DataFrame(columns=["Event_Type", "Count"])
-            
-                if date_col is None:
-                    st.warning("⚠️ No date column found — showing overall event counts.")
-                    bubble_counts = df_events[bin_cols].sum().reset_index()
-                    bubble_counts.columns = ["Event_Type", "Count"]
-                else:
-                    df_events[date_col] = pd.to_datetime(df_events[date_col], errors="coerce")
-                    df_events = df_events.dropna(subset=[date_col])
-            
-                    if not df_events.empty:
-                        # Determine period based on granularity
-                        if granularity.lower() == "daily":
-                            df_events["Period"] = df_events[date_col].dt.date
-                        elif granularity.lower() == "weekly":
-                            df_events["Period"] = df_events[date_col].dt.to_period("W").apply(lambda r: r.start_time)
-                        elif granularity.lower() == "monthly":
-                            df_events["Period"] = df_events[date_col].dt.to_period("M").apply(lambda r: r.start_time)
-                        else:
-                            df_events["Period"] = df_events[date_col]
-            
-                        grouped = df_events.groupby("Period")[bin_cols].sum().reset_index()
-            
-                        if not grouped.empty:
-                            latest_period = grouped["Period"].max()
-                            bubble_data = grouped[grouped["Period"] == latest_period]
-                            bubble_counts = bubble_data[bin_cols].sum().reset_index()
-                            bubble_counts.columns = ["Event_Type", "Count"]
-            
-                # Filter only nonzero counts
-                bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
-            
-                # Always define fig_bubble
-                if bubble_counts.empty:
-                    st.info("ℹ️ No events found for the selected granularity or period.")
+                # Safety check
+                if df_events.empty:
+                    st.warning("⚠️ No valid dates found in df_events.")
                     fig_bubble = go.Figure()
-                    fig_bubble.update_layout(
-                        title=f"No Data Available for {granularity}",
-                        xaxis=dict(visible=False),
-                        yaxis=dict(visible=False),
-                        height=400,
-                        template="plotly_dark"
-                    )
                 else:
-                    fig_bubble = go.Figure(
-                        go.Scatter(
-                            x=bubble_counts["Event_Type"],
-                            y=[1]*len(bubble_counts),
-                            mode="markers+text",
-                            marker=dict(
-                                size=bubble_counts["Count"] * 10,
-                                color=bubble_counts["Count"],
-                                colorscale="Viridis",
-                                showscale=True,
-                                colorbar=dict(title="Count"),
-                                sizemode="area"
-                            ),
-                            text=bubble_counts["Count"],
-                            textposition="top center",
-                            hovertemplate="<b>%{x}</b><br>Count: %{text}<extra></extra>"
-                        )
-                    )
+                    # Apply granularity
+                    if granularity.lower() == "daily":
+                        df_events["Period"] = df_events["Date"].dt.date
+                    elif granularity.lower() == "weekly":
+                        df_events["Period"] = df_events["Date"].dt.to_period("W").apply(lambda r: r.start_time)
+                    elif granularity.lower() == "monthly":
+                        df_events["Period"] = df_events["Date"].dt.to_period("M").apply(lambda r: r.start_time)
+                    else:
+                        df_events["Period"] = df_events["Date"]
             
-                    fig_bubble.update_layout(
-                        title=f"Event Type Distribution ({granularity})",
-                        xaxis_title="Event Type",
-                        yaxis=dict(visible=False),
-                        height=500,
-                        template="plotly_dark",
-                        margin=dict(t=50)
-                    )
+                    # Aggregate event counts for the selected granularity
+                    grouped = df_events.groupby("Period")[bin_cols].sum().reset_index()
+            
+                    if grouped.empty:
+                        st.info("ℹ️ No events found for this granularity.")
+                        fig_bubble = go.Figure()
+                    else:
+                        # Select the most recent period
+                        latest_period = grouped["Period"].max()
+                        bubble_data = grouped[grouped["Period"] == latest_period]
+            
+                        # Prepare data for chart
+                        bubble_counts = bubble_data[bin_cols].sum().reset_index()
+                        bubble_counts.columns = ["Event_Type", "Count"]
+                        bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
+            
+                        if bubble_counts.empty:
+                            st.info(f"ℹ️ No events recorded for {granularity} period: {latest_period}.")
+                            fig_bubble = go.Figure()
+                        else:
+                            fig_bubble = go.Figure(
+                                go.Scatter(
+                                    x=bubble_counts["Event_Type"],
+                                    y=[1]*len(bubble_counts),
+                                    mode="markers+text",
+                                    marker=dict(
+                                        size=bubble_counts["Count"] * 10,  # scale bubble size
+                                        color=bubble_counts["Count"],
+                                        colorscale="Viridis",
+                                        showscale=True,
+                                        colorbar=dict(title="Count"),
+                                        sizemode="area"
+                                    ),
+                                    text=bubble_counts["Count"],
+                                    textposition="top center",
+                                    hovertemplate="<b>%{x}</b><br>Count: %{text}<extra></extra>"
+                                )
+                            )
+            
+                            fig_bubble.update_layout(
+                                title=f"Event Type Distribution ({granularity}) - Latest Period: {latest_period}",
+                                xaxis_title="Event Type",
+                                yaxis=dict(visible=False),
+                                height=500,
+                                template="plotly_dark",
+                                margin=dict(t=50)
+                            )
             
                 st.plotly_chart(fig_bubble, use_container_width=True)
 
