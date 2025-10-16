@@ -577,26 +577,33 @@ def run():
                 locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
     
             # --- Determine which PCI column to use based on selected year(s) ---
-            selected_years = year_choice  # From your sidebar filter
+            if filter_mode == "Year":
+                years_selected = selected_years  
+            else:
+                years_selected = sorted(df_filtered["Year"].dropna().unique())
     
-            if set(selected_years) == {2023}:
+            if set(years_selected) == {2023}:
                 pci_col = "Per capita - 2022-23"
-            elif set(selected_years) == {2024}:
+            elif set(years_selected) == {2024}:
                 pci_col = "per capita - 2023-24"
             else:
                 pci_col = "Grand Total"
     
-            # --- Prepare PCI dataframe ---
-            df_pci_clean = df_pci.copy()
-            df_pci_clean.columns = [c.strip() for c in df_pci_clean.columns]
-            df_pci_clean.rename(columns={"Row Labels": "Location"}, inplace=True)
-            df_pci_clean["Location"] = df_pci_clean["Location"].str.strip().str.upper()
+            # --- Load PCI dataset ---
+            df_pci = pd.read_excel(
+                "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx",
+                sheet_name="PCI"
+            )
+    
+            df_pci.columns = [c.strip() for c in df_pci.columns]
+            df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
+            df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
     
             # --- Merge with shipment data ---
             locs["Location_upper"] = locs[LOCATION_COL].str.strip().str.upper()
             df_merged = pd.merge(
                 locs,
-                df_pci_clean[["Location", pci_col]],
+                df_pci[["Location", pci_col]],
                 left_on="Location_upper",
                 right_on="Location",
                 how="left"
@@ -642,6 +649,7 @@ def run():
             )
     
             st.plotly_chart(fig, use_container_width=True)
+
             st.markdown("""
 ### **Insights:**
 - The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. 
