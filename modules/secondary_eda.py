@@ -47,8 +47,9 @@ def load_event_calendar(sheet_id: str):
     """
     try:
         # Build a direct download link
-        download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-
+        
+        #download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+        download_url = f"https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
         df = pd.read_excel(download_url)
 
         # Clean and standardize columns
