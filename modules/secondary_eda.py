@@ -248,7 +248,8 @@ def run():
                 norm_y_title = "Normalized Volume"
     
             # --- Load Event Calendar ---
-            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+            #EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
             df_events = load_event_calendar(EVENT_CSV_URL)
             df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
     
