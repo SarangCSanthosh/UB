@@ -328,15 +328,27 @@ def run():
         st.plotly_chart(fig, use_container_width=True)
     
         # --- Summary Table ---
-        summary = (
-            df_filtered.groupby("Segment")[VOLUME_COL]
+        summary_base = (
+            df_brand.groupby("Segment")[VOLUME_COL]
             .sum()
             .reset_index()
-            .sort_values(by=VOLUME_COL, ascending=False)
         )
-        summary["Percentage"] = (summary[VOLUME_COL] / summary[VOLUME_COL].sum() * 100).round(0)
+        total_brand_volume = summary_base[VOLUME_COL].sum()
+        summary_base["Percentage"] = (summary_base[VOLUME_COL] / total_brand_volume * 100).round(1)
     
-        st.dataframe(summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
+        if selected_pack != "All":
+            # Highlight only selected pack, but show all for context
+            summary = summary_base.copy()
+            summary["Highlight"] = summary["Segment"].apply(lambda x: "✅ Selected" if x == selected_pack else "")
+        else:
+            summary = summary_base.copy()
+            summary["Highlight"] = ""
+    
+        st.dataframe(
+            summary.set_index("Segment")[[VOLUME_COL, "Percentage", "Highlight"]].round(0),
+            use_container_width=True
+        )
+
         #st.dataframe(summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
 ### **Insights:**
