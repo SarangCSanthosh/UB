@@ -185,7 +185,7 @@ def run():
         "Region Stacked",
         "Special Outlets",
         "Map",
-        "Depot YoY Change"
+        "Depot-wise YoY Change"
     ])
 
     # ---- Shipment Trends ----
@@ -966,7 +966,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 font=dict(size=13),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                title="🌍 Depot Shipment Volume Heat Map (Bubble Chart View)",
+                title="Depot Shipment Volume Heat Map (Bubble Chart View)",
             )
         
             st.plotly_chart(fig, use_container_width=True)
@@ -1034,7 +1034,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 # -------------------------------------------------------------------------
                 # NEW SECTION: YoY Change in Disposable Income (Per Capita Income)
                 # -------------------------------------------------------------------------
-                st.markdown("### 💰 YoY Change in Disposable Income (Per Capita Income)")
+                st.markdown("### YoY Change in Disposable Income (Per Capita Income)")
     
                 # Load PCI data
                 df_pci = pd.read_excel(
