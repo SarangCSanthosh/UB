@@ -882,16 +882,16 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
         st.markdown("### Question: How has depot volume changed YoY?")
         st.subheader("Depot-wise YoY Volume Change")
     
-        if "DBF_DEPOT" in df_filtered.columns and "Date" in df_filtered.columns:
-            # Ensure Date is datetime
-            df_filtered["Date"] = pd.to_datetime(df_filtered["Date"], errors="coerce")
-            df_filtered["Year"] = df_filtered["Date"].dt.year
+        if "DBF_DEPOT" in df_filtered.columns and "ACTUAL_DATE" in df_filtered.columns:
+        # Ensure ACTUAL_DATE is datetime
+            df_filtered["ACTUAL_DATE"] = pd.to_datetime(df_filtered["ACTUAL_DATE"], errors="coerce")
+            df_filtered["Year"] = df_filtered["ACTUAL_DATE"].dt.year
     
             # Aggregate volume by depot and year
-            depot_yearly = df_filtered.groupby(["DBF_DEPOT", "Year"])[VOLUME_COL].sum().reset_index()
+            depot_yearly = df_filtered.groupby(["DBF_DEPOT", "Year"])["VOLUME"].sum().reset_index()
     
             # Pivot to have years as columns
-            pivot_df = depot_yearly.pivot(index="DBF_DEPOT", columns="Year", values=VOLUME_COL).fillna(0)
+            pivot_df = depot_yearly.pivot(index="DBF_DEPOT", columns="Year", values="VOLUME").fillna(0)
     
             # Compute YoY change for the last two years
             if len(pivot_df.columns) >= 2:
@@ -923,7 +923,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             else:
                 st.info("Not enough yearly data for YoY calculation.")
         else:
-            st.info("DBF_DEPOT or Date column not found.")
+            st.info("DBF_DEPOT or ACTUAL_DATE column not found.")
             
 
 # ===============================
