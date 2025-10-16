@@ -652,7 +652,7 @@ def run():
                 y=LOCATION_COL,
                 color="Metric",
                 orientation="h",
-                text=df_melted["Value"].round(0),
+                #text=df_melted["Value"].round(0),
                 barmode="group",  # <<< CLUSTERED BARS
                 color_discrete_sequence=px.colors.qualitative.Set2
             )
