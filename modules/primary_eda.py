@@ -559,7 +559,8 @@ def run():
             df_filtered[LOCATION_COL] = df_filtered[LOCATION_COL].replace({
                 "HUBBALLI-1": "HUBBALLI",
                 "HUBBALLI-2": "HUBBALLI",
-                "BELAGAVI-2": "BELAGAVI"
+                "BELAGAVI-2": "BELAGAVI",
+                "CHIKODI": "CHIKKODI"
             })
     
             # --- Group shipments by location ---
@@ -583,7 +584,7 @@ def run():
                 total_volume = df_filtered[VOLUME_COL].sum().round(0)
                 locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
     
-            # --- Determine which PCI column to use based on selected year(s) ---
+            # --- Determine PCI column based on selected year(s) ---
             if filter_mode == "Year":
                 years_selected = selected_years  
             else:
@@ -611,10 +612,10 @@ def run():
                 "HUBBALLI-1": "HUBBALLI",
                 "HUBBALLI-2": "HUBBALLI",
                 "BELAGAVI-2": "BELAGAVI",
-                "CHIKODI" : "CHIKKODI"
+                "CHIKODI": "CHIKKODI"
             })
     
-            # --- Aggregate PCI values after merging ---
+            # --- Aggregate PCI values ---
             df_pci = df_pci.groupby("Location", as_index=False)[pci_col].mean()
     
             # --- Merge with shipment data ---
@@ -629,7 +630,7 @@ def run():
     
             df_merged.rename(columns={pci_col: "Per Capita Income"}, inplace=True)
     
-            # --- Melt for overlay bar chart ---
+            # --- Melt for bar chart ---
             df_melted = df_merged.melt(
                 id_vars=[LOCATION_COL],
                 value_vars=[VOLUME_COL, "Per Capita Income"],
@@ -637,7 +638,7 @@ def run():
                 value_name="Value"
             )
     
-            # --- Plot overlapping bars ---
+            # --- Clustered (side-by-side) bar chart ---
             fig = px.bar(
                 df_melted,
                 x="Value",
@@ -645,8 +646,7 @@ def run():
                 color="Metric",
                 orientation="h",
                 text=df_melted["Value"].round(0),
-                barmode="overlay",  # <--- Overlapping bars
-                opacity=0.7,
+                barmode="group",  # <<< CLUSTERED BARS
                 color_discrete_sequence=px.colors.qualitative.Set2
             )
     
