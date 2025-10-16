@@ -883,7 +883,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
         st.subheader("Depot-wise YoY Volume Change")
     
         if "DBF_DEPOT" in df_filtered.columns and "ACTUAL_DATE" in df_filtered.columns:
-            # Ensure ACTUAL_DATE is datetime
+        # Ensure ACTUAL_DATE is datetime
             df_filtered["ACTUAL_DATE"] = pd.to_datetime(df_filtered["ACTUAL_DATE"], errors="coerce")
             df_filtered["Year"] = df_filtered["ACTUAL_DATE"].dt.year
     
@@ -896,11 +896,13 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             # Only consider 2023 and 2024
             if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
                 pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
+                pivot_df["YoY_Percentage"] = ((pivot_df[2024] - pivot_df[2023]) / pivot_df[2023]) * 100
+                pivot_df["YoY_Percentage"] = pivot_df["YoY_Percentage"].round(2)
     
                 # Sort depots by YoY change for waterfall
                 pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
     
-                # Waterfall chart
+                # Waterfall chart with hover showing absolute and % change
                 fig = go.Figure(go.Waterfall(
                     name="YoY Change",
                     orientation="v",
@@ -910,15 +912,22 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                     text=pivot_df["YoY_Change"].apply(lambda x: f"{x:,.0f}"),
                     textposition="outside",
                     connector={"line":{"color":"rgb(63, 63, 63)"}},
+                    hovertemplate="<b>%{x}</b><br>Volume Change: %{y:,.0f}<br>Percentage Change: %{customdata:.2f}%<extra></extra>",
+                    customdata=pivot_df["YoY_Percentage"]
                 ))
     
                 fig.update_layout(
                     title="Depot-wise YoY Volume Change (2023 → 2024)",
                     yaxis=dict(title="Volume Change"),
+                    height=600,  # increase height to fit all depots
+                    margin=dict(b=150),  # bottom margin to prevent depot names from cutting off
                 )
     
                 st.plotly_chart(fig, use_container_width=True)
-                st.dataframe(pivot_df[[2023, 2024, "YoY_Change"]].round(0))
+    
+                # Add percentage change to summary table
+                summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
+                st.dataframe(summary_df)
             else:
                 st.info("Data for 2023 and/or 2024 is missing.")
         else:
