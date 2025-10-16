@@ -350,7 +350,7 @@ def run():
         # ===============================
         
         else:
-            st.subheader("📆 Event-Based Shipment Visualization")
+            st.subheader("Event Calender")
         
             # --- Load Event Calendar ---
             EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
@@ -460,7 +460,7 @@ def run():
             # ========================= WEEKLY VIEW ===============================
             # =====================================================================
             else:
-                st.subheader("📊 Weekly Event Trend")
+                st.subheader("Weekly Event Trend")
         
                 df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
                 df_events["Year"] = df_events["Date"].dt.year
