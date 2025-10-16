@@ -1037,26 +1037,26 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 
         st.markdown("### 💰 YoY Change in Disposable Income (Per Capita Income)")
 
-            # Load PCI data
-            df_pci = pd.read_excel(
-                "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx",
-                sheet_name="PCI"
-            )
-            df_pci.columns = [c.strip() for c in df_pci.columns]
-            df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
-            df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
+        # Load PCI data
+        df_pci = pd.read_excel(
+            "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx",
+            sheet_name="PCI"
+        )
+        df_pci.columns = [c.strip() for c in df_pci.columns]
+        df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
+        df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
 
 
-            # Calculate YoY change in PCI
-            if "Per capita - 2022-23" in df_pci.columns and "per capita - 2023-24" in df_pci.columns:
+        # Calculate YoY change in PCI
+        if "Per capita - 2022-23" in df_pci.columns and "per capita - 2023-24" in df_pci.columns:
                 df_pci["PCI_YoY_Change"] = df_pci["per capita - 2023-24"] - df_pci["Per capita - 2022-23"]
                 df_pci["PCI_YoY_%Change"] = (
                     df_pci["PCI_YoY_Change"] / df_pci["Per capita - 2022-23"]
                 ) * 100
                 df_pci["PCI_YoY_%Change"] = df_pci["PCI_YoY_%Change"].round(2)
-
+    
                 df_pci_sorted = df_pci.sort_values("PCI_YoY_%Change", ascending=False)
-
+    
                 # Bar chart for PCI YoY change
                 fig_pci = px.bar(
                     df_pci_sorted,
@@ -1067,7 +1067,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                     color_continuous_scale="Tealgrn",
                     text=df_pci_sorted["PCI_YoY_%Change"].apply(lambda x: f"{x:.1f}%")
                 )
-
+    
                 fig_pci.update_layout(
                     title="YoY % Change in Per Capita Income (2023 → 2024)",
                     xaxis_title="YoY % Change in PCI",
@@ -1076,15 +1076,15 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                     template="plotly_dark",
                     margin=dict(t=60, b=80)
                 )
-
+    
                 fig_pci.update_traces(textposition="outside")
                 st.plotly_chart(fig_pci, use_container_width=True)
-
+    
                 # Display PCI summary table
                 st.dataframe(df_pci_sorted[["Location", "Per capita - 2022-23", "per capita - 2023-24", "PCI_YoY_%Change"]])
             else:
                 st.warning("PCI columns for 2022-23 or 2023-24 are missing in the dataset.")
-
+    
         else:
             st.info("Data for 2023 and/or 2024 is missing.")
     else:
