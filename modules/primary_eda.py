@@ -555,7 +555,14 @@ def run():
         st.subheader("Top/Bottom Locations")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
 
-        # --- Group shipments by location ---
+        # --- Normalize location names for consistency ---
+            df_filtered[LOCATION_COL] = df_filtered[LOCATION_COL].replace({
+                "HUBBALLI-1": "HUBBALLI",
+                "HUBBALLI-2": "HUBBALLI",
+                "BELAGAVI-2": "BELAGAVI"
+            })
+    
+            # --- Group shipments by location ---
             location_volume = (
                 df_filtered.groupby(LOCATION_COL)[VOLUME_COL]
                 .sum()
@@ -599,11 +606,21 @@ def run():
             df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
             df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
     
+            # --- Merge HUBBALLI & BELAGAVI variants ---
+            df_pci["Location"] = df_pci["Location"].replace({
+                "HUBBALLI-1": "HUBBALLI",
+                "HUBBALLI-2": "HUBBALLI",
+                "BELAGAVI-2": "BELAGAVI"
+            })
+    
+            # --- Aggregate PCI values after merging ---
+            df_pci = df_pci.groupby("Location", as_index=False)[pci_col].mean()
+    
             # --- Merge with shipment data ---
             locs["Location_upper"] = locs[LOCATION_COL].str.strip().str.upper()
             df_merged = pd.merge(
                 locs,
-                df_pci[["Location", pci_col]],
+                df_pci,
                 left_on="Location_upper",
                 right_on="Location",
                 how="left"
@@ -611,7 +628,7 @@ def run():
     
             df_merged.rename(columns={pci_col: "Per Capita Income"}, inplace=True)
     
-            # --- Melt for stacked bar ---
+            # --- Melt for overlay bar chart ---
             df_melted = df_merged.melt(
                 id_vars=[LOCATION_COL],
                 value_vars=[VOLUME_COL, "Per Capita Income"],
@@ -619,7 +636,7 @@ def run():
                 value_name="Value"
             )
     
-            # --- Plot ---
+            # --- Plot overlapping bars ---
             fig = px.bar(
                 df_melted,
                 x="Value",
@@ -627,7 +644,8 @@ def run():
                 color="Metric",
                 orientation="h",
                 text=df_melted["Value"].round(0),
-                barmode="stack",
+                barmode="overlay",  # <--- Overlapping bars
+                opacity=0.7,
                 color_discrete_sequence=px.colors.qualitative.Set2
             )
     
