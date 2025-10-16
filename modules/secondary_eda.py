@@ -309,8 +309,6 @@ def run():
 
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
                 
-                        # --- Create two columns side by side ---
-            # Create side-by-side columns
             col1, col2 = st.columns([2, 1])  # left wider for line chart
             
             # ------------------------
@@ -318,7 +316,7 @@ def run():
             # ------------------------
             with col1:
                 fig_trend = go.Figure()
-            
+                
                 # Line: Shipment trend
                 fig_trend.add_trace(
                     go.Scatter(
@@ -331,7 +329,7 @@ def run():
                         hoverinfo="x+y+text",
                     )
                 )
-            
+                
                 # Line: Normalized volume (secondary y-axis)
                 fig_trend.add_trace(
                     go.Scatter(
@@ -343,7 +341,7 @@ def run():
                         yaxis="y2"
                     )
                 )
-            
+                
                 fig_trend.update_layout(
                     title=f"Shipment Trend vs Normalized Volume ({granularity})",
                     xaxis_title=granularity,
@@ -354,94 +352,50 @@ def run():
                     template="plotly_dark",
                     legend_title="Metrics",
                 )
-            
-                selected_points = plotly_events(fig_trend, select_event=True, override_height=500, override_width="100%")
+                st.plotly_chart(fig_trend, use_container_width=True)
             
             # ------------------------
             # RIGHT: Bubble Chart of Event Bins
             # ------------------------
             with col2:
-                
-                st.subheader(f"Event Type Distribution ({granularity})")
-            
                 bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
-            
-                df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-                df_events = df_events.dropna(subset=["Date"])
-            
-                if df_events.empty:
-                    st.warning("⚠️ No valid dates found in df_events.")
-                    fig_bubble = go.Figure()
-                else:
-                    # Apply granularity
-                    if granularity.lower() == "daily":
-                        df_events["Period"] = df_events["Date"].dt.date
-                    elif granularity.lower() == "weekly":
-                        df_events["Period"] = df_events["Date"].dt.to_period("W").apply(lambda r: r.start_time)
-                    elif granularity.lower() == "monthly":
-                        df_events["Period"] = df_events["Date"].dt.to_period("M").apply(lambda r: r.start_time)
-                    elif granularity.lower() == "quarterly":
-                        df_events["Period"] = df_events["Date"].dt.to_period("Q").apply(lambda r: r.start_time)
-                    elif granularity.lower() == "yearly":
-                        df_events["Period"] = df_events["Date"].dt.to_period("Y").apply(lambda r: r.start_time)
-                    else:
-                        df_events["Period"] = df_events["Date"]
-            
-                    grouped = df_events.groupby("Period")[bin_cols].sum().reset_index()
-            
-                    if grouped.empty:
-                        st.info("ℹ️ No events found for this granularity.")
-                        fig_bubble = go.Figure()
-                    else:
-                        # Check if user hovered or selected a point
-                        if selected_points:
-                            hovered_label = selected_points[0]["x"]
-                            # Match Period to hovered label (convert if needed)
-                            matched_period = pd.to_datetime(str(hovered_label), errors="coerce")
-                            bubble_data = grouped[grouped["Period"] == matched_period]
-                        else:
-                            latest_period = grouped["Period"].max()
-                            bubble_data = grouped[grouped["Period"] == latest_period]
-            
-                        bubble_counts = bubble_data[bin_cols].sum().reset_index()
-                        bubble_counts.columns = ["Event_Type", "Count"]
-                        bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
-            
-                        if bubble_counts.empty:
-                            period_label = str(latest_period if not selected_points else hovered_label)
-                            st.info(f"ℹ️ No events recorded for {granularity} period: {period_label}.")
-                            fig_bubble = go.Figure()
-                        else:
-                            fig_bubble = go.Figure(
-                                go.Scatter(
-                                    x=bubble_counts["Event_Type"],
-                                    y=[1]*len(bubble_counts),
-                                    mode="markers+text",
-                                    marker=dict(
-                                        size=bubble_counts["Count"] * 10,
-                                        color=bubble_counts["Count"],
-                                        colorscale="Viridis",
-                                        showscale=True,
-                                        colorbar=dict(title="Count"),
-                                        sizemode="area",
-                                        line=dict(width=3, color="cyan") if selected_points else dict(width=1, color="white")
-                                    ),
-                                    text=bubble_counts["Count"],
-                                    textposition="top center",
-                                    hovertemplate="<b>%{x}</b><br>Count: %{text}<extra></extra>"
-                                )
-                            )
-            
-                            title_period = hovered_label if selected_points else latest_period
-                            fig_bubble.update_layout(
-                                title=f"Event Type Distribution ({granularity}) — Period: {title_period}",
-                                xaxis_title="Event Type",
-                                yaxis=dict(visible=False),
-                                height=500,
-                                template="plotly_dark",
-                                margin=dict(t=50)
-                            )
-            
+                
+                # Aggregate counts for each bin
+                bubble_counts = df_events[bin_cols].sum().reset_index()
+                bubble_counts.columns = ["Event_Type", "Count"]
+                
+                # Filter zero counts
+                bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
+                
+                # Bubble chart
+                fig_bubble = go.Figure(
+                    go.Scatter(
+                        x=bubble_counts["Event_Type"],
+                        y=[1]*len(bubble_counts),  # same y-level for all bubbles
+                        mode="markers+text",
+                        marker=dict(
+                            size=bubble_counts["Count"]*10,  # scale bubble size
+                            color=bubble_counts["Count"],
+                            colorscale="Viridis",
+                            showscale=True,
+                            colorbar=dict(title="Count"),
+                            sizemode="area"
+                        ),
+                        text=bubble_counts["Count"],
+                        textposition="top center",
+                        hovertemplate="<b>%{x}</b><br>Count: %{text}<extra></extra>"
+                    )
+                )
+                
+                fig_bubble.update_layout(
+                    title="Event Type Distribution",
+                    xaxis_title="Event Type",
+                    yaxis=dict(visible=False),  # hide y-axis
+                    height=500,
+                    template="plotly_dark",
+                    margin=dict(t=50)
+                )
+                
                 st.plotly_chart(fig_bubble, use_container_width=True)
 
 
