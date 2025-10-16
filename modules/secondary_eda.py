@@ -307,115 +307,88 @@ def run():
             )
 
             trend_df = trend_df.merge(events_agg, on="Label", how="left")
-    
-            # --- Create subplot with 2 charts side-by-side ---
-            fig = make_subplots(
-                rows=1, cols=2,
-                column_widths=[0.7, 0.3],
-                subplot_titles=(
-                    f"Shipment Trend vs Normalized Volume ({granularity})",
-                    f"Event Type Distribution ({granularity})"
-                ),
-                specs=[[{"secondary_y": True}, {"type": "scatter"}]]
-            )
+                
+                        # --- Create two columns side by side ---
+            col1, col2 = st.columns([2, 1])  # Left column wider than right
             
             # ------------------------
-            # LEFT: SHIPMENT TREND CHART
+            # LEFT: Shipment Trend Chart
             # ------------------------
-            fig.add_trace(
-                go.Scatter(
-                    x=trend_df["Label"],
-                    y=trend_df["Value"],
-                    mode="lines+markers",
-                    name=f"Shipment Trend ({granularity}, {view_mode})",
-                    fill="tozeroy",
-                    yaxis="y1",
-                    hovertext=trend_df["Event / Task"],
-                    hoverinfo="x+y+text",
-                ),
-                row=1, col=1, secondary_y=False
-            )
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=norm_df["Label"],
-                    y=norm_df["Normalized_Value"],
-                    mode="lines+markers",
-                    name=f"Normalized {granularity} Volume",
-                    line=dict(color="red"),
-                    yaxis="y2",
-                    hoverinfo="x+y",
-                ),
-                row=1, col=1, secondary_y=True
-            )
-            
-            # ------------------------
-            # RIGHT: BUBBLE CHART (Event Bins)
-            # ------------------------
-            
-            # Load event calendar again (you already have df_events)
-            bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
-            df_bubbles = df_events.copy()
-            
-            # Map each date to the selected granularity (same logic as above)
-            if granularity == "Yearly":
-                df_bubbles["Label"] = df_bubbles["Date"].dt.year.astype(str)
-            elif granularity == "Quarterly":
-                df_bubbles["Label"] = df_bubbles["Date"].dt.to_period("Q").astype(str)
-            else:
-                df_bubbles["Label"] = df_bubbles["Date"].dt.to_period("M").astype(str)
-            
-            # Sum occurrences of each event type by Label
-            bubble_df = df_bubbles.groupby("Label")[bin_cols].sum().reset_index()
-            
-            # Melt for long format (so each event type becomes one bubble)
-            bubble_long = bubble_df.melt(id_vars="Label", var_name="Event_Type", value_name="Count")
-            
-            # Filter out 0-counts
-            bubble_long = bubble_long[bubble_long["Count"] > 0]
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=bubble_long["Label"],
-                    y=bubble_long["Event_Type"],
-                    mode="markers",
-                    marker=dict(
-                        size=bubble_long["Count"] * 10,  # scale bubble size
-                        sizemode="area",
-                        sizeref=2.*max(bubble_long["Count"])/100**2,
-                        color=bubble_long["Count"],
-                        colorscale="Viridis",
-                        showscale=True,
-                        colorbar=dict(title="Event Count"),
-                    ),
-                    text=bubble_long["Count"],
-                    hovertemplate="<b>%{y}</b><br>%{x}<br>Count: %{text}<extra></extra>",
-                    name="Event Intensity"
-                ),
-                row=1, col=2
-            )
+            with col1:
+                fig_trend = go.Figure()
+                fig_trend.add_trace(
+                    go.Scatter(
+                        x=trend_df["Label"],
+                        y=trend_df["Value"],
+                        mode="lines+markers",
+                        name=f"Shipment Trend ({granularity}, {view_mode})",
+                        fill="tozeroy",
+                        hovertext=trend_df["Event / Task"],
+                        hoverinfo="x+y+text",
+                    )
+                )
+                fig_trend.add_trace(
+                    go.Scatter(
+                        x=norm_df["Label"],
+                        y=norm_df["Normalized_Value"],
+                        mode="lines+markers",
+                        name=f"Normalized {granularity} Volume",
+                        line=dict(color="red"),
+                    )
+                )
+                fig_trend.update_layout(
+                    title=f"Shipment Trend vs Normalized Volume ({granularity})",
+                    xaxis_title=granularity,
+                    yaxis_title=y_title,
+                    height=500,
+                )
+                st.plotly_chart(fig_trend, use_container_width=True)
             
             # ------------------------
-            # Layout adjustments
+            # RIGHT: Bubble Chart for Event Types
             # ------------------------
-            fig.update_layout(
-                height=800,
-                width=1600,
-                template="plotly_dark",
-                hovermode="x unified",
-                showlegend=True,
-                legend_title="Metrics",
-            )
+            with col2:
+                bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
+                df_bubbles = df_events.copy()
             
-            # Axis titles for both charts
-            fig.update_xaxes(title_text=granularity, row=1, col=1)
-            fig.update_yaxes(title_text=y_title, row=1, col=1, secondary_y=False)
-            fig.update_yaxes(title_text=norm_y_title, row=1, col=1, secondary_y=True)
-            fig.update_xaxes(title_text="Period", row=1, col=2)
-            fig.update_yaxes(title_text="Event Type", row=1, col=2)
+                # Map dates to selected granularity
+                if granularity == "Yearly":
+                    df_bubbles["Label"] = df_bubbles["Date"].dt.year.astype(str)
+                elif granularity == "Quarterly":
+                    df_bubbles["Label"] = df_bubbles["Date"].dt.to_period("Q").astype(str)
+                else:
+                    df_bubbles["Label"] = df_bubbles["Date"].dt.to_period("M").astype(str)
             
-            # Display combined subplot
-            st.plotly_chart(fig, use_container_width=True)
+                # Aggregate counts by Label and Event Type
+                bubble_df = df_bubbles.groupby("Label")[bin_cols].sum().reset_index()
+                bubble_long = bubble_df.melt(id_vars="Label", var_name="Event_Type", value_name="Count")
+                bubble_long = bubble_long[bubble_long["Count"] > 0]  # remove zeros
+            
+                fig_bubble = go.Figure(
+                    go.Scatter(
+                        x=bubble_long["Label"],
+                        y=bubble_long["Event_Type"],
+                        mode="markers",
+                        marker=dict(
+                            size=bubble_long["Count"]*10, 
+                            sizemode="area",
+                            color=bubble_long["Count"],
+                            colorscale="Viridis",
+                            showscale=True,
+                            colorbar=dict(title="Event Count")
+                        ),
+                        text=bubble_long["Count"],
+                        hovertemplate="<b>%{y}</b><br>%{x}<br>Count: %{text}<extra></extra>",
+                    )
+                )
+                fig_bubble.update_layout(
+                    title=f"Event Type Distribution ({granularity})",
+                    xaxis_title=granularity,
+                    yaxis_title="Event Type",
+                    height=500,
+                )
+                st.plotly_chart(fig_bubble, use_container_width=True)
+
 
 
         # ===============================
