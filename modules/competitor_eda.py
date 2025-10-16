@@ -222,46 +222,91 @@ def run():
             sku = str(sku).upper().strip()
             match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
             segment = match.group(1) if match else "Other Segment"
-            
-            # Normalize segment names: remove trailing '.' and unify 'CAN'/'CANS'
             segment = segment.replace(".", "").replace("CANS", "CAN").strip()
             return segment
-            #sku = str(sku).upper().strip()
-            #match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
-            #return match.group(1) if match else "Other Segment"
-
+    
         df["Segment"] = df[SKU_COL].apply(extract_segment)
-
-        # Brand selection via radio buttons (include "All")
+    
+        # --- Brand selection ---
         brands = ["All"] + sorted(df["Brand"].unique())
         selected_brand = st.radio("Select Brand", options=brands, index=0, horizontal=True)
-
+    
         if selected_brand == "All":
             df_brand = df[df["Brand"] != "OTHER"]
         else:
             df_brand = df[df["Brand"] == selected_brand]
-
-        pack_sales = df_brand.groupby("Segment")[VOLUME_COL].sum().round(0).reset_index().sort_values(by=VOLUME_COL, ascending=False)
-        pack_sales["Percentage"] = (pack_sales[VOLUME_COL] / pack_sales[VOLUME_COL].sum() * 100).round(0)
-
-        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
-        y_col = "Percentage" if granularity == "Percentage" else VOLUME_COL
-        y_title = "Volume Share (%)" if y_col == "Percentage" else "Volume"
-
-        fig_pack = px.bar(
-            pack_sales,
-            x="Segment",
-            y=y_col,
-            text=pack_sales[y_col].round(2),
-            title=f"{selected_brand} Pack Size Distribution",
-            color="Segment",
-            labels={y_col: y_title}
+    
+        # --- Time granularity selection ---
+        time_granularity = st.radio(
+            "Select Time Granularity", 
+            ["Yearly", "Quarterly", "Monthly", "Weekly"], 
+            horizontal=True, 
+            key="time_granularity_tab2"
         )
-        fig_pack.update_traces(textposition="outside")
-        fig_pack.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
-        fig_pack.update_xaxes(tickangle=-45)
-        st.plotly_chart(fig_pack, use_container_width=True)
-        st.dataframe(pack_sales.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
+    
+        # Ensure date column is in datetime format
+        df_brand["Date"] = pd.to_datetime(df_brand[DATE_COL])
+    
+        # --- Resample based on granularity ---
+        if time_granularity == "Yearly":
+            df_brand["Period"] = df_brand["Date"].dt.to_period("Y").astype(str)
+        elif time_granularity == "Quarterly":
+            df_brand["Period"] = df_brand["Date"].dt.to_period("Q").astype(str)
+        elif time_granularity == "Monthly":
+            df_brand["Period"] = df_brand["Date"].dt.to_period("M").astype(str)
+        elif time_granularity == "Weekly":
+            df_brand["Period"] = df_brand["Date"].dt.to_period("W").astype(str)
+    
+        # --- Aggregate volume by Segment and Period ---
+        pack_sales_time = (
+            df_brand.groupby(["Period", "Segment"])[VOLUME_COL]
+            .sum()
+            .reset_index()
+            .sort_values(by=["Period", "Segment"])
+        )
+    
+        # --- Granularity toggle for Absolute / Percentage ---
+        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab2")
+        if granularity == "Percentage":
+            pack_sales_time["Percentage"] = (
+                pack_sales_time.groupby("Period")[VOLUME_COL].apply(lambda x: x / x.sum() * 100).reset_index(drop=True)
+            )
+            y_col = "Percentage"
+            y_title = "Volume Share (%)"
+        else:
+            y_col = VOLUME_COL
+            y_title = "Volume"
+    
+        # --- Line chart visualization ---
+        fig_pack_line = px.line(
+            pack_sales_time,
+            x="Period",
+            y=y_col,
+            color="Segment",
+            markers=True,
+            title=f"{selected_brand} Pack Size Trend ({time_granularity})",
+            labels={y_col: y_title, "Period": time_granularity},
+        )
+    
+        fig_pack_line.update_layout(
+            height=600,
+            margin=dict(t=100, b=100, l=50, r=50),
+            legend_title_text="Segment",
+            hovermode="x unified"
+        )
+    
+        st.plotly_chart(fig_pack_line, use_container_width=True)
+    
+        # --- Display data ---
+        summary = (
+            pack_sales_time.groupby("Segment")[VOLUME_COL]
+            .sum()
+            .reset_index()
+            .sort_values(by=VOLUME_COL, ascending=False)
+        )
+        summary["Percentage"] = (summary[VOLUME_COL] / summary[VOLUME_COL].sum() * 100).round(0)
+    
+        st.dataframe(summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
 ### **Insights:**
 The 650 ML pack size (light blue bar) is the undisputed leader. It contributed to 81 percent of the total shipment volume. The 330 ml can comes 2nd with just 11% contribution followed by 550 ml can with 6%  and 330 ml with 3%.""")
