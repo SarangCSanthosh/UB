@@ -373,7 +373,7 @@ def run():
             # ======================== MONTHLY VIEW ===============================
             # =====================================================================
             if granularity == "Monthly":
-                st.subheader("🗓️ Monthly Event Heatmap")
+                st.subheader("Monthly Event Heatmap")
         
                 selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
                 selected_month_name = st.selectbox(
