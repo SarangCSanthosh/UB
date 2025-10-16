@@ -883,7 +883,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
         st.subheader("Depot-wise YoY Volume Change")
     
         if "DBF_DEPOT" in df_filtered.columns and "ACTUAL_DATE" in df_filtered.columns:
-        # Ensure ACTUAL_DATE is datetime
+            # Ensure ACTUAL_DATE is datetime
             df_filtered["ACTUAL_DATE"] = pd.to_datetime(df_filtered["ACTUAL_DATE"], errors="coerce")
             df_filtered["Year"] = df_filtered["ACTUAL_DATE"].dt.year
     
@@ -893,10 +893,9 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             # Pivot to have years as columns
             pivot_df = depot_yearly.pivot(index="DBF_DEPOT", columns="Year", values="VOLUME").fillna(0)
     
-            # Compute YoY change for the last two years
-            if len(pivot_df.columns) >= 2:
-                last_year, prev_year = sorted(pivot_df.columns)[-2:]
-                pivot_df["YoY_Change"] = pivot_df[last_year] - pivot_df[prev_year]
+            # Only consider 2023 and 2024
+            if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
+                pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
     
                 # Sort depots by YoY change for waterfall
                 pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
@@ -914,16 +913,17 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 ))
     
                 fig.update_layout(
-                    title=f"Depot-wise YoY Volume Change ({prev_year} → {last_year})",
+                    title="Depot-wise YoY Volume Change (2023 → 2024)",
                     yaxis=dict(title="Volume Change"),
                 )
     
                 st.plotly_chart(fig, use_container_width=True)
-                st.dataframe(pivot_df[[prev_year, last_year, "YoY_Change"]].round(0))
+                st.dataframe(pivot_df[[2023, 2024, "YoY_Change"]].round(0))
             else:
-                st.info("Not enough yearly data for YoY calculation.")
+                st.info("Data for 2023 and/or 2024 is missing.")
         else:
             st.info("DBF_DEPOT or ACTUAL_DATE column not found.")
+
             
 
 # ===============================
