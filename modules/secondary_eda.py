@@ -366,6 +366,7 @@ def run():
                 selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
     
                 # --- Aggregate shipment volume weekly ---
+                df_ship = df.copy()
                 df_ship["Date"] = pd.to_datetime(df_ship["ACTUAL_DATE"], errors="coerce")
                 df_ship["Year"] = df_ship["Date"].dt.year
                 df_ship["Week"] = df_ship["Date"].dt.isocalendar().week
