@@ -350,7 +350,7 @@ def run():
         # ===============================
         
         else:
-            st.subheader("Event Calender")
+            st.subheader("Event-Based Shipment Visualization")
         
             # --- Load Event Calendar ---
             EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
