@@ -344,7 +344,7 @@ def run():
             # 📅 EVENT CALENDAR HEATMAP
             # ===============================
         else:
-            st.subheader("📅 Event-Based Shipment Visualization")
+            st.subheader("Event-Based Shipment Visualization")
         
             EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
             df_events = load_event_calendar(EVENT_XLSX_URL)
@@ -445,7 +445,7 @@ def run():
             # ==== WEEKLY VIEW ========
             # =========================
             else:
-                st.subheader("📊 Weekly Event Trend")
+                st.subheader("Weekly Event Trend")
         
                 df_events["Year"] = df_events["Date"].dt.year
                 df_events["Week"] = df_events["Date"].dt.isocalendar().week
