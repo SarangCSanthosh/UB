@@ -9,13 +9,13 @@ st.set_page_config(page_title="EDA Dashboard", layout="wide")
 
 # Sidebar navigation
 st.sidebar.title("EDA Dashboard")
-page = st.sidebar.radio("Choose Dataset", ["Primary Dataset", "Secondary Dataset","Competitor Analysis"])
+page = st.sidebar.radio("Choose Dataset", ["Primary Dataset", "Secondary Dataset","Comparative Analysis"])
 
 # Render selected page
 if page == "Primary Dataset":
     primary_eda.run()
 elif page == "Secondary Dataset":
     secondary_eda.run()
-elif page == "Competitor Analysis":
+elif page == "Comparative Analysis":
     competitor_eda.run()
     
