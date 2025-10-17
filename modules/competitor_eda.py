@@ -204,8 +204,8 @@ def run():
                     st.plotly_chart(fig, use_container_width=True)
     
                     # --- Show summary table ---
-                    summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(2)
-                    st.markdown("#### 📊 Summary Table: Brand YoY Comparison")
+                    summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
+                    st.markdown("#### Summary Table: Brand YoY Comparison")
                     st.dataframe(summary_df)
                 else:
                     st.warning("Data for both 2023 and 2024 is required to compute YoY change.")
