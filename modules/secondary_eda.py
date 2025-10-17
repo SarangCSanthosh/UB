@@ -915,8 +915,8 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 
         # ---- TAB 7: Depot Map View ----
     with tab7:
-        st.markdown("### 🚛 Question: What is the geographic spread of shipment volumes?")
-        st.subheader("📍 Advanced Depot Shipment Volume Map")
+        st.markdown("### Question: What is the geographic spread of shipment volumes?")
+        st.subheader(" Depot Shipment Volume Map")
     
         # --- Approximate and refined coordinates for Karnataka depots ---
         DEPOT_COORDS = {
