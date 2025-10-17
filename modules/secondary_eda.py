@@ -51,7 +51,7 @@ def load_event_calendar(sheet_id: str):
         # Build a direct download link
         
         #download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-        download_url = f"https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
+        download_url = f"https://docs.google.com/spreadsheets/d/1mvZJSFbQrajrnxbu-KY9wC3cJkX-lZ9g/export?format=xlsx"
         df = pd.read_excel(download_url)
 
         # Clean and standardize columns
@@ -80,7 +80,7 @@ def run():
     # --------------------------
     # LOAD DATA
     # --------------------------
-    default_path = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
+    default_path = "https://docs.google.com/spreadsheets/d/1mvZJSFbQrajrnxbu-KY9wC3cJkX-lZ9g/export?format=xlsx"
     df = load_excel(default_path)
     SHEET_ID = "1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO"
     df_events = load_event_calendar(SHEET_ID)
