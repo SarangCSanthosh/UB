@@ -140,71 +140,81 @@ def run():
 
     # ---- Tab 1: Brand Distribution ----
     with tab1:
-        st.markdown("### Question: Which brands dominate in shipment volume?")
-        st.subheader("Brand Distribution")
+        st.markdown("### Question: Which brands contributed most to shipment growth or decline?")
+        st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
     
-        # --- Aggregate volume by Brand ---
-        brand_sales = df.groupby("Brand")[VOLUME_COL].sum().round(0).reset_index()
-        brand_sales = brand_sales[brand_sales["Brand"] != "OTHER"]
-        brand_sales["Percentage"] = (brand_sales[VOLUME_COL] / brand_sales[VOLUME_COL].sum().round(0) * 100).round(0)
+        # --- Ensure date column exists ---
+        if "ACTUAL_DATE" in df.columns:
+            df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
+            df["Year"] = df["ACTUAL_DATE"].dt.year
     
-        # --- Group brands with <1% as OTHERS ---
-        major_brands = brand_sales[brand_sales["Percentage"] >= 3]
-        minor_brands = brand_sales[brand_sales["Percentage"] < 3]
+            # --- Filter only 2023 and 2024 ---
+            df_filtered_years = df[df["Year"].isin([2023, 2024])]
     
-        if not minor_brands.empty:
-            others_sum = minor_brands[VOLUME_COL].sum().round(0)
-            others_pct = minor_brands["Percentage"].sum().round(0)
-            others_row = pd.DataFrame({"Brand": ["OTHERS"], VOLUME_COL: [others_sum], "Percentage": [others_pct]})
-            brand_sales = pd.concat([major_brands, others_row], ignore_index=True)
+            if not df_filtered_years.empty:
+                # --- Aggregate volume by brand & year ---
+                brand_yearly = (
+                    df_filtered_years.groupby(["Brand", "Year"])[VOLUME_COL]
+                    .sum()
+                    .reset_index()
+                )
     
-        brand_sales = brand_sales.sort_values(by=VOLUME_COL, ascending=False)
+                # --- Pivot: brands as rows, years as columns ---
+                pivot_df = brand_yearly.pivot(index="Brand", columns="Year", values=VOLUME_COL).fillna(0)
     
-        # --- Toggle between Absolute and Percentage view ---
-        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True, key="granularity_tab1")
-        y_col = "Percentage" if granularity == "Percentage" else VOLUME_COL
-        y_title = "Volume Share (%)" if y_col == "Percentage" else "Volume"
+                # --- Compute YoY Change ---
+                if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
+                    pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
+                    pivot_df["YoY_Percentage"] = (
+                        (pivot_df["YoY_Change"] / pivot_df[2023].replace(0, np.nan)) * 100
+                    ).round(2)
     
-        # --- Bar Chart for Main Brands ---
-        fig = px.bar(
-            brand_sales,
-            x="Brand",
-            y=y_col,
-            text=brand_sales[y_col],
-            title="Volume Distribution Across Brands (Grouped by OTHERS < 1%)",
-            color="Brand",
-            labels={y_col: y_title}
-        )
-        fig.update_traces(textposition="outside")
-        fig.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
-        fig.update_xaxes(tickangle=-45)
-        st.plotly_chart(fig, use_container_width=True)
+                    # --- Remove "OTHER" brand if present ---
+                    pivot_df = pivot_df[pivot_df.index.str.upper() != "OTHER"]
     
-        # --- Pie Chart: Breakdown of OTHERS ---
-        if not minor_brands.empty:
-            st.markdown("#### Breakdown of Brands Under 'OTHERS' (< 1%)")
-            fig_pie = px.pie(
-                minor_brands,
-                names="Brand",
-                values=VOLUME_COL,
-                title="Distribution of Brands Grouped Under 'OTHERS'",
-                color="Brand",
-                hole=0.4
-            )
-            fig_pie.update_traces(texttemplate="%{label}<br>%{percent:.0%}",  # Show label + rounded percent
-                hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
-                insidetextorientation='auto'
-            )
-            fig_pie.update_layout(height=400, margin=dict(t=50, b=50, l=50, r=50))
-            st.plotly_chart(fig_pie, use_container_width=True)
+                    # --- Sort by YoY change ---
+                    pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
+    
+                    # --- Waterfall Chart ---
+                    fig = go.Figure(go.Waterfall(
+                        name="YoY Change",
+                        orientation="v",
+                        measure=["relative"] * len(pivot_df),
+                        x=pivot_df.index,
+                        y=pivot_df["YoY_Change"],
+                        text=pivot_df["YoY_Change"].apply(lambda x: f"{x:,.0f}"),
+                        textposition="outside",
+                        connector={"line": {"color": "rgb(63, 63, 63)"}},
+                        customdata=pivot_df["YoY_Percentage"],
+                        hovertemplate="<b>%{x}</b><br>Change: %{y:,.0f}<br>YoY: %{customdata:.2f}%<extra></extra>"
+                    ))
+    
+                    # --- Layout Styling ---
+                    fig.update_layout(
+                        title="Brand-wise Shipment Growth/Decline (2023 → 2024)",
+                        yaxis=dict(title="Change in Volume"),
+                        xaxis=dict(title="Brand", tickangle=-45),
+                        height=600,
+                        margin=dict(b=150),
+                        template="plotly_white"
+                    )
+    
+                    st.plotly_chart(fig, use_container_width=True)
+    
+                    # --- Show summary table ---
+                    summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(2)
+                    st.markdown("#### 📊 Summary Table: Brand YoY Comparison")
+                    st.dataframe(summary_df)
+                else:
+                    st.warning("Data for both 2023 and 2024 is required to compute YoY change.")
+            else:
+                st.info("No records found for 2023 or 2024.")
         else:
-            st.info("No brands fall under the 'OTHERS' (<1%) category for the current selection.")
-    
-        # --- Data Table ---
-        st.dataframe(brand_sales.set_index("Brand")[[VOLUME_COL, "Percentage"]].round(0))
+            st.error("The dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
+
        
-        with st.container():
-            st.markdown("""
+        #with st.container():
+            #st.markdown("""
 ### **Insights:**
 - KFS is the brand which has the highest shipment amongst all other brands under UNITED BREWERIES.
 - It has given a strong lead comprising 72 percent of the total volume. 
