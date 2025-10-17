@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
 import re
@@ -69,7 +70,7 @@ def map_sku_to_brand(sku):
 # Main app
 # ===============================
 def run():
-    st.title("Competitor Analysis Dashboard")
+    st.title("Comparative Analysis Dashboard")
 
     # --------------------------
     # LOAD DATA via gdown
