@@ -80,7 +80,7 @@ def run():
     # --------------------------
     # LOAD DATA
     # --------------------------
-    default_path = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
+    default_path = "https://docs.google.com/spreadsheets/d/1mvZJSFbQrajrnxbu-KY9wC3cJkX-lZ9g/export?format=xlsx"
     df = load_excel(default_path)
     SHEET_ID = "1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO"
     df_events = load_event_calendar(SHEET_ID)
@@ -659,32 +659,64 @@ def run():
         st.markdown("###  Question: Where is shipment activity the highest among outlets?")
         st.subheader("Top Outlets by Volume")
         
-        # --- Controls ---
-        view_mode_tab2 = st.radio("Display Mode", ["Absolute", "Percentage"], horizontal=True, key="top_outlets_view_mode")
-        top_n = st.slider("Top-N Outlets", 5, 25, 10)
-        
-        outlet_volume = df_filtered.groupby(OUTLET_COL)[VOLUME_COL].sum().round(0).reset_index()
-        top_outlets = outlet_volume.sort_values(by=VOLUME_COL, ascending=False).head(top_n)
-        
-        if view_mode_tab2 == "Percentage":
-            top_outlets["Value"] = (top_outlets[VOLUME_COL] / top_outlets[VOLUME_COL].sum().round(0)) * 100
-            value_col = "Value"
-            title_suffix = " (%)"
+         # --- Load external data from Google Sheets ---
+        sheet_url = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
+        try:
+            external_df = pd.read_excel(sheet_url)
+        except Exception as e:
+            st.error(f"Error loading external data: {e}")
+            st.stop()
+    
+        # --- Check if required columns exist ---
+        if OUTLET_COL in external_df.columns and VOLUME_COL in external_df.columns:
+            # --- Controls ---
+            view_mode_tab2 = st.radio(
+                "Display Mode", ["Absolute", "Percentage"], horizontal=True, key="top_outlets_view_mode"
+            )
+            top_n = st.slider("Top-N Outlets", 5, 25, 10)
+    
+            # --- Group and sort by outlet volume ---
+            outlet_volume = (
+                external_df.groupby(OUTLET_COL)[VOLUME_COL]
+                .sum()
+                .round(0)
+                .reset_index()
+                .sort_values(by=VOLUME_COL, ascending=False)
+            )
+    
+            top_outlets = outlet_volume.head(top_n)
+    
+            # --- Handle Percentage vs Absolute ---
+            if view_mode_tab2 == "Percentage":
+                top_outlets["Value"] = (
+                    top_outlets[VOLUME_COL] / top_outlets[VOLUME_COL].sum() * 100
+                ).round(2)
+                title_suffix = " (%)"
+            else:
+                top_outlets["Value"] = top_outlets[VOLUME_COL]
+                title_suffix = ""
+    
+            # --- Treemap Chart ---
+            fig = px.treemap(
+                top_outlets,
+                path=[OUTLET_COL],
+                values="Value",
+                title=f"Top {top_n} Outlets Treemap{title_suffix}",
+                custom_data=["Value"],
+            )
+    
+            fig.update_traces(
+                hovertemplate="<b>%{label}</b><br>Value: %{customdata[0]:,.2f}<extra></extra>"
+            )
+    
+            st.plotly_chart(fig, use_container_width=True)
+    
+            # --- Display dataframe ---
+            display_df = top_outlets[[OUTLET_COL, "Value"]].set_index(OUTLET_COL).round(2)
+            st.dataframe(display_df)
+    
         else:
-            top_outlets["Value"] = top_outlets[VOLUME_COL]
-            value_col = "Value"
-            title_suffix = ""
-        
-        # Treemap
-        fig = px.treemap(top_outlets, path=[OUTLET_COL], values=value_col, 
-                         title=f"Top {top_n} Outlets Treemap{title_suffix}",custom_data=[value_col])
-        fig.update_traces(
-            hovertemplate='<b>%{label}</b><br>Value: %{customdata[0]:,.0f}<extra></extra>'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        display_df = top_outlets[[OUTLET_COL, value_col]].set_index(OUTLET_COL).round(0)
-        st.dataframe(display_df)
-
+            st.warning("Required columns not found in the external sheet. Please check OUTLET_COL and VOLUME_COL names.")
         
         st.markdown("""
     ### **Insights:**
