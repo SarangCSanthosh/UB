@@ -56,11 +56,7 @@ SKU_GROUP_MAPPING = {
     "KFS 500 ML. CANS": "KF STRONG",
     "KFS 650 ML.": "KF STRONG",
 
-    # Bullet
-    "BSSB 300 ML.": "Bullet",
-    "BSSB 330 ML.": "Bullet",
-    "BSSB 330 ML. CANS": "Bullet",
-    "BSSB 650 ML.": "Bullet",
+    
 }
 
 def map_sku_to_brand(sku):
