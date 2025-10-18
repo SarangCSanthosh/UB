@@ -54,7 +54,7 @@ SKU_GROUP_MAPPING = {
     "KFS 330 ML.": "KF STRONG",
     "KFS 330 ML. CANS": "KF STRONG",
     "KFS 500 ML. CANS": "KF STRONG",
-    "KFS 650 ML.": "KF STRONG",
+    "KFS 650 ML.": "KF STRONG"
 
     
 }
