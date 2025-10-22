@@ -80,8 +80,8 @@ def run():
     # --------------------------
     # LOAD DATA
     # --------------------------
-    #default_path = "https://docs.google.com/spreadsheets/d/1mvZJSFbQrajrnxbu-KY9wC3cJkX-lZ9g/export?format=xlsx"
-    default_path = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
+    default_path = "https://docs.google.com/spreadsheets/d/1mvZJSFbQrajrnxbu-KY9wC3cJkX-lZ9g/export?format=xlsx"
+    #default_path = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
     df = load_excel(default_path)
     SHEET_ID = "1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO"
     df_events = load_event_calendar(SHEET_ID)
