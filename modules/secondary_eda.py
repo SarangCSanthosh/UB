@@ -96,7 +96,7 @@ def run():
     # --------------------------
     yearly_data = df.groupby("Year").agg(
         Total_Volume=(VOLUME_COL, "sum"),
-        Unique_Outlets=(OUTLET_COL, "nunique"),
+        Unique_Outlets=(OUTLET_COL, "unique"),
         Total_Shipments=(DATE_COL, "count"),
     ).sort_index()
 
