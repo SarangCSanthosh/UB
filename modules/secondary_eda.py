@@ -88,7 +88,7 @@ def run():
 
     VOLUME_COL = "VOLUME"
     OUTLET_COL = "DBF_OUTLET_NAME"
-
+    df[OUTLET_COL] = df[OUTLET_COL].astype(str).str.strip().str.upper()
     df, DATE_COL = prepare_dates(df)
 
     # --------------------------
@@ -96,7 +96,7 @@ def run():
     # --------------------------
     yearly_data = df.groupby("Year").agg(
         Total_Volume=(VOLUME_COL, "sum"),
-        Unique_Outlets=(OUTLET_COL, "unique"),
+        Unique_Outlets=(OUTLET_COL, "nunique"),
         Total_Shipments=(DATE_COL, "count"),
     ).sort_index()
 
