@@ -88,7 +88,24 @@ def run():
 
     VOLUME_COL = "VOLUME"
     OUTLET_COL = "DBF_OUTLET_NAME"
-    df[OUTLET_COL] = df[OUTLET_COL].astype(str).str.strip().str.upper()
+    #df[OUTLET_COL] = df[OUTLET_COL].astype(str).str.strip().str.upper()
+    # 1️⃣ Inspect potential hidden characters
+    df['clean_outlet'] = (
+        df[OUTLET_COL]
+        .astype(str)
+        .str.replace(r'[\u200b\u200c\u200d\u00a0\r\n\t]', '', regex=True)  # invisible Unicode chars
+        .str.strip()
+        .str.upper()
+    )
+    
+    # 2️⃣ Compare unique counts
+    print("Before:", df[OUTLET_COL].nunique())
+    print("After:", df['clean_outlet'].nunique())
+    
+    # 3️⃣ Replace column finally if count improves
+    df[OUTLET_COL] = df['clean_outlet']
+    df.drop(columns=['clean_outlet'], inplace=True)
+
     df, DATE_COL = prepare_dates(df)
 
     # --------------------------
