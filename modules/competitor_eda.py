@@ -21,7 +21,7 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
     df["Quarter"] = df[date_col].dt.to_period("Q")
     return df, date_col
 
- ===============================
+# ===============================
 # Exact SKU to Brand mapping
 # ===============================
 SKU_GROUP_MAPPING = {
