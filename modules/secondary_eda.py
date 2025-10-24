@@ -1142,11 +1142,11 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             st.info("DBF_DEPOT or ACTUAL_DATE column not found.")
         st.markdown("""
             ### **Insights**
-	        1. CHIKKODI - Kingfisher presence around sugar factories
-	        2. KALABURAGI - Disposable income⬆️, shipments also ⬆️
+	        1. CHIKKODI - Good Kingfisher presence around sugar factories
+	        2. KALABURAGI - Disposable Income ⬆️, shipments also ⬆️
 	        3. SINDHANUR - Young drinkers turn towards hard drinks 
-	        4. CHITRADURGA -  new liquor store licenses rejected by CM 
-            5. VIJAYAPURA - Disposable Income ⬆️ but shipments ⬇️
+	        4. CHITRADURGA -  New liquor store licenses rejected by CM 
+            5. VIJAYAPURA - Disposable Income ⬆️, but shipments ⬇️
             """)
     
 
