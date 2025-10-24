@@ -67,42 +67,6 @@ def map_sku_to_brand(sku):
     return SKU_GROUP_MAPPING.get(sku.strip().upper(), "OTHER")
 
 
-COMPANY_GROUP_MAPPING = {
-    # UB Group
-    "UB": "UB",
-
-    # SOM Group
-    "SOM BREWERIES": "SOM BREWERIES",
-
-    # AB-INBEV
-    "AB-INBEV": "AB-INBEV",
-
-    # CIPL
-    "CIPL": "CIPL",
-
-    # SNJ
-    "SNJ": "SNJ",
-
-    # BIRA
-    "BIRA": "BIRA",
-
-    # BIO
-    "BIO": "BIO",
-
-    # LILA
-    "LILA": "LILA",
-
-    # GRANO
-    "GRANO 69 BEVERAGES PVT LTD ": "GRANO 69 BEVERAGES",
-    "GRANO69": "GRANO 69 BEVERAGES",
-}
-
-def map_company_group(company):
-    if not isinstance(company, str):
-        return "OTHER"
-    cleaned = company.strip().upper()
-    return COMPANY_GROUP_MAPPING.get(cleaned, "OTHER")
-
 
 
 # ===============================
