@@ -132,6 +132,10 @@ def run():
     # ---- Tab 6: Company-wise ----
     with tab6:
         st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
+        # --- Combine GRANO69 variants ---
+        df["DBF_COMPANY"] = df["DBF_COMPANY"].replace({
+            "GRANO69": "GRANO 69 BEVERAGES PVT LTD"
+        })
         df_filtered = df[df["Year"].isin([2023, 2024])]
         if not df_filtered.empty and "DBF_COMPANY" in df_filtered.columns:
             df_filtered["DBF_COMPANY"] = df_filtered["DBF_COMPANY"].astype(str).str.strip().str.upper()
