@@ -1140,6 +1140,13 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 st.info("Data for 2023 and/or 2024 is missing.")
         else:
             st.info("DBF_DEPOT or ACTUAL_DATE column not found.")
+        st.markdown("""
+            ### **Insights: Shipment Volume Analysis (2023–2024)**
+            - There has been a substantial decrease in the yearly shipment volume between 2023 and 2024.  
+            - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years.  
+            - The shipment volume is highly unstable on a monthly basis, showing recovery in Q4 2024 but still below peak levels.
+            """)
+    
 
     with tab9:  # replace tabX with your tab name
         st.markdown("### Event Type Distribution")
