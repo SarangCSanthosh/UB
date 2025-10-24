@@ -12,22 +12,13 @@ import os
 # ===============================
 
 @st.cache_data
-def download_and_convert_parquet(file_id, csv_filename="comparative_data.csv", parquet_filename="comparative_data.parquet"):
-    if os.path.exists(parquet_filename):
-        return pd.read_parquet(parquet_filename)
-    
+def download_csv(file_id, csv_filename="comparative_data.csv"):
     if not os.path.exists(csv_filename):
         url = f"https://drive.google.com/uc?id={file_id}"
         gdown.download(url, csv_filename, quiet=False)
-    
-    df_csv = pd.read_csv(csv_filename)
-    
-    # Force all columns to string to avoid PyArrow conversion issues
-    for col in df_csv.columns:
-        df_csv[col] = df_csv[col].astype(str)
-    
-    df_csv.to_parquet(parquet_filename, index=False)
-    return pd.read_parquet(parquet_filename)
+    # Read all as string to avoid type issues
+    df_csv = pd.read_csv(csv_filename, dtype=str)
+    return df_csv
 
 
 @st.cache_data
@@ -76,11 +67,9 @@ def run():
     st.title("Comparative Analysis Dashboard")
 
     FILE_ID = "1hwjURmEeUS3W_-72KnmraIlAjd1o1zDl"
-    CSV_FILE = "comparative_data.csv"
-    PARQUET_FILE = "comparative_data.parquet"
 
-    # Load data
-    df = download_and_convert_parquet(FILE_ID, CSV_FILE, PARQUET_FILE)
+    # Load data from CSV
+    df = download_csv(FILE_ID)
     st.success("✅ Data loaded successfully!")
 
     # Prepare dates
