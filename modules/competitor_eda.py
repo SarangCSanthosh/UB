@@ -494,51 +494,51 @@ The company’s performance is highly dependent on the stability and success of 
         st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
     
         if "ACTUAL_DATE" in df.columns and "DBF_COMPANY" in df.columns:
+        # --- Convert date column and extract year ---
             df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
             df["Year"] = df["ACTUAL_DATE"].dt.year
     
-            # --- Clean company names before mapping ---
+            # --- Clean company names ---
             df["DBF_COMPANY"] = df["DBF_COMPANY"].astype(str).str.strip().str.upper()
-            df["Company_Group"] = df["DBF_COMPANY"].apply(map_company_group)
     
             # --- Filter only 2023 and 2024 ---
             df_filtered_years = df[df["Year"].isin([2023, 2024])]
     
             if not df_filtered_years.empty:
-                # Debug: Check what companies exist
-                st.write("🧩 Unique Company Groups Present:", df_filtered_years["Company_Group"].unique())
+                st.write("🧩 Unique Companies Present:", df_filtered_years["DBF_COMPANY"].unique())
     
-                # --- Aggregate ---
+                # --- Aggregate volume by company & year ---
                 company_yearly = (
-                    df_filtered_years.groupby(["Company_Group", "Year"])[VOLUME_COL]
+                    df_filtered_years.groupby(["DBF_COMPANY", "Year"])[VOLUME_COL]
                     .sum()
                     .reset_index()
                 )
                 st.write("📊 Aggregated Company-Year Data:")
                 st.dataframe(company_yearly)
     
-                # --- Pivot ---
-                pivot_df = company_yearly.pivot(index="Company_Group", columns="Year", values=VOLUME_COL).fillna(0)
+                # --- Pivot: companies as rows, years as columns ---
+                pivot_df = company_yearly.pivot(index="DBF_COMPANY", columns="Year", values=VOLUME_COL).fillna(0)
                 st.write("📈 Pivoted Table:")
                 st.dataframe(pivot_df)
     
-                # --- Compute YoY ---
+                # --- Compute YoY Change ---
                 if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
                     pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
                     pivot_df["YoY_Percentage"] = (
                         (pivot_df["YoY_Change"] / pivot_df[2023].replace(0, np.nan)) * 100
                     ).round(2)
     
+                    # --- Remove "OTHER" if any stray values exist ---
                     pivot_df = pivot_df[pivot_df.index.str.upper() != "OTHER"]
-                    pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
     
-                    # Filter out zero-change companies
+                    # --- Sort and filter ---
+                    pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
                     pivot_df = pivot_df[pivot_df["YoY_Change"] != 0]
     
                     if pivot_df.empty:
-                        st.warning("No valid YoY changes found — check if other companies have shipment data in both 2023 and 2024.")
+                        st.warning("No valid YoY changes found — check if companies have shipment data in both 2023 and 2024.")
                     else:
-                        # --- Plot ---
+                        # --- Waterfall Chart ---
                         fig = go.Figure(go.Waterfall(
                             name="YoY Change",
                             orientation="v",
@@ -563,6 +563,7 @@ The company’s performance is highly dependent on the stability and success of 
     
                         st.plotly_chart(fig, use_container_width=True)
     
+                        # --- Summary Table ---
                         st.markdown("#### Summary Table: Company YoY Comparison")
                         st.dataframe(pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0))
                 else:
@@ -571,7 +572,7 @@ The company’s performance is highly dependent on the stability and success of 
                 st.info("No records found for 2023 or 2024.")
         else:
             st.error("The dataset must include both 'ACTUAL_DATE' and 'DBF_COMPANY' columns.")
-
+    
 
 # ===============================
 # Entry Point
