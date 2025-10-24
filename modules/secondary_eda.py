@@ -1141,10 +1141,12 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
         else:
             st.info("DBF_DEPOT or ACTUAL_DATE column not found.")
         st.markdown("""
-            ### **Insights: Shipment Volume Analysis (2023–2024)**
-            - There has been a substantial decrease in the yearly shipment volume between 2023 and 2024.  
-            - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years.  
-            - The shipment volume is highly unstable on a monthly basis, showing recovery in Q4 2024 but still below peak levels.
+            ### **Insights**
+	        1. CHIKKODI - Kingfisher presence around sugar factories
+	        2. KALABURAGI - Disposable income⬆️, shipments also ⬆️
+	        3. SINDHANUR - Young drinkers turn towards hard drinks 
+	        4. CHITRADURGA -  new liquor store licenses rejected by CM 
+            5. VIJAYAPURA - Disposable Income ⬆️ but shipments ⬇️
             """)
     
 
