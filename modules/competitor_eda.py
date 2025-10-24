@@ -10,16 +10,9 @@ import os
 # ===============================
 # Utility functions
 # ===============================
-@st.cache_data
-def load_csv(path_or_file):
-    return pd.read_csv(path_or_file)
-
-def prepare_dates(df, date_col="ACTUAL_DATE"):
-    df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-    df["Year"] = df[date_col].dt.year
-    df["YearMonth"] = df[date_col].dt.to_period("M")
-    df["Quarter"] = df[date_col].dt.to_period("Q")
-    return df, date_col
+#@st.cache_data
+#def load_csv(path_or_file):
+    #return pd.read_csv(path_or_file)
 
 @st.cache_data(show_spinner=False)
 def load_data_from_drive():
@@ -34,6 +27,15 @@ def load_data_from_drive():
     # Load the CSV file into a DataFrame
     df = pd.read_csv(output_file)
     return df
+
+def prepare_dates(df, date_col="ACTUAL_DATE"):
+    df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+    df["Year"] = df[date_col].dt.year
+    df["YearMonth"] = df[date_col].dt.to_period("M")
+    df["Quarter"] = df[date_col].dt.to_period("Q")
+    return df, date_col
+
+
 
 
 
