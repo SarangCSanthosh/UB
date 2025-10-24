@@ -320,6 +320,12 @@ def run():
         else:
             st.info("No company data found.")
 
+
+
+df = pd.read_csv("data.csv")
+print(df.columns.tolist())
+
+
 # ===============================
 # Entry Point
 # ===============================
