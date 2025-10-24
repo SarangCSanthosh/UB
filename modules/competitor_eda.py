@@ -13,7 +13,7 @@ import re
 @st.cache_data(show_spinner=False)
 def load_data_from_drive():
     file_id = "1hwjURmEeUS3W_-72KnmraIlAjd1o1zDl"
-    output_file = "data.csv"
+    output_file = "comparative data.csv"
 
     if not os.path.exists(output_file):
         url = f"https://drive.google.com/uc?id={file_id}"
