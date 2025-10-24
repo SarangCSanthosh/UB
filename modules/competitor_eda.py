@@ -21,8 +21,52 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
     df["Quarter"] = df[date_col].dt.to_period("Q")
     return df, date_col
 
+ ===============================
+# Exact SKU to Brand mapping
 # ===============================
-# Company Group Mapping
+SKU_GROUP_MAPPING = {
+    # KF
+    "KF 330 ML.": "KF LAGER",
+    "KF 330 ML. CANS": "KF LAGER",
+    "KF 500 ML. CANS": "KF LAGER",
+    "KF 650 ML.": "KF LAGER",
+
+    # KF STORM
+    "KF STORM 500 ML. CANS": "KF STORM",
+    "KF STORM 650 ML.": "KF STORM",
+
+    # KF ULTRA
+    "KF ULTRA 330 ML.": "KF ULTRA",
+    "KF ULTRA 500 ML. CAN": "KF ULTRA",
+    "KF ULTRA 650 ML.": "KF ULTRA",
+
+    # KF ULTRA MAX
+    "KF ULTRA MAX 330 ML.": "KF ULTRA MAX",
+    "KF ULTRA MAX 500 ML. CANS": "KF ULTRA MAX",
+    "KF ULTRA MAX 650 ML.": "KF ULTRA MAX",
+
+    # KF ULTRA WITBIER
+    "KF ULTRA WITBIER 330 ML.": "KF ULTRA WITBIER",
+    "KF ULTRA WITBIER 500 ML. CANS": "KF ULTRA WITBIER",
+    "KF ULTRA WITBIER 650 ML.": "KF ULTRA WITBIER",
+
+    # KFS
+    "KFS 330 ML.": "KF STRONG",
+    "KFS 330 ML. CANS": "KF STRONG",
+    "KFS 500 ML. CANS": "KF STRONG",
+    "KFS 650 ML.": "KF STRONG",
+
+    # Bullet 
+    "BSSB 300 ML.": "Bullet", 
+    "BSSB 330 ML.": "Bullet", 
+    "BSSB 330 ML. CANS": "Bullet", 
+    "BSSB 650 ML.": "Bullet",
+}
+
+def map_sku_to_brand(sku):
+    return SKU_GROUP_MAPPING.get(sku.strip().upper(), "OTHER")
+
+
 COMPANY_GROUP_MAPPING = {
     # UB Group
     "UB": "UB",
@@ -61,7 +105,6 @@ def map_company_group(company):
         return "OTHER"
     return COMPANY_GROUP_MAPPING.get(company.strip().upper(), "OTHER")
 
-SKU_GROUP_MAPPING = { # KF "KF 330 ML.": "KF LAGER", "KF 330 ML. CANS": "KF LAGER", "KF 500 ML. CANS": "KF LAGER", "KF 650 ML.": "KF LAGER", # KF STORM "KF STORM 500 ML. CANS": "KF STORM", "KF STORM 650 ML.": "KF STORM", # KF ULTRA "KF ULTRA 330 ML.": "KF ULTRA", "KF ULTRA 500 ML. CAN": "KF ULTRA", "KF ULTRA 650 ML.": "KF ULTRA", # KF ULTRA MAX "KF ULTRA MAX 330 ML.": "KF ULTRA MAX", "KF ULTRA MAX 500 ML. CANS": "KF ULTRA MAX", "KF ULTRA MAX 650 ML.": "KF ULTRA MAX", # KF ULTRA WITBIER "KF ULTRA WITBIER 330 ML.": "KF ULTRA WITBIER", "KF ULTRA WITBIER 500 ML. CANS": "KF ULTRA WITBIER", "KF ULTRA WITBIER 650 ML.": "KF ULTRA WITBIER", # KFS "KFS 330 ML.": "KF STRONG", "KFS 330 ML. CANS": "KF STRONG", "KFS 500 ML. CANS": "KF STRONG", "KFS 650 ML.": "KF STRONG", # Bullet "BSSB 300 ML.": "Bullet", "BSSB 330 ML.": "Bullet", "BSSB 330 ML. CANS": "Bullet", "BSSB 650 ML.": "Bullet", } def map_sku_to_brand(sku): return SKU_GROUP_MAPPING.get(sku.strip().upper(), "OTHER") instead of SKU based grouping. do this
 
 # ===============================
 # Main app
