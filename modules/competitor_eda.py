@@ -21,6 +21,24 @@ def prepare_dates(df, date_col="ACTUAL_DATE"):
     df["Quarter"] = df[date_col].dt.to_period("Q")
     return df, date_col
 
+@st.cache_data(show_spinner=False)
+def load_data_from_drive():
+    file_id = "1hwjURmEeUS3W_-72KnmraIlAjd1o1zDl"
+    output_file = "data.csv"
+
+    # Download file only if not present locally
+    if not os.path.exists(output_file):
+        url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(url, output_file, quiet=False)
+
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(output_file)
+    return df
+
+# Usage
+df = load_data_from_drive()
+st.success("✅ Data loaded successfully!")
+
 # ===============================
 # Exact SKU to Brand mapping
 # ===============================
@@ -79,16 +97,7 @@ def run():
     # LOAD DATA via gdown
     # --------------------------
 
-    # Google Drive file ID (replace with your actual file ID)
-    file_id = "1hwjURmEeUS3W_-72KnmraIlAjd1o1zDl"
-
-    # Destination filename
-    output_file = "data.csv"
-
-    # Download file from Google Drive if not already downloaded
-    if not os.path.exists(output_file):
-        url = f"https://drive.google.com/uc?id={file_id}"
-        gdown.download(url, output_file, quiet=False)
+    
 
     # Load CSV from local file
     df = load_csv(output_file)
