@@ -61,6 +61,8 @@ def map_company_group(company):
         return "OTHER"
     return COMPANY_GROUP_MAPPING.get(company.strip().upper(), "OTHER")
 
+SKU_GROUP_MAPPING = { # KF "KF 330 ML.": "KF LAGER", "KF 330 ML. CANS": "KF LAGER", "KF 500 ML. CANS": "KF LAGER", "KF 650 ML.": "KF LAGER", # KF STORM "KF STORM 500 ML. CANS": "KF STORM", "KF STORM 650 ML.": "KF STORM", # KF ULTRA "KF ULTRA 330 ML.": "KF ULTRA", "KF ULTRA 500 ML. CAN": "KF ULTRA", "KF ULTRA 650 ML.": "KF ULTRA", # KF ULTRA MAX "KF ULTRA MAX 330 ML.": "KF ULTRA MAX", "KF ULTRA MAX 500 ML. CANS": "KF ULTRA MAX", "KF ULTRA MAX 650 ML.": "KF ULTRA MAX", # KF ULTRA WITBIER "KF ULTRA WITBIER 330 ML.": "KF ULTRA WITBIER", "KF ULTRA WITBIER 500 ML. CANS": "KF ULTRA WITBIER", "KF ULTRA WITBIER 650 ML.": "KF ULTRA WITBIER", # KFS "KFS 330 ML.": "KF STRONG", "KFS 330 ML. CANS": "KF STRONG", "KFS 500 ML. CANS": "KF STRONG", "KFS 650 ML.": "KF STRONG", # Bullet "BSSB 300 ML.": "Bullet", "BSSB 330 ML.": "Bullet", "BSSB 330 ML. CANS": "Bullet", "BSSB 650 ML.": "Bullet", } def map_sku_to_brand(sku): return SKU_GROUP_MAPPING.get(sku.strip().upper(), "OTHER") instead of SKU based grouping. do this
+
 # ===============================
 # Main app
 # ===============================
@@ -89,7 +91,7 @@ def run():
 
     df, DATE_COL = prepare_dates(df)
     # Map SKU → Brand before any tab uses it
-    #df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
+    df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
 
 
     # --------------------------
@@ -127,40 +129,38 @@ def run():
     # --------------------------
     # TABS
     # --------------------------
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5,tab6 = st.tabs([
         "Brand Distribution",
         "Pack Size Wise Analysis",
         "Bottle v/s Cans",
         "Top SKUs",
-        "Monthly Trend"
+        "Monthly Trend",
+        "COmpany"
     ])
 
     # ---- Tab 1: Brand Distribution ----
     with tab1:
-        st.markdown("### Question: Which companies contributed most to shipment growth or decline?")
-        st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
+        st.markdown("### Question: Which brands contributed most to shipment growth or decline?")
+        st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
     
         # --- Ensure date column exists ---
-        if "ACTUAL_DATE" in df.columns and "DBF_COMPANY" in df.columns:
+        if "ACTUAL_DATE" in df.columns:
             df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
             df["Year"] = df["ACTUAL_DATE"].dt.year
-    
-            # --- Map company groups ---
-            df["Company_Group"] = df["DBF_COMPANY"].apply(map_company_group)
     
             # --- Filter only 2023 and 2024 ---
             df_filtered_years = df[df["Year"].isin([2023, 2024])]
     
             if not df_filtered_years.empty:
-                # --- Aggregate volume by company & year ---
-                company_yearly = (
-                    df_filtered_years.groupby(["Company_Group", "Year"])[VOLUME_COL]
+                # --- Aggregate volume by brand & year ---
+                brand_yearly = (
+                    df_filtered_years.groupby(["Brand", "Year"])[VOLUME_COL]
                     .sum()
                     .reset_index()
                 )
     
-                # --- Pivot: companies as rows, years as columns ---
-                pivot_df = company_yearly.pivot(index="Company_Group", columns="Year", values=VOLUME_COL).fillna(0)
+                # --- Pivot: brands as rows, years as columns ---
+                pivot_df = brand_yearly.pivot(index="Brand", columns="Year", values=VOLUME_COL).fillna(0)
     
                 # --- Compute YoY Change ---
                 if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
@@ -169,7 +169,7 @@ def run():
                         (pivot_df["YoY_Change"] / pivot_df[2023].replace(0, np.nan)) * 100
                     ).round(2)
     
-                    # --- Remove "OTHER" group if present ---
+                    # --- Remove "OTHER" brand if present ---
                     pivot_df = pivot_df[pivot_df.index.str.upper() != "OTHER"]
     
                     # --- Sort by YoY change ---
@@ -191,9 +191,9 @@ def run():
     
                     # --- Layout Styling ---
                     fig.update_layout(
-                        title="Company-wise Shipment Growth/Decline (2023 → 2024)",
+                        title="Brand-wise Shipment Growth/Decline (2023 → 2024)",
                         yaxis=dict(title="Change in Volume"),
-                        xaxis=dict(title="Company", tickangle=-45),
+                        xaxis=dict(title="Brand", tickangle=-45),
                         height=600,
                         margin=dict(b=150),
                         template="plotly_white"
@@ -203,14 +203,14 @@ def run():
     
                     # --- Show summary table ---
                     summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
-                    st.markdown("#### Summary Table: Company YoY Comparison")
+                    st.markdown("#### Summary Table: Brand YoY Comparison")
                     st.dataframe(summary_df)
                 else:
                     st.warning("Data for both 2023 and 2024 is required to compute YoY change.")
             else:
                 st.info("No records found for 2023 or 2024.")
         else:
-            st.error("The dataset must include both 'ACTUAL_DATE' and 'DBF_COMPANY' columns to compute YoY change.")
+            st.error("The dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
 
        
         #with st.container():
@@ -481,6 +481,83 @@ The company’s performance is highly dependent on the stability and success of 
 - Although BULLET had seen a rise in the year 2024 , with a spike in MAY 2024 , it has fallen down again by August 2024.
 
 """)
+
+
+    with tab6:
+        st.markdown("### Question: Which companies contributed most to shipment growth or decline?")
+        st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
+    
+        # --- Ensure date column exists ---
+        if "ACTUAL_DATE" in df.columns and "DBF_COMPANY" in df.columns:
+            df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
+            df["Year"] = df["ACTUAL_DATE"].dt.year
+    
+            # --- Map company groups ---
+            df["Company_Group"] = df["DBF_COMPANY"].apply(map_company_group)
+    
+            # --- Filter only 2023 and 2024 ---
+            df_filtered_years = df[df["Year"].isin([2023, 2024])]
+    
+            if not df_filtered_years.empty:
+                # --- Aggregate volume by company & year ---
+                company_yearly = (
+                    df_filtered_years.groupby(["Company_Group", "Year"])[VOLUME_COL]
+                    .sum()
+                    .reset_index()
+                )
+    
+                # --- Pivot: companies as rows, years as columns ---
+                pivot_df = company_yearly.pivot(index="Company_Group", columns="Year", values=VOLUME_COL).fillna(0)
+    
+                # --- Compute YoY Change ---
+                if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
+                    pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
+                    pivot_df["YoY_Percentage"] = (
+                        (pivot_df["YoY_Change"] / pivot_df[2023].replace(0, np.nan)) * 100
+                    ).round(2)
+    
+                    # --- Remove "OTHER" group if present ---
+                    pivot_df = pivot_df[pivot_df.index.str.upper() != "OTHER"]
+    
+                    # --- Sort by YoY change ---
+                    pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
+    
+                    # --- Waterfall Chart ---
+                    fig = go.Figure(go.Waterfall(
+                        name="YoY Change",
+                        orientation="v",
+                        measure=["relative"] * len(pivot_df),
+                        x=pivot_df.index,
+                        y=pivot_df["YoY_Change"],
+                        text=pivot_df["YoY_Change"].apply(lambda x: f"{x:,.0f}"),
+                        textposition="outside",
+                        connector={"line": {"color": "rgb(63, 63, 63)"}},
+                        customdata=pivot_df["YoY_Percentage"],
+                        hovertemplate="<b>%{x}</b><br>Change: %{y:,.0f}<br>YoY: %{customdata:.2f}%<extra></extra>"
+                    ))
+    
+                    # --- Layout Styling ---
+                    fig.update_layout(
+                        title="Company-wise Shipment Growth/Decline (2023 → 2024)",
+                        yaxis=dict(title="Change in Volume"),
+                        xaxis=dict(title="Company", tickangle=-45),
+                        height=600,
+                        margin=dict(b=150),
+                        template="plotly_white"
+                    )
+    
+                    st.plotly_chart(fig, use_container_width=True)
+    
+                    # --- Show summary table ---
+                    summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
+                    st.markdown("#### Summary Table: Company YoY Comparison")
+                    st.dataframe(summary_df)
+                else:
+                    st.warning("Data for both 2023 and 2024 is required to compute YoY change.")
+            else:
+                st.info("No records found for 2023 or 2024.")
+        else:
+            st.error("The dataset must include both 'ACTUAL_DATE' and 'DBF_COMPANY' columns to compute YoY change.")
 
 # ===============================
 # Entry Point
