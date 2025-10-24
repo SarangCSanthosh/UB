@@ -100,7 +100,7 @@ def run():
     
 
     # Load CSV from local file
-    df = load_csv(output_file)
+    #df = load_csv(output_file)
     VOLUME_COL = "VOLUME"
     SKU_COL = "DBF_SKU"
 
