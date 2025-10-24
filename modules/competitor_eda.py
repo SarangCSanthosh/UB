@@ -13,14 +13,20 @@ import re
 
 @st.cache_data(show_spinner=False)
 def download_and_convert_parquet(file_id: str, csv_filename: str, parquet_filename: str):
-    """Download CSV from Google Drive and convert to Parquet for faster loading."""
+    """Download CSV from Google Drive and convert to Parquet safely."""
     if not os.path.exists(parquet_filename):
         if not os.path.exists(csv_filename):
             url = f"https://drive.google.com/uc?id={file_id}"
             gdown.download(url, csv_filename, quiet=False)
         df_csv = pd.read_csv(csv_filename)
+
+        # Convert object columns with mixed types to string
+        for col in df_csv.select_dtypes(include="object").columns:
+            df_csv[col] = df_csv[col].astype(str)
+
         df_csv.to_parquet(parquet_filename, index=False)
     return pd.read_parquet(parquet_filename)
+
 
 @st.cache_data
 def prepare_dates(df, date_col="ACTUAL_DATE"):
