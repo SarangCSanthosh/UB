@@ -89,7 +89,7 @@ def run():
 
     df, DATE_COL = prepare_dates(df)
     # Map SKU → Brand before any tab uses it
-    df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
+    #df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
 
 
     # --------------------------
