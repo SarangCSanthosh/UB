@@ -98,12 +98,11 @@ COMPANY_GROUP_MAPPING = {
 }
 
 def map_company_group(company):
-    """
-    Maps company names in DBF_COMPANY column to standardized groups.
-    """
     if not isinstance(company, str):
         return "OTHER"
-    return COMPANY_GROUP_MAPPING.get(company.strip().upper(), "OTHER")
+    cleaned = company.strip().upper()
+    return COMPANY_GROUP_MAPPING.get(cleaned, "OTHER")
+)
 
 
 # ===============================
