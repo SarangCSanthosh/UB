@@ -21,8 +21,14 @@ def download_and_convert_parquet(file_id, csv_filename="comparative_data.csv", p
         gdown.download(url, csv_filename, quiet=False)
     
     df_csv = pd.read_csv(csv_filename)
+    
+    # Force all columns to string to avoid PyArrow conversion issues
+    for col in df_csv.columns:
+        df_csv[col] = df_csv[col].astype(str)
+    
     df_csv.to_parquet(parquet_filename, index=False)
     return pd.read_parquet(parquet_filename)
+
 
 @st.cache_data
 def prepare_dates(df, date_col="ACTUAL_DATE"):
