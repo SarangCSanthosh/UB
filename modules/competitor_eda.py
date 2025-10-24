@@ -102,7 +102,7 @@ def map_company_group(company):
         return "OTHER"
     cleaned = company.strip().upper()
     return COMPANY_GROUP_MAPPING.get(cleaned, "OTHER")
-)
+
 
 
 # ===============================
