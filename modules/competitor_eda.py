@@ -35,9 +35,7 @@ def load_data_from_drive():
     df = pd.read_csv(output_file)
     return df
 
-# Usage
-df = load_data_from_drive()
-st.success("✅ Data loaded successfully!")
+
 
 # ===============================
 # Exact SKU to Brand mapping
@@ -100,7 +98,9 @@ def run():
     
 
     # Load CSV from local file
-    #df = load_csv(output_file)
+    # Usage
+    df = load_data_from_drive()
+    st.success("✅ Data loaded successfully!")
     VOLUME_COL = "VOLUME"
     SKU_COL = "DBF_SKU"
 
