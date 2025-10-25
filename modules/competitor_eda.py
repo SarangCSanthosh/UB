@@ -372,7 +372,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. It contributed t
 
     # ---- Tab 5: Bottle vs Can Distribution ----
     with tab3:
-        st.markdown("###  Question: How is shipment volume split between bottles and cans?")
+        st.markdown("### Question: How is shipment volume split between bottles and cans?")
         st.subheader("Bottle vs Can Distribution")
     
         # Helper function to classify pack type
@@ -400,7 +400,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. It contributed t
             color="Pack_Type"
         )
         fig_packtype.update_traces(
-            texttemplate="%{label}<br>%{percent:.0%}",  # Rounded percent inside the chart
+            texttemplate="%{label}<br>%{percent:.0%}",
             hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
             insidetextorientation='auto'
         )
@@ -409,6 +409,51 @@ The 650 ML pack size (light blue bar) is the undisputed leader. It contributed t
     
         # Data table below the chart
         st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
+    
+        st.markdown("""
+        ### **Insights:**
+        BOTTLE (light blue) is accounting for a massive 83.5% of the total volume.
+        Whereas cans fall massively behind with just 16.5% contribution.
+        """)
+    
+        # -------------------------------
+        # NEW ADDITION: Depot-level bar chart for KFS 650 ML
+        # -------------------------------
+        st.markdown("### Depot-wise Volume for **KFS 650 ML.**")
+    
+        sku_filter = "KFS 650 ML."
+        if "DBF_DEPOT" not in df.columns:
+            st.warning("⚠️ 'DBF_DEPOT' column not found in dataset.")
+        else:
+            df_kfs650 = df[df[SKU_COL].str.strip().str.upper() == sku_filter]
+            if not df_kfs650.empty:
+                depot_sales = (
+                    df_kfs650.groupby("DBF_DEPOT")[VOLUME_COL]
+                    .sum()
+                    .sort_values(ascending=False)
+                    .reset_index()
+                )
+    
+                fig_depot = px.bar(
+                    depot_sales,
+                    x="DBF_DEPOT",
+                    y=VOLUME_COL,
+                    title=f"Depot-wise Shipment Volume for {sku_filter}",
+                    text=VOLUME_COL,
+                    labels={VOLUME_COL: "Volume", "DBF_DEPOT": "Depot"},
+                )
+                fig_depot.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
+                fig_depot.update_layout(
+                    xaxis_tickangle=-45,
+                    height=500,
+                    margin=dict(b=150, t=100),
+                    showlegend=False,
+                )
+                st.plotly_chart(fig_depot, use_container_width=True)
+                st.dataframe(depot_sales)
+            else:
+                st.info(f"No data found for SKU '{sku_filter}'.")
+
         st.markdown("""
 ### **Insights:**
 BOTTLE (light blue) is accounting for a massive 83.5% of the total volume. Whereas cans fall massively behind with just 16.5 % contribution.""")
