@@ -387,12 +387,18 @@ The 650 ML pack size (light blue bar) is the undisputed leader. It contributed t
     
         df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
     
-        pack_type_sales = df.groupby("Pack_Type")[VOLUME_COL].sum().round(0).reset_index()
-        pack_type_sales = pack_type_sales.sort_values(by=VOLUME_COL, ascending=False)
+        # Overall Bottle vs Can Split
+        pack_type_sales = (
+            df.groupby("Pack_Type")[VOLUME_COL]
+            .sum()
+            .round(0)
+            .reset_index()
+            .sort_values(by=VOLUME_COL, ascending=False)
+        )
     
         # Pie chart for intuitive visualization
         fig_packtype = px.pie(
-            pack_type_sales.round(0),
+            pack_type_sales,
             names="Pack_Type",
             values=VOLUME_COL,
             title="Bottle vs Can Volume Distribution",
@@ -402,7 +408,7 @@ The 650 ML pack size (light blue bar) is the undisputed leader. It contributed t
         fig_packtype.update_traces(
             texttemplate="%{label}<br>%{percent:.0%}",
             hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
-            insidetextorientation='auto'
+            insidetextorientation="auto"
         )
         fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         st.plotly_chart(fig_packtype, use_container_width=True)
@@ -416,44 +422,56 @@ The 650 ML pack size (light blue bar) is the undisputed leader. It contributed t
         Whereas cans fall massively behind with just 16.5% contribution.
         """)
     
-        # -------------------------------
-        # NEW ADDITION: Depot-level bar chart for KFS 650 ML
-        # -------------------------------
-        st.markdown("### Depot-wise Volume for **KFS 650 ML.**")
+        # -----------------------------------------
+        # NEW SECTION: Clustered Bar Chart by Depot
+        # -----------------------------------------
+        st.markdown("### Depot-wise Comparison: Bottle vs Can")
     
-        sku_filter = "KFS 650 ML."
         if "DBF_DEPOT" not in df.columns:
             st.warning("⚠️ 'DBF_DEPOT' column not found in dataset.")
         else:
-            df_kfs650 = df[df[SKU_COL].str.strip().str.upper() == sku_filter]
-            if not df_kfs650.empty:
-                depot_sales = (
-                    df_kfs650.groupby("DBF_DEPOT")[VOLUME_COL]
-                    .sum()
-                    .sort_values(ascending=False)
-                    .reset_index()
-                )
+            # Clean depot names (remove 'KSBCL - ' prefix if present)
+            df["Depot_Clean"] = df["DBF_DEPOT"].astype(str).str.replace(r"^KSBCL\s*-\s*", "", regex=True).str.strip()
     
-                fig_depot = px.bar(
-                    depot_sales,
-                    x="DBF_DEPOT",
-                    y=VOLUME_COL,
-                    title=f"Depot-wise Shipment Volume for {sku_filter}",
-                    text=VOLUME_COL,
-                    labels={VOLUME_COL: "Volume", "DBF_DEPOT": "Depot"},
-                )
-                fig_depot.update_traces(texttemplate="%{text:,.0f}", textposition="outside")
-                fig_depot.update_layout(
-                    xaxis_tickangle=-45,
-                    height=500,
-                    margin=dict(b=150, t=100),
-                    showlegend=False,
-                )
-                st.plotly_chart(fig_depot, use_container_width=True)
-                st.dataframe(depot_sales)
-            else:
-                st.info(f"No data found for SKU '{sku_filter}'.")
-
+            # Aggregate Bottle vs Can volumes by depot
+            depot_pack = (
+                df.groupby(["Depot_Clean", "Pack_Type"])[VOLUME_COL]
+                .sum()
+                .reset_index()
+            )
+    
+            # Keep only Bottle and Can (remove 'OTHER' if any)
+            depot_pack = depot_pack[depot_pack["Pack_Type"].isin(["BOTTLE", "CAN"])]
+    
+            # Clustered bar chart
+            fig_cluster = px.bar(
+                depot_pack,
+                x="Depot_Clean",
+                y=VOLUME_COL,
+                color="Pack_Type",
+                barmode="group",
+                text_auto=".2s",
+                title="Depot-wise Shipment Volume: Bottle vs Can",
+                labels={"Depot_Clean": "Depot", VOLUME_COL: "Shipment Volume"}
+            )
+    
+            fig_cluster.update_traces(textposition="outside")
+            fig_cluster.update_layout(
+                height=600,
+                xaxis_tickangle=-45,
+                margin=dict(b=200, t=100),
+                showlegend=True,
+                legend_title_text="Pack Type",
+            )
+            st.plotly_chart(fig_cluster, use_container_width=True)
+    
+            # Optional table for exact values
+            st.dataframe(
+                depot_pack.pivot(index="Depot_Clean", columns="Pack_Type", values=VOLUME_COL)
+                .fillna(0)
+                .round(0)
+            )
+        
         st.markdown("""
 ### **Insights:**
 BOTTLE (light blue) is accounting for a massive 83.5% of the total volume. Whereas cans fall massively behind with just 16.5 % contribution.""")
