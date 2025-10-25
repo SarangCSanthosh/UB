@@ -145,11 +145,12 @@ def run():
 
     # ---- Tab 1: Brand Distribution ----
     with tab1:
-        st.markdown("### Question: Which brands contributed most to shipment growth or decline?")
-        st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
+        st.markdown("### Question: Which companies and brands contributed most to shipment growth or decline?")
+        st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
     
         # --- Display the image before the chart ---
         st.image("assets/comparison.png", caption="Volume Change by Company (2023–2024)", use_container_width=True)
+        st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
 
     
         # --- Ensure date column exists ---
