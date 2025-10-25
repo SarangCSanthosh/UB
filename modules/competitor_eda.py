@@ -149,11 +149,8 @@ def run():
         st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
     
         # --- Display the image before the chart ---
-        st.image(
-            "/mnt/data/comparison.png",  # ✅ path to your uploaded image
-            caption="Volume Change by Company (2023–2024)",
-            use_container_width=True
-        )
+        st.image("assets/comparison.png", caption="Volume Change by Company (2023–2024)", use_container_width=True)
+
     
         # --- Ensure date column exists ---
         if "ACTUAL_DATE" in df.columns:
