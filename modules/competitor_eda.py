@@ -612,7 +612,7 @@ The company’s performance is highly dependent on the stability and success of 
                 return pd.DataFrame(columns=["YearMonth", "Event / Task"])
     
         # --- Load Event Calendar ---
-        EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
+        EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1GxgGo6waZV7WDsF50v_nYSu2mxEX6bmj/export?format=xlsx"
         df_events = load_event_calendar(EVENT_XLSX_URL)
     
         # --- Merge Trend with Events ---
