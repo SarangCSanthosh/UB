@@ -529,7 +529,7 @@ The company’s performance is highly dependent on the stability and success of 
         df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
     
         # --- Prepare trend data ---
-        df["YearMonth"] = pd.to_datetime(df["SHIPMENT_DATE"], errors="coerce").dt.to_period("M").astype(str)
+        df["YearMonth"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce").dt.to_period("M").astype(str)
         trend = (
             df.groupby(["YearMonth", "Brand"])[VOLUME_COL]
             .sum()
