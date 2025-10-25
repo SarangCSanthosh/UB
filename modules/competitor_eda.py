@@ -148,6 +148,13 @@ def run():
         st.markdown("### Question: Which brands contributed most to shipment growth or decline?")
         st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
     
+        # --- Display the image before the chart ---
+        st.image(
+            "/mnt/data/comparison.png",  # ✅ path to your uploaded image
+            caption="Volume Change by Company (2023–2024)",
+            use_container_width=True
+        )
+    
         # --- Ensure date column exists ---
         if "ACTUAL_DATE" in df.columns:
             df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
