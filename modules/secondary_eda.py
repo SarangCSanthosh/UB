@@ -195,7 +195,7 @@ def run():
     # --------------------------
     # VISUALIZATIONS (tabs)
     # --------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8,tab9 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8 = st.tabs([
         "Shipment Trends",
         "Top Outlets",
         "Depot Analysis",
@@ -203,8 +203,7 @@ def run():
         "Region Stacked",
         "Special Outlets",
         "Map",
-        "Depot-wise YoY Change",
-        "Event Type Distribution"
+        "Depot-wise YoY Change"
     ])
 
     # ---- Shipment Trends ----
@@ -1149,62 +1148,6 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             5. VIJAYAPURA - Disposable Income ⬆️, but shipments ⬇️
             """)
     
-
-    with tab9:  # replace tabX with your tab name
-        st.markdown("### Event Type Distribution")
-        st.subheader("Event Type → Event Name → Occurrence Frequency")
-    
-        # --- Load the event calendar ---
-        df_events = load_event_calendar("1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk")
-    
-        if not df_events.empty:
-            # --- Identify event type columns ---
-            event_type_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
-    
-            # --- Melt event types into a single column ---
-            melted = df_events.melt(
-                id_vars=["Date", "Event / Task", "Remarks"],
-                value_vars=event_type_cols,
-                var_name="Event_Type",
-                value_name="Flag"
-            )
-    
-            # --- Keep only active events (where Flag == 1 or not null) ---
-            melted = melted[(melted["Flag"] == 1) | (melted["Flag"] == "1")]
-    
-            # --- Determine event name (prefer Event / Task, else Remarks) ---
-            melted["Event_Name"] = melted["Event / Task"].fillna(melted["Remarks"])
-            melted["Event_Name"] = melted["Event_Name"].replace("", "Unnamed Event")
-    
-            # --- Aggregate occurrences ---
-            event_counts = (
-                melted.groupby(["Event_Type", "Event_Name"])
-                .size()
-                .reset_index(name="Count")
-                .sort_values(by="Count", ascending=False)
-            )
-    
-            # --- Sunburst chart ---
-            fig = px.sunburst(
-                event_counts,
-                path=["Event_Type", "Event_Name"],
-                values="Count",
-                color="Event_Type",
-                color_discrete_sequence=px.colors.qualitative.Set3,
-                title="Event Calendar Overview: Event Type → Event Name → Count",
-            )
-    
-            fig.update_traces(
-                hovertemplate="<b>%{label}</b><br>Type: %{color}<br>Occurrences: %{value}<extra></extra>"
-            )
-    
-            st.plotly_chart(fig, use_container_width=True)
-    
-            # --- Optional: show data table ---
-            st.dataframe(event_counts)
-    
-        else:
-            st.warning("⚠️ No data found in the event calendar.")
 
 
 # ===============================
