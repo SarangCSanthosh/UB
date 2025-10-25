@@ -113,7 +113,7 @@ def run():
     # --------------------------
     yearly_data = df.groupby("Year").agg(
         Total_Volume=(VOLUME_COL, "sum"),
-        Unique_Outlets=(OUTLET_COL, "nunique"),
+        #Unique_Outlets=(OUTLET_COL, "nunique"),
         Total_Shipments=(DATE_COL, "count"),
     ).sort_index()
 
@@ -127,11 +127,11 @@ def run():
 
     if prev_year:
         kpi_volume = yearly_data.loc[latest_year, "Total_Volume"]
-        kpi_outlets = yearly_data.loc[latest_year, "Unique_Outlets"]
+        #kpi_outlets = yearly_data.loc[latest_year, "Unique_Outlets"]
         kpi_shipments = yearly_data.loc[latest_year, "Total_Shipments"]
 
         delta_volume = pct_delta(kpi_volume, yearly_data.loc[prev_year, "Total_Volume"])
-        delta_outlets = pct_delta(kpi_outlets, yearly_data.loc[prev_year, "Unique_Outlets"])
+        #delta_outlets = pct_delta(kpi_outlets, yearly_data.loc[prev_year, "Unique_Outlets"])
         delta_shipments = pct_delta(kpi_shipments, yearly_data.loc[prev_year, "Total_Shipments"])
     else:
         kpi_volume = kpi_outlets = kpi_shipments = 0
