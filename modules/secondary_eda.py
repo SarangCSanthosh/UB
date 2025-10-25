@@ -87,24 +87,24 @@ def run():
     df_events = load_event_calendar(SHEET_ID)
 
     VOLUME_COL = "VOLUME"
-    OUTLET_COL = "DBF_OUTLET_NAME"
+    OUTLET_COL = "DBF_OUTLET_CODE"
     #df[OUTLET_COL] = df[OUTLET_COL].astype(str).str.strip().str.upper()
     # 1️⃣ Inspect potential hidden characters
-    df['clean_outlet'] = (
-        df[OUTLET_COL]
-        .astype(str)
-        .str.replace(r'[\u200b\u200c\u200d\u00a0\r\n\t]', '', regex=True)  # invisible Unicode chars
-        .str.strip()
-        .str.upper()
-    )
+    #df['clean_outlet'] = (
+        #df[OUTLET_COL]
+        #.astype(str)
+        #.str.replace(r'[\u200b\u200c\u200d\u00a0\r\n\t]', '', regex=True)  # invisible Unicode chars
+        #.str.strip()
+        #.str.upper()
+    #)
     
     # 2️⃣ Compare unique counts
-    print("Before:", df[OUTLET_COL].nunique())
-    print("After:", df['clean_outlet'].nunique())
+    #print("Before:", df[OUTLET_COL].nunique())
+    #print("After:", df['clean_outlet'].nunique())
     
     # 3️⃣ Replace column finally if count improves
-    df[OUTLET_COL] = df['clean_outlet']
-    df.drop(columns=['clean_outlet'], inplace=True)
+    #df[OUTLET_COL] = df['clean_outlet']
+    #df.drop(columns=['clean_outlet'], inplace=True)
 
     df, DATE_COL = prepare_dates(df)
 
@@ -113,7 +113,7 @@ def run():
     # --------------------------
     yearly_data = df.groupby("Year").agg(
         Total_Volume=(VOLUME_COL, "sum"),
-        #Unique_Outlets=(OUTLET_COL, "nunique"),
+        Unique_Outlets=(OUTLET_COL, "nunique"),
         Total_Shipments=(DATE_COL, "count"),
     ).sort_index()
 
@@ -127,11 +127,11 @@ def run():
 
     if prev_year:
         kpi_volume = yearly_data.loc[latest_year, "Total_Volume"]
-        #kpi_outlets = yearly_data.loc[latest_year, "Unique_Outlets"]
+        kpi_outlets = yearly_data.loc[latest_year, "Unique_Outlets"]
         kpi_shipments = yearly_data.loc[latest_year, "Total_Shipments"]
 
         delta_volume = pct_delta(kpi_volume, yearly_data.loc[prev_year, "Total_Volume"])
-        #delta_outlets = pct_delta(kpi_outlets, yearly_data.loc[prev_year, "Unique_Outlets"])
+        delta_outlets = pct_delta(kpi_outlets, yearly_data.loc[prev_year, "Unique_Outlets"])
         delta_shipments = pct_delta(kpi_shipments, yearly_data.loc[prev_year, "Total_Shipments"])
     else:
         kpi_volume = kpi_outlets = kpi_shipments = 0
@@ -143,10 +143,10 @@ def run():
     # --------------------------
     # SHOW FIXED KPIs
     # --------------------------
-    col1, col2 = st.columns(2)
+    col1, col2,col3 = st.columns(3)
     col1.metric("Total Volume", f"{int(kpi_volume):,}", format_delta(delta_volume))
-    #col2.metric("Unique Outlets", f"{kpi_outlets}", format_delta(delta_outlets))
-    col2.metric("Total Shipments", f"{kpi_shipments}", format_delta(delta_shipments))
+    col2.metric("Unique Outlets", f"{kpi_outlets}", format_delta(delta_outlets))
+    col3.metric("Total Shipments", f"{kpi_shipments}", format_delta(delta_shipments))
     st.caption(f"YoY change: {latest_year} vs {prev_year}")
     st.markdown("---")
 
