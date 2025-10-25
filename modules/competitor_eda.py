@@ -525,23 +525,114 @@ The company’s performance is highly dependent on the stability and success of 
         st.markdown("###  Question: How do shipment volumes change month by month for each brand?")
         st.subheader("Monthly Trend by Brand")
 
+        # --- Map brand names ---
         df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
-        trend = df.groupby(["YearMonth", "Brand"])[VOLUME_COL].sum().round(0).reset_index()
-        trend["YearMonth"] = trend["YearMonth"].astype(str)
-
+    
+        # --- Prepare trend data ---
+        df["YearMonth"] = pd.to_datetime(df["SHIPMENT_DATE"], errors="coerce").dt.to_period("M").astype(str)
+        trend = (
+            df.groupby(["YearMonth", "Brand"])[VOLUME_COL]
+            .sum()
+            .round(0)
+            .reset_index()
+        )
         trend["Value"] = trend[VOLUME_COL].round(0)
         y_title = "Volume"
-
+    
+        # ===============================
+        # 📅 EVENT CALENDAR INTEGRATION
+        # ===============================
+    
+        @st.cache_data
+        def load_event_calendar(sheet_url: str):
+            """Loads and cleans event calendar from Google Sheets."""
+            try:
+                df_events = pd.read_excel(sheet_url)
+                df_events.columns = df_events.columns.str.strip()
+    
+                if "Date" not in df_events.columns:
+                    st.error("❌ 'Date' column not found in event sheet.")
+                    return pd.DataFrame(columns=["Date", "Event / Task"])
+    
+                df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+                df_events.dropna(subset=["Date"], inplace=True)
+    
+                # Clean and normalize event names
+                def clean_event_name(text):
+                    if pd.isna(text):
+                        return None
+                    text = str(text).strip()
+                    if not text or text.lower() in ["nan", "none"]:
+                        return None
+                    text = (
+                        text.replace("Against", "")
+                        .replace("Friendly", "BFC")
+                        .replace("Footll", "Football")
+                        .replace("Pro Ka", "Pro Kabbadi")
+                        .replace("C ", " ")
+                        .replace("IND World cup", "IND World Cup")
+                        .replace("RCB Match", "RCB Match")
+                        .replace("Week end", "Weekend")
+                        .replace("INDependence", "Independence")
+                        .replace("Ni8", "Night")
+                    )
+                    text = " ".join(text.split())
+                    text = text.title().replace("Ipl", "IPL").replace("Bfc", "BFC")
+                    return text
+    
+                df_events["Event / Task"] = df_events["Event / Task"].apply(clean_event_name)
+    
+                # Group events by YearMonth
+                df_events["YearMonth"] = df_events["Date"].dt.to_period("M").astype(str)
+    
+                def summarize_events(x):
+                    counts = x.value_counts()
+                    lines = []
+                    for event, count in counts.items():
+                        if count > 1:
+                            lines.append(f"{event} (x{count})")
+                        else:
+                            lines.append(event)
+                    return "<br>".join(lines)
+    
+                events_agg = (
+                    df_events.groupby("YearMonth")["Event / Task"]
+                    .apply(summarize_events)
+                    .reset_index()
+                )
+                return events_agg
+    
+            except Exception as e:
+                st.error(f"❌ Could not load event calendar: {e}")
+                return pd.DataFrame(columns=["YearMonth", "Event / Task"])
+    
+        # --- Load Event Calendar ---
+        EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
+        df_events = load_event_calendar(EVENT_XLSX_URL)
+    
+        # --- Merge Trend with Events ---
+        trend = trend.merge(df_events, on="YearMonth", how="left")
+    
+        # ===============================
+        # 📈 LINE CHART
+        # ===============================
         fig_trend = px.line(
             trend,
             x="YearMonth",
             y="Value",
             color="Brand",
             markers=True,
-            title="Monthly Brand Trend (Absolute)"
+            title="Monthly Brand Trend (Absolute)",
+            hover_data={"Event / Task": True, "Brand": True, "Value": True},
         )
+    
+        fig_trend.update_traces(
+            hovertemplate="<b>%{x}</b><br>Brand: %{customdata[1]}<br>Volume: %{y:,.0f}<br><br><b>Events:</b><br>%{customdata[0]}<extra></extra>"
+        )
+    
         fig_trend.update_yaxes(title_text=y_title)
         fig_trend.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+    
         st.plotly_chart(fig_trend, use_container_width=True)
         st.markdown("""
 ### **Insights:**
