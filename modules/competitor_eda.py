@@ -223,13 +223,17 @@ def run():
             st.error("The dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
 
        
-        #with st.container():
-            #st.markdown("""
+        with st.container():
+            st.markdown("""
 ### **Insights:**
-#- KFS is the brand which has the highest shipment amongst all other brands under UNITED BREWERIES.
-#- It has given a strong lead comprising 72 percent of the total volume. 
-#- Bullet and Lager are the other two brands contributing highly to the shipment volume. 2% of the shipment comprises various other brands like KF Ultra , KF Ultra Max etc.
-#""")
+	1. EXTERNAL ANALYSIS
+	    • Growth of shipments -> SOM BREWERIES > UBL > AB-INBEV
+	
+    2. INTERNAL ANALYSIS 
+	    • Bullet ⬆️ but KFS ⬇️
+    
+    KFS not be the key performing brand of UBL
+""")
 
 
     # ---- Tab 2: Pack Size Wise Analysis ----
