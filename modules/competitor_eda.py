@@ -487,12 +487,12 @@ def run():
         st.markdown("""
 ### **Insights:**
 
-🧴 Bottle:
-	• 🔼 High: Kalaburagi, Bidar
-	• 🔽 Low: Chikodi, Chitradurga
-🥫 Can:
-	• 🔼 High: Raichur, Koppal
-	• 🔽 Low: Jamakhandi, Chikodi
+	🧴 Bottle:
+		• 🔼 High: Kalaburagi, Bidar
+		• 🔽 Low: Chikodi, Chitradurga
+	🥫 Can:
+		• 🔼 High: Raichur, Koppal
+		• 🔽 Low: Jamakhandi, Chikodi
 
 """)
 
@@ -657,10 +657,10 @@ The company’s performance is highly dependent on the stability and success of 
         st.markdown("""
 ### **Insights:**
 
-KFS
-	1. 2023 - MAY - 🔽 , JUNE - 🔼
-	2. 2024 - MAY - 🔼 , JUNE - 🔽 
-Overall -  Dip in KFS from 2023 to 2024 , Spike in bullet from 2023 to 2024
+	KFS
+		1. 2023 - MAY - 🔽 , JUNE - 🔼
+		2. 2024 - MAY - 🔼 , JUNE - 🔽 
+	Overall -  Dip in KFS from 2023 to 2024 , Spike in bullet from 2023 to 2024
 
 """)
 
