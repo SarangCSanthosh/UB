@@ -226,6 +226,7 @@ def run():
         with st.container():
             st.markdown("""
 **Insights:**
+	
 	1. EXTERNAL ANALYSIS
 	    • Growth of shipments -> SOM BREWERIES > UBL > AB-INBEV
 	
