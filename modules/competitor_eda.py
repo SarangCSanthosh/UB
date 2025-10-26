@@ -225,7 +225,7 @@ def run():
        
         with st.container():
             st.markdown("""
-**Insights:**
+### **Insights:**
 	
 	1. EXTERNAL ANALYSIS
 	    • Growth of shipments -> SOM BREWERIES > UBL > AB-INBEV
@@ -233,7 +233,7 @@ def run():
     2. INTERNAL ANALYSIS 
 	    • Bullet ⬆️ but KFS ⬇️
     
-    KFS not be the key performing brand of UBL
+    KFS might not be the key performing brand of UBL
 """)
 
 
@@ -432,11 +432,7 @@ def run():
         # Data table below the chart
         st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
     
-        st.markdown("""
-        ### **Insights:**
-        BOTTLE (light blue) is accounting for a massive 83.5% of the total volume.
-        Whereas cans fall massively behind with just 16.5% contribution.
-        """)
+        
     
         # -----------------------------------------
         # NEW SECTION: Clustered Bar Chart by Depot
@@ -490,7 +486,15 @@ def run():
         
         st.markdown("""
 ### **Insights:**
-BOTTLE (light blue) is accounting for a massive 83.5% of the total volume. Whereas cans fall massively behind with just 16.5 % contribution.""")
+
+🧴 Bottle:
+	• 🔼 High: Kalaburagi, Bidar
+	• 🔽 Low: Chikodi, Chitradurga
+🥫 Can:
+	• 🔼 High: Raichur, Koppal
+	• 🔽 Low: Jamakhandi, Chikodi
+
+""")
 
   
     
@@ -652,8 +656,11 @@ The company’s performance is highly dependent on the stability and success of 
         st.plotly_chart(fig_trend, use_container_width=True)
         st.markdown("""
 ### **Insights:**
-- The KFS brand (yellow line) dominates all other brands in absolute volume, consistently operating at a level 2 to 3 times higher than the nearest competitor. Peaks occur in the late Spring/Early Summer reaching volumes of approximately 5,000 to 5,500 units . The 2024 season appears weaker than 2023. The 2024 peak was lower than the 2023 peak, and the post-peak declines were noticeably lower than the equivalent period in 2023.
-- Although BULLET had seen a rise in the year 2024 , with a spike in MAY 2024 , it has fallen down again by August 2024.
+
+KFS
+	1. 2023 - MAY - 🔽 , JUNE - 🔼
+	2. 2024 - MAY - 🔼 , JUNE - 🔽 
+Overall -  Dip in KFS from 2023 to 2024 , Spike in bullet from 2023 to 2024
 
 """)
 
