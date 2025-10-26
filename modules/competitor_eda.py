@@ -225,7 +225,7 @@ def run():
        
         with st.container():
             st.markdown("""
-###**Insights:**
+**Insights:**
 	
 	1. EXTERNAL ANALYSIS
 	    • Growth of shipments -> SOM BREWERIES > UBL > AB-INBEV
@@ -377,7 +377,13 @@ def run():
         #st.dataframe(summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
 ### **Insights:**
-The 650 ML pack size (light blue bar) is the undisputed leader. It contributed to 81 percent of the total shipment volume. The 330 ml can comes 2nd with just 11% contribution followed by 550 ml can with 6%  and 330 ml with 3%.""")
+
+	1. 650 ML - 81% of total shipments
+	2. 330 ML - 11% of total shipments
+	3. KFS - 650 ML has been undisputed leader
+	4. KF storm has seen instances where 330ML has taken over 650 ML sales
+	
+""")
 
 
     # ---- Tab 5: Bottle vs Can Distribution ----
