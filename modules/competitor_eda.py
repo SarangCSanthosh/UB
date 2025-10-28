@@ -239,141 +239,111 @@ def run():
 
     # ---- Tab 2: Pack Size Wise Analysis ----
     with tab2:
-		
-		st.markdown("###  Question: What are the top-selling SKUs?")
-		st.subheader("Pack Size Wise Volume Distribution")
-    
-        def extract_segment(sku):
-            sku = str(sku).upper().strip()
-            match = re.search(r'(\d+\s?ML(?:\.?\s?CANS?)?)', sku)
-            segment = match.group(1) if match else "Other Segment"
-            segment = segment.replace(".", "").replace("CANS", "CAN").strip()
-            return segment
-    
-        df["Segment"] = df[SKU_COL].apply(extract_segment)
-        df["Date"] = pd.to_datetime(df[DATE_COL])
-    
-        # --- Time Granularity ---
-        time_granularity = st.radio(
-            "Select Time Granularity",
-            ["Yearly", "Quarterly", "Monthly", "Weekly"],
-            horizontal=True
-        )
-    
-        if time_granularity == "Yearly":
-            df["Period"] = df["Date"].dt.to_period("Y").astype(str)
-        elif time_granularity == "Quarterly":
-            df["Period"] = df["Date"].dt.to_period("Q").astype(str)
-        elif time_granularity == "Monthly":
-            df["Period"] = df["Date"].dt.to_period("M").astype(str)
-        else:
-            df["Period"] = df["Date"].dt.to_period("W").astype(str)
-    
-        # --- Brand Filter ---
-        brands = ["All"] + sorted(df["Brand"].unique())
-        selected_brand = st.radio("Select Brand", options=brands, index=0, horizontal=True)
-    
-        if selected_brand == "All":
-            df_brand = df[df["Brand"] != "OTHER"]
-        else:
-            df_brand = df[df["Brand"] == selected_brand]
-    
-        # --- Pack Size Filter (NEW) ---
-        pack_sizes = ["All"] + sorted(df_brand["Segment"].unique())
-        selected_pack = st.radio("Select Pack Size", options=pack_sizes, index=0, horizontal=True)
-    
-        if selected_pack == "All":
-            df_filtered = df_brand.copy()
-        else:
-            df_filtered = df_brand[df_brand["Segment"] == selected_pack]
-    
-        # --- Aggregate by Period + Segment ---
-        pack_sales_time = (
-            df_filtered.groupby(["Period", "Segment"])[VOLUME_COL]
-            .sum()
-            .reset_index()
-        )
-    
-        # --- Fill missing combinations (to avoid spikes) ---
-        all_periods = sorted(df["Period"].unique())
-        all_segments = sorted(df_filtered["Segment"].unique())
-        full_index = pd.MultiIndex.from_product([all_periods, all_segments], names=["Period", "Segment"])
-        pack_sales_time = (
-            pack_sales_time.set_index(["Period", "Segment"])
-            .reindex(full_index, fill_value=0)
-            .reset_index()
-        )
-    
-        # --- Compute total per period ---
-        period_totals = pack_sales_time.groupby("Period")[VOLUME_COL].sum().rename("Total").reset_index()
-        pack_sales_time = pack_sales_time.merge(period_totals, on="Period", how="left")
-    
-        # --- View Mode Toggle ---
-        granularity = st.radio("View Mode", ["Absolute", "Percentage"], horizontal=True)
-    
-        if granularity == "Percentage":
-            pack_sales_time["Share"] = (
-                (pack_sales_time[VOLUME_COL] / pack_sales_time["Total"]) * 100
-            ).fillna(0)
-            y_col = "Share"
-            y_title = "Volume Share (%)"
-            chart_type = "area"
-        else:
-            y_col = VOLUME_COL
-            y_title = "Volume"
-            chart_type = "line"
-    
-        # --- Visualization ---
-        if chart_type == "area":
-            fig = px.area(
-                pack_sales_time,
-                x="Period",
-                y=y_col,
-                color="Segment",
-                title=f"{selected_brand} {selected_pack} Pack Size Share Over Time ({time_granularity})",
-                labels={y_col: y_title, "Period": time_granularity},
-            )
-        else:
-            fig = px.line(
-                pack_sales_time,
-                x="Period",
-                y=y_col,
-                color="Segment",
-                markers=True,
-                title=f"{selected_brand} {selected_pack} Pack Size Volume Trend ({time_granularity})",
-                labels={y_col: y_title, "Period": time_granularity},
-            )
-    
-        fig.update_layout(
-            height=600,
-            margin=dict(t=100, b=100, l=50, r=50),
-            legend_title_text="Segment",
-            hovermode="x unified",
-        )
-    
-        st.plotly_chart(fig, use_container_width=True)
-    
-        # --- Summary Table ---
-        summary_base = (
-            df_brand.groupby("Segment")[VOLUME_COL]
-            .sum()
-            .reset_index()
-        )
-        total_brand_volume = summary_base[VOLUME_COL].sum()
-        summary_base["Percentage"] = (summary_base[VOLUME_COL] / total_brand_volume * 100).round(1)
-    
-        if selected_pack != "All":
-            # Highlight only selected pack, but show all for context
-            summary = summary_base.copy()
-            #summary["Highlight"] = summary["Segment"].apply(lambda x: "✅ Selected" if x == selected_pack else "")
-        else:
-            summary = summary_base.copy()
-            #summary["Highlight"] = ""
-    
-        st.dataframe(
-            summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0),
-            use_container_width=True
-        )
+	    st.markdown("### Question: How is shipment volume split between bottles and cans?")
+	    st.subheader("Bottle vs Can Distribution")
+	
+	    # Helper function to classify pack type
+	    def classify_pack_type(sku):
+	        sku = str(sku).upper()
+	        if "CAN" in sku or "CANS" in sku:
+	            return "CAN"
+	        elif "ML" in sku:
+	            return "BOTTLE"
+	        else:
+	            return "OTHER"
+	
+	    df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
+	
+	    # Overall Bottle vs Can Split
+	    pack_type_sales = (
+	        df.groupby("Pack_Type")[VOLUME_COL]
+	        .sum()
+	        .round(0)
+	        .reset_index()
+	        .sort_values(by=VOLUME_COL, ascending=False)
+	    )
+	
+	    # Pie chart for intuitive visualization
+	    fig_packtype = px.pie(
+	        pack_type_sales,
+	        names="Pack_Type",
+	        values=VOLUME_COL,
+	        title="Bottle vs Can Volume Distribution",
+	        hole=0.4,
+	        color="Pack_Type"
+	    )
+	    fig_packtype.update_traces(
+	        texttemplate="%{label}<br>%{percent:.0%}",
+	        hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
+	        insidetextorientation="auto"
+	    )
+	    fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+	    st.plotly_chart(fig_packtype, use_container_width=True)
+	
+	    # Data table below the chart
+	    st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
+	
+	    # -----------------------------------------
+	    # NEW SECTION: Clustered Bar Chart by Depot
+	    # -----------------------------------------
+	    st.markdown("### Depot-wise Comparison: Bottle vs Can")
+	
+	    if "DBF_DEPOT" not in df.columns:
+	        st.warning("⚠️ 'DBF_DEPOT' column not found in dataset.")
+	    else:
+	        # Clean depot names (remove 'KSBCL - ' prefix if present)
+	        df["Depot_Clean"] = df["DBF_DEPOT"].astype(str).str.replace(r"^KSBCL\s*-\s*", "", regex=True).str.strip()
+	
+	        # Aggregate Bottle vs Can volumes by depot
+	        depot_pack = (
+	            df.groupby(["Depot_Clean", "Pack_Type"])[VOLUME_COL]
+	            .sum()
+	            .reset_index()
+	        )
+	
+	        # Keep only Bottle and Can (remove 'OTHER' if any)
+	        depot_pack = depot_pack[depot_pack["Pack_Type"].isin(["BOTTLE", "CAN"])]
+	
+	        # ---- Sort depots by Bottle volume (descending) ----
+	        bottle_order = (
+	            depot_pack[depot_pack["Pack_Type"] == "BOTTLE"]
+	            .sort_values(by=VOLUME_COL, ascending=False)["Depot_Clean"]
+	            .tolist()
+	        )
+	
+	        # Apply this order to the x-axis
+	        depot_pack["Depot_Clean"] = pd.Categorical(depot_pack["Depot_Clean"], categories=bottle_order, ordered=True)
+	        depot_pack = depot_pack.sort_values("Depot_Clean")
+	
+	        # Clustered bar chart
+	        fig_cluster = px.bar(
+	            depot_pack,
+	            x="Depot_Clean",
+	            y=VOLUME_COL,
+	            color="Pack_Type",
+	            barmode="group",  # side-by-side bars
+	            text_auto=".2s",
+	            title="Depot-wise Shipment Volume: Bottle vs Can (Sorted by Bottle Volume)",
+	            labels={"Depot_Clean": "Depot", VOLUME_COL: "Shipment Volume"}
+	        )
+	
+	        fig_cluster.update_traces(textposition="outside")
+	        fig_cluster.update_layout(
+	            height=600,
+	            xaxis_tickangle=-45,
+	            margin=dict(b=200, t=100),
+	            showlegend=True,
+	            legend_title_text="Pack Type",
+	        )
+	        st.plotly_chart(fig_cluster, use_container_width=True)
+	
+	        # Optional table for exact values
+	        st.dataframe(
+	            depot_pack.pivot(index="Depot_Clean", columns="Pack_Type", values=VOLUME_COL)
+	            .fillna(0)
+	            .round(0)
+	        )
+
 
         #st.dataframe(summary.set_index("Segment")[[VOLUME_COL, "Percentage"]].round(0))
         st.markdown("""
