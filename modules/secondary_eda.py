@@ -680,29 +680,34 @@ def run():
 	
 
     with tab2:
-	    st.subheader("Month-on-Month Shipment Trends")
+	    st.subheader("Month-on-Month Shipment Trends (Clustered Bar Chart)")
 	
-	    # --- Ensure ACTUAL_DATE is datetime ---
+	    # Ensure ACTUAL_DATE is datetime
 	    df_filtered["ACTUAL_DATE"] = pd.to_datetime(df_filtered["ACTUAL_DATE"], errors="coerce")
 	    df_filtered["Year"] = df_filtered["ACTUAL_DATE"].dt.year
 	    df_filtered["Month"] = df_filtered["ACTUAL_DATE"].dt.month
 	    df_filtered["Month_Name"] = df_filtered["ACTUAL_DATE"].dt.strftime("%b")
 	
-	    # --- Group data ---
+	    # Group and aggregate shipment volume
 	    trend_df = (
-	        df_filtered.groupby(["Month", "Month_Name", "Year"])[VOLUME_COL]
+	        df_filtered.groupby(["Year", "Month", "Month_Name"])[VOLUME_COL]
 	        .sum()
 	        .reset_index()
-	        .sort_values(["Year", "Month"])
 	    )
 	
-	    # --- Create chart ---
+	    # Ensure months appear in Jan–Dec order
+	    month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+	    trend_df["Month_Name"] = pd.Categorical(trend_df["Month_Name"], categories=month_order, ordered=True)
+	    trend_df = trend_df.sort_values(["Year", "Month"])
+	
+	    # Create clustered bar chart
 	    fig = px.bar(
 	        trend_df,
 	        x="Month_Name",
 	        y=VOLUME_COL,
 	        color="Year",
-	        barmode="group",
+	        barmode="group",  # <---- Clustered bars
 	        text_auto=True,
 	        title="Month-on-Month Shipment Trends (Grouped by Year)",
 	        labels={VOLUME_COL: "Shipment Volume", "Month_Name": "Month"}
