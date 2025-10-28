@@ -198,8 +198,9 @@ def run():
     # --------------------------
     # VISUALIZATIONS (tabs)
     # --------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8,tab9 = st.tabs([
         "Shipment Trends",
+		"Month on Month Shipment"
         "Top Outlets",
         "Depot Analysis",
         "Region Donut",
@@ -675,8 +676,43 @@ def run():
 """)
 
 
+	with tab2:
+		# --- Shipment Trend Tab ---
+		df_filtered["ACTUAL_DATE"] = pd.to_datetime(df_filtered["ACTUAL_DATE"], errors="coerce")
+		df_filtered["Year"] = df_filtered["ACTUAL_DATE"].dt.year
+		df_filtered["Month"] = df_filtered["ACTUAL_DATE"].dt.month
+		df_filtered["Month_Name"] = df_filtered["ACTUAL_DATE"].dt.strftime("%b")
+		
+		trend_df = (
+		    df_filtered.groupby(["Month", "Month_Name", "Year"])[VOLUME_COL]
+		    .sum()
+		    .reset_index()
+		    .sort_values(["Month", "Year"])
+		)
+		
+		fig = px.bar(
+		    trend_df,
+		    x="Month_Name",
+		    y=VOLUME_COL,
+		    color="Year",
+		    barmode="group",
+		    text_auto=True,
+		    title="Month-on-Month Shipment Trends (Grouped by Year)",
+		    labels={VOLUME_COL: "Shipment Volume", "Month_Name": "Month"}
+		)
+		
+		fig.update_layout(
+		    xaxis_title="Month",
+		    yaxis_title="Shipment Volume",
+		    legend_title="Year",
+		    template="plotly_white",
+		    bargap=0.2,
+		    title_x=0.5
+		)
+		
+		st.plotly_chart(fig, use_container_width=True)
 
-    with tab2:
+    with tab3:
         st.markdown("###  Question: Where is shipment activity the highest among outlets?")
         st.subheader("Top Outlets by Volume")
         
@@ -747,7 +783,7 @@ def run():
 
 
     # ---- Depot Analysis ----
-    with tab3:
+    with tab4:
         st.markdown("###  Question: Which depots are driving the majority of volume?")
         st.subheader("Depot-wise ABC Analysis")
         if "DBF_DEPOT" in df_filtered.columns:
@@ -802,7 +838,7 @@ def run():
 """)
 
     # ---- Region Donut ----
-    with tab4:
+    with tab5:
         st.markdown("###  Question: Which regions account for the largest share of shipments?")
         st.subheader("Region-wise Volume Share")
         if "DBF_REGION" in df_filtered.columns:
@@ -827,7 +863,7 @@ def run():
 """)
 
     # ---- Region Stacked ----
-    with tab5:
+    with tab6:
         st.markdown("###  Question: Which outlets contribute most to regional shipment volume?")
         st.subheader("Outlets & Volume by Region (100% Share)")
         if "DBF_REGION" in df_filtered.columns and "DBF_OUTLET_CODE" in df_filtered.columns:
@@ -862,7 +898,7 @@ The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute 
 """)
 
     # ---- Special Outlets ----
-    with tab6:
+    with tab7:
         st.markdown("###  Question: How does shipment performance differ between Hubbali and Belagavi?")
         st.subheader("Focused Analysis: Hubbali & Belagavi Depots")
 
@@ -934,7 +970,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 
 
         # ---- TAB 7: Depot Map View ----
-    with tab7:
+    with tab8:
         st.markdown("### Question: What is the geographic spread of shipment volumes?")
         st.subheader(" Depot Shipment Volume Map")
     
@@ -1033,7 +1069,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 #.round(0)
             #)
     
-    with tab8:
+    with tab9:
         st.markdown("### Question: How has depot volume changed YoY?")
         st.subheader("Depot-wise YoY Volume Change")
     
