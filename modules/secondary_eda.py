@@ -682,44 +682,53 @@ def run():
     with tab2:
 	    st.subheader("Month-on-Month Shipment Trends (Clustered Bar Chart)")
 	
-	    # Ensure ACTUAL_DATE is datetime
+	    # --- Ensure datetime ---
 	    df_filtered["ACTUAL_DATE"] = pd.to_datetime(df_filtered["ACTUAL_DATE"], errors="coerce")
 	    df_filtered["Year"] = df_filtered["ACTUAL_DATE"].dt.year
 	    df_filtered["Month"] = df_filtered["ACTUAL_DATE"].dt.month
 	    df_filtered["Month_Name"] = df_filtered["ACTUAL_DATE"].dt.strftime("%b")
 	
-	    # Group and aggregate shipment volume
+	    # --- Group data ---
 	    trend_df = (
 	        df_filtered.groupby(["Year", "Month", "Month_Name"])[VOLUME_COL]
 	        .sum()
 	        .reset_index()
 	    )
 	
-	    # Ensure months appear in Jan–Dec order
+	    # --- Order months correctly ---
 	    month_order = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 	    trend_df["Month_Name"] = pd.Categorical(trend_df["Month_Name"], categories=month_order, ordered=True)
-	    trend_df = trend_df.sort_values(["Year", "Month"])
+	    trend_df = trend_df.sort_values(["Month", "Year"])
 	
-	    # Create clustered bar chart
-	    fig = px.bar(
-	        trend_df,
-	        x="Month_Name",
-	        y=VOLUME_COL,
-	        color="Year",
-	        barmode="group",  # <---- Clustered bars
-	        text_auto=True,
-	        title="Month-on-Month Shipment Trends (Grouped by Year)",
-	        labels={VOLUME_COL: "Shipment Volume", "Month_Name": "Month"}
-	    )
+	    # --- Get unique years dynamically ---
+	    years = sorted(trend_df["Year"].unique())
 	
+	    # --- Create clustered chart manually using go.Figure ---
+	    fig = go.Figure()
+	
+	    # Add a separate bar trace for each year
+	    for yr in years:
+	        df_year = trend_df[trend_df["Year"] == yr]
+	        fig.add_trace(go.Bar(
+	            x=df_year["Month_Name"],
+	            y=df_year[VOLUME_COL],
+	            name=str(yr),
+	            text=df_year[VOLUME_COL],
+	            textposition="auto"
+	        ))
+	
+	    # --- Layout settings for side-by-side (clustered) view ---
 	    fig.update_layout(
+	        barmode="group",  # <— This makes it clustered (side-by-side)
 	        xaxis_title="Month",
 	        yaxis_title="Shipment Volume",
-	        legend_title="Year",
+	        title="Month-on-Month Shipment Trends (2023 vs 2024)",
 	        template="plotly_white",
-	        bargap=0.2,
-	        title_x=0.5
+	        bargap=0.15,
+	        bargroupgap=0.05,
+	        title_x=0.5,
+	        legend_title="Year"
 	    )
 	
 	    st.plotly_chart(fig, use_container_width=True)
