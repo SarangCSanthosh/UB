@@ -201,7 +201,7 @@ def run():
     # --------------------------
     tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8,tab9 = st.tabs([
         "Shipment Trends",
-		"Month on Month Shipment"
+		"Month on Month Shipment",
         "Top Outlets",
         "Depot Analysis",
         "Region Donut",
