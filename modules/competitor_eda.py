@@ -389,100 +389,109 @@ def run():
     # ---- Tab 5: Bottle vs Can Distribution ----
     with tab3:
         st.markdown("### Question: How is shipment volume split between bottles and cans?")
-        st.subheader("Bottle vs Can Distribution")
-    
-        # Helper function to classify pack type
-        def classify_pack_type(sku):
-            sku = str(sku).upper()
-            if "CAN" in sku or "CANS" in sku:
-                return "CAN"
-            elif "ML" in sku:
-                return "BOTTLE"
-            else:
-                return "OTHER"
-    
-        df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
-    
-        # Overall Bottle vs Can Split
-        pack_type_sales = (
-            df.groupby("Pack_Type")[VOLUME_COL]
-            .sum()
-            .round(0)
-            .reset_index()
-            .sort_values(by=VOLUME_COL, ascending=False)
-        )
-    
-        # Pie chart for intuitive visualization
-        fig_packtype = px.pie(
-            pack_type_sales,
-            names="Pack_Type",
-            values=VOLUME_COL,
-            title="Bottle vs Can Volume Distribution",
-            hole=0.4,
-            color="Pack_Type"
-        )
-        fig_packtype.update_traces(
-            texttemplate="%{label}<br>%{percent:.0%}",
-            hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
-            insidetextorientation="auto"
-        )
-        fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
-        st.plotly_chart(fig_packtype, use_container_width=True)
-    
-        # Data table below the chart
-        st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
-    
-        
-    
-        # -----------------------------------------
-        # NEW SECTION: Clustered Bar Chart by Depot
-        # -----------------------------------------
-        st.markdown("### Depot-wise Comparison: Bottle vs Can")
-    
-        if "DBF_DEPOT" not in df.columns:
-            st.warning("⚠️ 'DBF_DEPOT' column not found in dataset.")
-        else:
-            # Clean depot names (remove 'KSBCL - ' prefix if present)
-            df["Depot_Clean"] = df["DBF_DEPOT"].astype(str).str.replace(r"^KSBCL\s*-\s*", "", regex=True).str.strip()
-    
-            # Aggregate Bottle vs Can volumes by depot
-            depot_pack = (
-                df.groupby(["Depot_Clean", "Pack_Type"])[VOLUME_COL]
-                .sum()
-                .reset_index()
-            )
-    
-            # Keep only Bottle and Can (remove 'OTHER' if any)
-            depot_pack = depot_pack[depot_pack["Pack_Type"].isin(["BOTTLE", "CAN"])]
-    
-            # Clustered bar chart
-            fig_cluster = px.bar(
-                depot_pack,
-                x="Depot_Clean",
-                y=VOLUME_COL,
-                color="Pack_Type",
-                barmode="group",
-                text_auto=".2s",
-                title="Depot-wise Shipment Volume: Bottle vs Can",
-                labels={"Depot_Clean": "Depot", VOLUME_COL: "Shipment Volume"}
-            )
-    
-            fig_cluster.update_traces(textposition="outside")
-            fig_cluster.update_layout(
-                height=600,
-                xaxis_tickangle=-45,
-                margin=dict(b=200, t=100),
-                showlegend=True,
-                legend_title_text="Pack Type",
-            )
-            st.plotly_chart(fig_cluster, use_container_width=True)
-    
-            # Optional table for exact values
-            st.dataframe(
-                depot_pack.pivot(index="Depot_Clean", columns="Pack_Type", values=VOLUME_COL)
-                .fillna(0)
-                .round(0)
-            )
+	    st.subheader("Bottle vs Can Distribution")
+	
+	    # Helper function to classify pack type
+	    def classify_pack_type(sku):
+	        sku = str(sku).upper()
+	        if "CAN" in sku or "CANS" in sku:
+	            return "CAN"
+	        elif "ML" in sku:
+	            return "BOTTLE"
+	        else:
+	            return "OTHER"
+	
+	    df["Pack_Type"] = df[SKU_COL].apply(classify_pack_type)
+	
+	    # Overall Bottle vs Can Split
+	    pack_type_sales = (
+	        df.groupby("Pack_Type")[VOLUME_COL]
+	        .sum()
+	        .round(0)
+	        .reset_index()
+	        .sort_values(by=VOLUME_COL, ascending=False)
+	    )
+	
+	    # Pie chart for intuitive visualization
+	    fig_packtype = px.pie(
+	        pack_type_sales,
+	        names="Pack_Type",
+	        values=VOLUME_COL,
+	        title="Bottle vs Can Volume Distribution",
+	        hole=0.4,
+	        color="Pack_Type"
+	    )
+	    fig_packtype.update_traces(
+	        texttemplate="%{label}<br>%{percent:.0%}",
+	        hovertemplate="<b>%{label}</b><br>Volume: %{value:,.0f}<br>Share: %{percent:.0%}<extra></extra>",
+	        insidetextorientation="auto"
+	    )
+	    fig_packtype.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
+	    st.plotly_chart(fig_packtype, use_container_width=True)
+	
+	    # Data table below the chart
+	    st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
+	
+	    # -----------------------------------------
+	    # NEW SECTION: Clustered Bar Chart by Depot
+	    # -----------------------------------------
+	    st.markdown("### Depot-wise Comparison: Bottle vs Can")
+	
+	    if "DBF_DEPOT" not in df.columns:
+	        st.warning("⚠️ 'DBF_DEPOT' column not found in dataset.")
+	    else:
+	        # Clean depot names (remove 'KSBCL - ' prefix if present)
+	        df["Depot_Clean"] = df["DBF_DEPOT"].astype(str).str.replace(r"^KSBCL\s*-\s*", "", regex=True).str.strip()
+	
+	        # Aggregate Bottle vs Can volumes by depot
+	        depot_pack = (
+	            df.groupby(["Depot_Clean", "Pack_Type"])[VOLUME_COL]
+	            .sum()
+	            .reset_index()
+	        )
+	
+	        # Keep only Bottle and Can (remove 'OTHER' if any)
+	        depot_pack = depot_pack[depot_pack["Pack_Type"].isin(["BOTTLE", "CAN"])]
+	
+	        # ---- Sort depots by Bottle volume (descending) ----
+	        bottle_order = (
+	            depot_pack[depot_pack["Pack_Type"] == "BOTTLE"]
+	            .sort_values(by=VOLUME_COL, ascending=False)["Depot_Clean"]
+	            .tolist()
+	        )
+	
+	        # Apply this order to the x-axis
+	        depot_pack["Depot_Clean"] = pd.Categorical(depot_pack["Depot_Clean"], categories=bottle_order, ordered=True)
+	        depot_pack = depot_pack.sort_values("Depot_Clean")
+	
+	        # Clustered bar chart
+	        fig_cluster = px.bar(
+	            depot_pack,
+	            x="Depot_Clean",
+	            y=VOLUME_COL,
+	            color="Pack_Type",
+	            barmode="group",  # side-by-side bars
+	            text_auto=".2s",
+	            title="Depot-wise Shipment Volume: Bottle vs Can (Sorted by Bottle Volume)",
+	            labels={"Depot_Clean": "Depot", VOLUME_COL: "Shipment Volume"}
+	        )
+	
+	        fig_cluster.update_traces(textposition="outside")
+	        fig_cluster.update_layout(
+	            height=600,
+	            xaxis_tickangle=-45,
+	            margin=dict(b=200, t=100),
+	            showlegend=True,
+	            legend_title_text="Pack Type",
+	        )
+	        st.plotly_chart(fig_cluster, use_container_width=True)
+	
+	        # Optional table for exact values
+	        st.dataframe(
+	            depot_pack.pivot(index="Depot_Clean", columns="Pack_Type", values=VOLUME_COL)
+	            .fillna(0)
+	            .round(0)
+	        )
         
         st.markdown("""
 ### **Insights:**
