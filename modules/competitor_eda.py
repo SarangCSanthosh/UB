@@ -492,19 +492,18 @@ def run():
 	            .fillna(0)
 	            .round(0)
 	        )
-
-        
-        st.markdown("""
-### **Insights:**
-
-	🧴 Bottle:
-		• 🔼 High: Kalaburagi, Bidar
-		• 🔽 Low: Chikodi, Chitradurga
-	🥫 Can:
-		• 🔼 High: Raichur, Koppal
-		• 🔽 Low: Jamakhandi, Chikodi
-
-""")
+	
+	        # Insights Section
+	        st.markdown("""
+	        ### **Insights:**
+	        🧴 **Bottle:**
+	        - 🔼 High: Kalaburagi, Bidar  
+	        - 🔽 Low: Chikodi, Chitradurga  
+	
+	        🥫 **Can:**
+	        - 🔼 High: Raichur, Koppal  
+	        - 🔽 Low: Jamakhandi, Chikodi  
+	        """)
 
   
     
