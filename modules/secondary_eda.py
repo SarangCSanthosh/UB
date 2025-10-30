@@ -789,11 +789,11 @@ def run():
                 path=[OUTLET_COL],
                 values="Value",
                 title=f"Top {top_n} Outlets Treemap{title_suffix}",
-                custom_data=["Value"],
+                custom_data=[top_outlets[OUTLET_COL], top_outlets["Value"]],
             )
     
             fig.update_traces(
-                hovertemplate="<b>%{label}</b><br>Value: %{customdata[0]:,.2f}<extra></extra>"
+                hovertemplate="<b>Outlet:</b> %{customdata[0]}<br><b>Value:</b> %{customdata[1]:,.2f}<extra></extra>"
             )
     
             st.plotly_chart(fig, use_container_width=True)
