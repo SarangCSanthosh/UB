@@ -684,8 +684,9 @@ def run():
 
             st.markdown("""
 ### **Insights:**
-- The shipment volume is heavily concentrated in the top three locations, particularly Kalaburagi and Bidar. 
-- Cities with lowest shipment volumes are - Gokak , Jamkhandi , Haveri. 
+-	🏭 Hubballi -  high shipment volume but low per capita income --- core logistics hub. 
+-	⚙️ Belagavi - high shipment activity but low income --- industrial or outbound trade flow rather than local consumption
+-	📈 Kalaburagi - highest shipment volume and per capita income --- strong positive correlation between income and logistics activity.
 """)
 
 
@@ -705,9 +706,10 @@ def run():
             st.plotly_chart(fig_hm, use_container_width=True)
             st.markdown("""
 ### **Insights:**
-- There is a clear cyclical pattern across most locations. Volume tends to be highest during the middle of the year, roughly from April to July.
-- Conversely, volume is consistently lower at the beginning (Jan/Feb) and end (Oct/Dec) of the year. 
-- The most prominent feature is the massive volume spike for Vijayapura around April-May 2024. 
+- Cyclical pattern across most locations. 
+- Volume is consistently lower at the beginning (Jan/Feb) and end (Oct/Dec) of the year. 
+- Massive volume spike for Vijayapura around April-May 2024. 
+- Hubballi’s steady shipment levels across all quarters --- logistics powerhouse with minimal seasonal variation
 
 """)
 
@@ -770,26 +772,11 @@ def run():
                 #st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(0), width=400, height=200)
                 st.markdown("""
 ### **Insights:**
-The clustering reveals four distinct groups of locations based on their shipment activity patterns:
+🟣 Cluster 0: Low-demand rural zones — Bagalkot, Sedam, Koppal, Ballari (require shared logistics support).
+🟢 Cluster 1: Balanced trade regions — Raichur, Hosapete, Belagavi (suitable for scaling operations).
+🟠 Cluster 2: Emerging hubs — Vijayapura, Bidar, Yadgiri (show increasing shipment potential).
+🔴 Cluster 3: Major shipment centres — Kalaburagi, Hubballi (strategic for warehousing and route optimisation).
 
-- Cluster 0 - Moderate, steady performers:
-Includes locations such as Bagalkot, Chikkodi, Gadag, Gokak, Haveri, Jamakhandi, and Sindhanur.
-These show balanced shipment volumes with relatively consistent monthly activity and minimal fluctuations.
-
-- Cluster 1 - High-activity, central hubs:
-Includes Ballari, Belagavi, Chitradurga, Davangere, Hosapete, and Koppal.
-These centers handle larger shipment volumes and serve as regional distribution nodes.
-
-- Cluster 2 - Emerging or volatile markets:
-Includes Bidar, Kalaburagi, and Vijayapura.
-Their shipment activity is variable, occasionally spiking due to concentrated dispatches, suggesting developing demand or logistical challenges.
-
-- Cluster 3 - Low-volume or specialized locations:
-Includes Hubballi, Raichur, Sedam, and Yadgir.
-These sites have comparatively low or niche shipment patterns, possibly influenced by geographic or operational constraints.
-
-
-The presence of four well-separated clusters indicates that shipment behaviour varies meaningfully across regions.
 """)
 
     
