@@ -733,12 +733,12 @@ def run():
 	
 	    st.plotly_chart(fig, use_container_width=True)
 		st.markdown("""
-### *Insights:*
-📊 February 2024 - lower shipments than 2023, --- Union Budget announcements
-⚙ May 2024 volumes dipped --- pre-monsoon transport constraints and inventory adjustments before Q2.
-🌧 June 2024 major drop versus 2023 --- intense monsoon floods and industrial disruptions across Karnataka.
-🎄 December 2024 shipments lower than 2023 --- weaker festive demand and reduced year-end restocking compared to the previous year
-""")
+	### *Insights:*
+	📊 February 2024 - lower shipments than 2023, --- Union Budget announcements
+	⚙ May 2024 volumes dipped --- pre-monsoon transport constraints and inventory adjustments before Q2.
+	🌧 June 2024 major drop versus 2023 --- intense monsoon floods and industrial disruptions across Karnataka.
+	🎄 December 2024 shipments lower than 2023 --- weaker festive demand and reduced year-end restocking compared to the previous year
+	""")
 
     with tab3:
         st.markdown("###  Question: Where is shipment activity the highest among outlets?")
