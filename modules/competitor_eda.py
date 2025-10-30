@@ -137,10 +137,11 @@ def run():
     # --------------------------
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "Brand Distribution",
-        "Pack Size Wise Analysis",
+		"Monthly Trend",
         "Bottle v/s Cans",
+		"Pack Wise Salience",
         "Top SKUs",
-        "Monthly Trend"
+        
     ])
 
     # ---- Tab 1: Brand Distribution ----
@@ -238,7 +239,7 @@ def run():
 
 
     # ---- Tab 2: Pack Size Wise Analysis ----
-    with tab2:
+    with tab4:
         st.markdown("###  Question: What are the top-selling SKUs?")
         st.subheader("Pack Size Wise Volume Distribution")
     
@@ -510,7 +511,7 @@ def run():
 
 
     # ---- Tab 2: Top SKUs with Granularity ----
-    with tab4:
+    with tab5:
         st.markdown("###  Question: What are the top-performing SKUs by volume?")
         st.subheader("Top SKUs by Volume")
         sku_sales = df.groupby(SKU_COL)[VOLUME_COL].sum().round(0).reset_index()
@@ -550,7 +551,7 @@ The company’s performance is highly dependent on the stability and success of 
 
         
     # ---- Tab 3: Monthly Trend (Absolute Only) ----
-    with tab5:
+    with tab2:
         st.markdown("###  Question: How do shipment volumes change month by month for each brand?")
         st.subheader("Monthly Trend by Brand")
 
