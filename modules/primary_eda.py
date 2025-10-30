@@ -379,7 +379,10 @@ def run():
                 df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
                 df_events["Day"] = df_events["Date"].dt.day
         
-                selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+                # ✅ Exclude 2025
+                valid_years = sorted([y for y in df_events["Year"].dropna().unique() if y < 2025])
+        
+                selected_year = st.selectbox("Select Year", valid_years)
                 selected_month_name = st.selectbox(
                     "Select Month",
                     sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
@@ -392,6 +395,8 @@ def run():
         
                 df_ship = df.copy()
                 df_ship["Date"] = pd.to_datetime(df_ship["SHIPMENT_DATE"], errors="coerce")
+                df_ship["Year"] = df_ship["Date"].dt.year
+                df_ship = df_ship[df_ship["Year"] < 2025]  # ✅ Exclude 2025 data
                 ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
                 ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
                 ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
@@ -465,12 +470,16 @@ def run():
                 df_events["Year"] = df_events["Date"].dt.year
                 df_events["Week"] = df_events["Date"].dt.isocalendar().week
         
-                selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+                # ✅ Exclude 2025
+                valid_years = sorted([y for y in df_events["Year"].dropna().unique() if y < 2025])
+        
+                selected_year = st.selectbox("Select Year", valid_years)
         
                 df_ship = df.copy()
                 df_ship["Date"] = pd.to_datetime(df_ship["SHIPMENT_DATE"], errors="coerce")
                 df_ship["Year"] = df_ship["Date"].dt.year
                 df_ship["Week"] = df_ship["Date"].dt.isocalendar().week
+                df_ship = df_ship[df_ship["Year"] < 2025]  # ✅ Exclude 2025 data
         
                 weekly_ship = (
                     df_ship[df_ship["Year"] == selected_year]
@@ -535,6 +544,7 @@ def run():
                 )
         
                 st.plotly_chart(fig_week, use_container_width=True)
+
 
               
                             
