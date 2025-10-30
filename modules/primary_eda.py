@@ -115,27 +115,23 @@ def run():
 
     kpi_volume = df_latest[VOLUME_COL].sum()
     kpi_outlets = df_latest[LOCATION_COL].nunique()
-    kpi_shipments = df_latest.shape[0]
+    #kpi_shipments = df_latest.shape[0]
 
     prev_volume = df_prev[VOLUME_COL].sum() if not df_prev.empty else None
-    prev_shipments = df_prev.shape[0] if not df_prev.empty else None
+    #prev_shipments = df_prev.shape[0] if not df_prev.empty else None
 
     delta_volume = _pct_change(kpi_volume, prev_volume)
-    delta_shipments = _pct_change(kpi_shipments, prev_shipments)
+    #delta_shipments = _pct_change(kpi_shipments, prev_shipments)
 
     # Show KPIs (fixed, not linked to filters)
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     col1.metric(
         "Total Volume",
         f"{kpi_volume:,.0f}",
         f"{delta_volume:+.0f}%" if delta_volume is not None else None
     )
     col2.metric("Unique Locations", f"{kpi_outlets}")
-    col3.metric(
-        "Total Shipments",
-        f"{kpi_shipments}",
-        f"{delta_shipments:+.0f}%" if delta_shipments is not None else None
-    )
+    
 
     st.caption(f"YoY change: {latest_year} vs {prev_year}")
     st.markdown("---")
