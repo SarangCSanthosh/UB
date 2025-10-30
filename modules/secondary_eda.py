@@ -753,7 +753,7 @@ def run():
         except Exception as e:
             st.error(f"Error loading external data: {e}")
             st.stop()
-    
+    	OUTLET_COL = "DBF_OUTLET"
         # --- Check if required columns exist ---
         if OUTLET_COL in external_df.columns and VOLUME_COL in external_df.columns:
             # --- Controls ---
