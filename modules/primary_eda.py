@@ -547,10 +547,9 @@ def run():
             st.markdown("""
     ### **Insights: Shipment Volume Analysis (2023–2024)**
     
-    - There has been a substantial decrease in the yearly shipment volume between 2023 and 2024. This indicates a contraction in shipping activity or demand.
-    - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years (though much more severe in 2024). The period from 2024 Q2 to 2024 Q3 represents a major performance concern due to the unprecedented low volume.
-    - The shipment volume is highly unstable on a monthly basis. While the first half of 2024 contained the single highest month (May), the subsequent crash to the lowest volume in August. The recent recovery in Q4 2024 (September and October) is a positive sign, but volume remains far below peak levels.
-    
+    - Shipment volume 📉 between 2023 and 2024.
+    - Shipment activity cyclical --- 📉 in Q3 of both years
+    - 2024 - May 📈 , August 📉    
     """)
 
 
