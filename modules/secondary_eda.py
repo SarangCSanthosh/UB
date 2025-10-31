@@ -1210,7 +1210,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
         st.markdown("""
             ### **Insights**
 	        1. CHIKKODI - Good Kingfisher presence around sugar factories
-	        2. KALABURAGI - Disposable Income ⬆️, shipments also ⬆️
+	        2. KALABURAGI - Disposable Income ⬇️, shipments also ⬆️
 	        3. SINDHANUR - Young drinkers turn towards hard drinks 
 	        4. CHITRADURGA -  New liquor store licenses rejected by CM 
             5. VIJAYAPURA - Disposable Income ⬆️, but shipments ⬇️
