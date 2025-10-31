@@ -771,10 +771,10 @@ def run():
                 #st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(0), width=400, height=200)
                 st.markdown("""
 ### **Insights:**
-🟣 Cluster 0: Low-demand rural zones — Bagalkot, Sedam, Koppal, Ballari (require shared logistics support).
-🟢 Cluster 1: Balanced trade regions — Raichur, Hosapete, Belagavi (suitable for scaling operations).
-🟠 Cluster 2: Emerging hubs — Vijayapura, Bidar, Yadgiri (show increasing shipment potential).
-🔴 Cluster 3: Major shipment centres — Kalaburagi, Hubballi (strategic for warehousing and route optimisation).
+- 🟣 Cluster 0: Low-demand rural zones — Bagalkot, Sedam, Koppal, Ballari (require shared logistics support).
+- 🟢 Cluster 1: Balanced trade regions — Raichur, Hosapete, Belagavi (suitable for scaling operations).
+- 🟠 Cluster 2: Emerging hubs — Vijayapura, Bidar, Yadgiri (show increasing shipment potential).
+- 🔴 Cluster 3: Major shipment centres — Kalaburagi, Hubballi (strategic for warehousing and route optimisation).
 
 """)
 
