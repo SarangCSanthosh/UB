@@ -670,9 +670,9 @@ def run():
 
         st.markdown("""
 ### **Insights:**
-- There has been a huge dip in the shipment in the month of May-2023. Which is explained by the events that took place during the time period.
-- The same dip has been observed in the year 2024 as well but the absolute shipment volume has seen a spike.
-- Month wise shipment can be observed through Event Calendar Heat Map. 
+ODD OCCURENCES - Peaks were observed in normalised trend
+- August , December - 2023
+- March, October - 2024
 """)
 
 
