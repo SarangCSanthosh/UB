@@ -8,7 +8,7 @@ from modules import primary_eda, secondary_eda, competitor_eda
 st.set_page_config(page_title="UBL Dashboard", layout="wide")
 
 # Sidebar navigation
-st.sidebar.title("EDA Dashboard")
+st.sidebar.title("UBL Dashboard")
 page = st.sidebar.radio("Choose Dataset", ["Primary Dataset", "Secondary Dataset","Comparative Analysis"])
 
 # Render selected page
