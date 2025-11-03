@@ -5,7 +5,7 @@ import streamlit as st
 from modules import primary_eda, secondary_eda, competitor_eda
 
 # Set Streamlit app config
-st.set_page_config(page_title="EDA Dashboard", layout="wide")
+st.set_page_config(page_title="UBL Dashboard", layout="wide")
 
 # Sidebar navigation
 st.sidebar.title("EDA Dashboard")
