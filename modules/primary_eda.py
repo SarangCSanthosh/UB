@@ -186,24 +186,16 @@ def run():
     # ---- Tab 1: Trends ----
     # ---- Tab 1: Trends ----
     with tab1:
-        st.markdown("###  Question: What trends do we see in shipments across months, quarters, or years?")
-        st.subheader("Shipment Trends and Event Calendar")
+        st.markdown("### Question: What trends do we see in shipments across months, quarters, or years?")
+        st.subheader("Shipment Trends")
     
-        # --- Chart Selection ---
+        # --- Chart Type ---
         chart_type = st.radio(
             "Select Chart Type:",
-            ["Shipment Trend", "Event Calendar"],
+            ["Shipment Trend"],
             horizontal=True
         )
     
-        
-    
-        # ===============================
-        # 📈 SHIPMENT TREND
-        # ===============================
-    
-
-
         if chart_type == "Shipment Trend":
             granularity = st.radio(
                 "Select Granularity", 
@@ -218,29 +210,27 @@ def run():
                 horizontal=True, 
                 key="trend_value_type"
             )
-            # --- Create Label in df_filtered based on granularity ---
+    
+            # --- Prepare date features ---
             df_filtered["SHIPMENT_DATE"] = pd.to_datetime(df_filtered["SHIPMENT_DATE"], errors="coerce")
             df_filtered["Year"] = df_filtered["SHIPMENT_DATE"].dt.year.astype(int)
             df_filtered["Quarter"] = "Q" + df_filtered["SHIPMENT_DATE"].dt.quarter.astype(str)
             df_filtered["YearMonth"] = df_filtered["SHIPMENT_DATE"].dt.to_period("M").astype(str)
-            
-            # Force remove old Label if it exists
+    
+            # Remove any old label column
             if "Label" in df_filtered.columns:
                 df_filtered.drop(columns=["Label"], inplace=True)
-            
-            # Assign Label based on selected granularity
+    
+            # --- Label for granularity ---
             if granularity == "Yearly":
                 df_filtered["Label"] = df_filtered["Year"].astype(str)
-            
             elif granularity == "Quarterly":
                 df_filtered["Label"] = df_filtered["Quarter"] + " " + df_filtered["Year"].astype(str)
-            
             else:  # Monthly
                 df_filtered["Label"] = df_filtered["YearMonth"]
-            
     
+            # --- Aggregate ---
             trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
-            
     
             # --- Convert to percentage if needed ---
             if value_type == "Percentage":
@@ -251,73 +241,7 @@ def run():
                 trend_df["Value"] = trend_df[VOLUME_COL]
                 y_title = "Volume"
     
-            # --- Load Event Calendar ---
-            #EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-            
-            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
-            df_events = load_event_calendar(EVENT_CSV_URL)
-            df_events.drop(columns=["Remark"], inplace=True, errors="ignore")
-
-
-            df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-    
-            # --- Create Label column in df_events based on granularity ---
-            if granularity == "Yearly":
-                df_events["Label"] = df_events["Date"].dt.year.astype(int).astype(str)
-            elif granularity == "Quarterly":
-                df_events["Label"] = "Q" + df_events["Date"].dt.quarter.astype(str) + " " + df_events["Date"].dt.year.astype(str)
-            else:  # Monthly
-                df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
-    
-            # --- Clean and normalize event names ---
-            def clean_event_name(text):
-                if pd.isna(text):
-                    return None
-                text = str(text).strip()
-                if not text or text.lower() in ["nan", "none"]:
-                    return None
-    
-                # Fix common corrupt patterns
-                text = text.replace("Against", "")
-                text = text.replace("Friendly", "BFC")
-                text = text.replace("Footll", "Football")
-                text = text.replace("Pro Ka", "Pro Kabbadi")
-                text = text.replace("C ", " ")
-                text = text.replace("IND World cup", "IND World Cup")
-                text = text.replace("RCB Match", "RCB Match")
-                text = text.replace("Week end", "Weekend")
-                text = text.replace("INDependence", "Independence")
-                text = text.replace("Ni8", "Night")
-    
-                # Remove extra spaces and normalize casing
-                text = " ".join(text.split())
-                text = text.title().replace("Ipl", "IPL").replace("Bfc","BFC")
-                return text
-    
-            df_events["Event / Task"] = df_events["Event / Task"].apply(clean_event_name)
-    
-            # --- Aggregate events by Label ---
-            def summarize_events(x):
-                counts = x.value_counts()
-                lines = []
-                for event, count in counts.items():
-                    if count > 1:
-                        lines.append(f"{event} (x{count})")
-                    else:
-                        lines.append(event)
-                return "<br>".join(lines)
-    
-            events_agg = (
-                df_events.groupby("Label", dropna=False)["Event / Task"]
-                .apply(summarize_events)
-                .reset_index()
-            )
-
-    
-            # --- Merge trend with events ---
-            trend_df = trend_df.merge(events_agg, on="Label", how="left")
-    
-            # --- Plot Shipment Trend with Events ---
+            # --- Plot Trend ---
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
@@ -326,360 +250,160 @@ def run():
                     mode="lines+markers",
                     name=f"Shipment Trend ({granularity}, {value_type})",
                     fill="tozeroy",
-                    yaxis="y1",
-                    hovertext=trend_df["Event / Task"],
-                    hoverinfo="x+y+text",
+                    line=dict(color="mediumvioletred", width=2),
+                    marker=dict(size=6)
                 )
             )
-
+    
             fig.update_layout(
                 xaxis=dict(type='category'),
                 yaxis=dict(title=y_title),
                 title=f"Shipment Trend ({granularity}, {value_type})",
-                template="plotly_white"
+                template="plotly_white",
+                height=450,
+                margin=dict(l=40, r=40, t=60, b=40)
             )
-
     
-            fig.update_yaxes(title_text=y_title)
             st.plotly_chart(fig, use_container_width=True)
     
-            st.markdown("""
-            ### **Insights: Shipment Volume Analysis (2023–2024)**
-            - There has been a substantial decrease in the yearly shipment volume between 2023 and 2024.  
-            - The company's shipment activity is highly cyclical, with a common drop observed in Q3 of both years.  
-            - The shipment volume is highly unstable on a monthly basis, showing recovery in Q4 2024 but still below peak levels.
-            """)
+                  
+                                
+                st.markdown("""
+        ### **Insights: Shipment Volume Analysis (2023–2024)**
+        
+        - Shipment volume 📉 between 2023 and 2024.
+        - Shipment activity cyclical --- 📉 in Q3 of both years
+        - 2024 - May 📈 , August 📉    
+        """)
     
-            
-            # ===============================
-            # 📅 EVENT CALENDAR HEATMAP
-            # ===============================
-        else:
-            st.subheader("Event-Based Shipment Visualization")
+    
+    
+        # ---- Tab 2: Top/Bottom Locations ----
+        with tab2:
+            st.markdown("###  Question: Where are shipments highest and where are they lagging?")
+            st.subheader("Top/Bottom Locations")
+            if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
+    
+            # --- Normalize location names for consistency ---
+                df_filtered[LOCATION_COL] = df_filtered[LOCATION_COL].replace({
+                    "HUBBALLI-1": "HUBBALLI",
+                    "HUBBALLI-2": "HUBBALLI",
+                    "BELAGAVI-2": "BELAGAVI",
+                    "CHIKODI": "CHIKKODI"
+                })
         
-            EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-            df_events = load_event_calendar(EVENT_XLSX_URL)
-            df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-        
-            # --- Add Granularity Option ---
-            granularity = st.radio("Select View", ["Monthly", "Weekly"], horizontal=True)
-        
-            # =========================
-            # ==== MONTHLY VIEW =======
-            # =========================
-            if granularity == "Monthly":
-                st.subheader("Monthly Event Heatmap")
-        
-                df_events["Year"] = df_events["Date"].dt.year
-                df_events["Month"] = df_events["Date"].dt.month
-                df_events["MonthName"] = df_events["Date"].dt.strftime("%B")
-                df_events["Day"] = df_events["Date"].dt.day
-        
-                # ✅ Exclude 2025
-                valid_years = sorted([y for y in df_events["Year"].dropna().unique() if y < 2025])
-        
-                selected_year = st.selectbox("Select Year", valid_years)
-                selected_month_name = st.selectbox(
-                    "Select Month",
-                    sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
+                # --- Group shipments by location ---
+                location_volume = (
+                    df_filtered.groupby(LOCATION_COL)[VOLUME_COL]
+                    .sum()
+                    .round(0)
+                    .reset_index()
                 )
         
-                df_selected = df_events[
-                    (df_events["Year"] == selected_year) &
-                    (df_events["MonthName"] == selected_month_name)
-                ].copy()
+                choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
+                value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
+                n_locations = st.slider("Number of Locations", 5, 25, 10)
         
-                df_ship = df.copy()
-                df_ship["Date"] = pd.to_datetime(df_ship["SHIPMENT_DATE"], errors="coerce")
-                df_ship["Year"] = df_ship["Date"].dt.year
-                df_ship = df_ship[df_ship["Year"] < 2025]  # ✅ Exclude 2025 data
-                ship_day = df_ship.groupby(df_ship["Date"].dt.date)[VOLUME_COL].sum().reset_index()
-                ship_day.rename(columns={VOLUME_COL: "VOLUME"}, inplace=True)
-                ship_day["Date"] = pd.to_datetime(ship_day["Date"], errors="coerce")
+                if choice == "Top":
+                    locs = location_volume.sort_values(by=VOLUME_COL, ascending=False).head(n_locations)
+                else:
+                    locs = location_volume.sort_values(by=VOLUME_COL, ascending=True).head(n_locations)
         
-                df_selected = pd.merge(df_selected, ship_day[["Date", "VOLUME"]], on="Date", how="left")
-                df_selected["VOLUME"] = df_selected["VOLUME"].fillna(0)
+                if value_type == "Percentage":
+                    total_volume = df_filtered[VOLUME_COL].sum().round(0)
+                    locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
         
-                month_start = pd.Timestamp(f"{selected_year}-{selected_month_name}-01")
-                month_end = month_start + pd.offsets.MonthEnd(1)
-                start_day = month_start - pd.Timedelta(days=month_start.weekday())
-                end_day = month_end + pd.Timedelta(days=(6 - month_end.weekday()))
-                full_range = pd.date_range(start_day, end_day, freq="D")
+                # --- Determine PCI column based on selected year(s) ---
+                if filter_mode == "Year":
+                    years_selected = selected_years  
+                else:
+                    years_selected = sorted(df_filtered["Year"].dropna().unique())
         
-                calendar_df = pd.DataFrame({"Date": full_range})
-                calendar_df["Day"] = calendar_df["Date"].dt.day
-                calendar_df["DayOfWeek"] = calendar_df["Date"].dt.day_name().str[:3]
-                calendar_df["Month"] = calendar_df["Date"].dt.month
-                calendar_df["Week"] = ((calendar_df["Date"] - start_day).dt.days // 7) + 1
-                calendar_df["VOLUME"] = calendar_df["Date"].map(df_selected.set_index("Date")["VOLUME"]).fillna(0)
+                if set(years_selected) == {2023}:
+                    pci_col = "Per capita - 2022-23"
+                elif set(years_selected) == {2024}:
+                    pci_col = "per capita - 2023-24"
+                else:
+                    pci_col = "Grand Total"
         
-                calendar_df.loc[calendar_df["Month"] != month_start.month, "VOLUME"] = None
-                calendar_df.loc[calendar_df["Month"] != month_start.month, "Day"] = ""
-        
-                ordered_days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                pivot_volume = calendar_df.pivot(index="Week", columns="DayOfWeek", values="VOLUME")[ordered_days]
-                text_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Day")[ordered_days]
-        
-                df_selected["Tooltip"] = (
-                    "<b>" + df_selected["Date"].dt.strftime("%d %b %Y") + "</b><br>" +
-                    "Event: " + df_selected["Event / Task"].fillna("") + "<br>" +
-                    "Volume: " + df_selected["VOLUME"].round(0).astype(int).astype(str)
+                # --- Load PCI dataset ---
+                df_pci = pd.read_excel(
+                    "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx",
+                    sheet_name="PCI"
                 )
         
-                calendar_df["Tooltip"] = calendar_df["Date"].map(df_selected.set_index("Date")["Tooltip"])
-                calendar_df.loc[calendar_df["Month"] != month_start.month, "Tooltip"] = None
-                hover_matrix = calendar_df.pivot(index="Week", columns="DayOfWeek", values="Tooltip")[ordered_days]
+                df_pci.columns = [c.strip() for c in df_pci.columns]
+                df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
+                df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
         
-                fig = go.Figure(
-                    data=go.Heatmap(
-                        z=pivot_volume.values,
-                        x=pivot_volume.columns,
-                        y=pivot_volume.index,
-                        text=text_matrix.values,
-                        texttemplate="%{text}",
-                        hovertext=hover_matrix.values,
-                        hoverinfo="text",
-                        colorscale="RdPu",
-                        showscale=True
-                    )
+                # --- Merge HUBBALLI & BELAGAVI variants ---
+                df_pci["Location"] = df_pci["Location"].replace({
+                    "HUBBALLI-1": "HUBBALLI",
+                    "HUBBALLI-2": "HUBBALLI",
+                    "BELAGAVI-2": "BELAGAVI",
+                    "CHIKODI": "CHIKKODI"
+                })
+        
+                # --- Aggregate PCI values ---
+                df_pci = df_pci.groupby("Location", as_index=False)[pci_col].mean()
+        
+                # --- Merge with shipment data ---
+                locs["Location_upper"] = locs[LOCATION_COL].str.strip().str.upper()
+                df_merged = pd.merge(
+                    locs,
+                    df_pci,
+                    left_on="Location_upper",
+                    right_on="Location",
+                    how="left"
                 )
+        
+                df_merged.rename(columns={pci_col: "Per Capita Income"}, inplace=True)
+    
+                if value_type == "Percentage":
+                    total_volume = df_merged[VOLUME_COL].sum()
+                    total_pci = df_merged["Per Capita Income"].sum()
+                
+                    df_merged[VOLUME_COL] = (df_merged[VOLUME_COL] / total_volume * 100).round(1)
+                    df_merged["Per Capita Income"] = (df_merged["Per Capita Income"] / total_pci * 100).round(1)
+        
+                # --- Melt for bar chart ---
+                df_melted = df_merged.melt(
+                    id_vars=[LOCATION_COL],
+                    value_vars=[VOLUME_COL, "Per Capita Income"],
+                    var_name="Metric",
+                    value_name="Value"
+                )
+        
+                # --- Clustered (side-by-side) bar chart ---
+                fig = px.bar(
+                    df_melted,
+                    x="Value",
+                    y=LOCATION_COL,
+                    color="Metric",
+                    orientation="h",
+                    #text=df_melted["Value"].round(0),
+                    barmode="group",  # <<< CLUSTERED BARS
+                    color_discrete_sequence=px.colors.qualitative.Set2
+                )
+        
+                fig.update_traces(textposition="outside")
+        
+                if choice == "Top":
+                    fig.update_layout(yaxis=dict(categoryorder="total ascending"))
+                else:
+                    fig.update_layout(yaxis=dict(categoryorder="total descending"))
         
                 fig.update_layout(
-                    title=f"{selected_month_name} {selected_year} — Shipment Heatmap",
-                    xaxis=dict(title="", side="top"),
-                    yaxis=dict(title="", autorange="reversed"),
-                    width=600,
-                    height=450,
-                    template="simple_white",
-                    margin=dict(l=20, r=20, t=80, b=20),
-                    coloraxis_colorbar=dict(title="Volume")
+                    title=f"Shipment Volume vs Per Capita Income ({pci_col})",
+                    xaxis_title="Value",
+                    yaxis_title="Location",
+                    legend_title="Metric",
+                    template="plotly_dark",
+                    height=600,
+                    margin=dict(t=80)
                 )
         
                 st.plotly_chart(fig, use_container_width=True)
-        
-            # =========================
-            # ==== WEEKLY VIEW ========
-            # =========================
-            else:
-                st.subheader("Weekly Event Trend")
-        
-                df_events["Year"] = df_events["Date"].dt.year
-                df_events["Week"] = df_events["Date"].dt.isocalendar().week
-        
-                # ✅ Exclude 2025
-                valid_years = sorted([y for y in df_events["Year"].dropna().unique() if y < 2025])
-        
-                selected_year = st.selectbox("Select Year", valid_years)
-        
-                df_ship = df.copy()
-                df_ship["Date"] = pd.to_datetime(df_ship["SHIPMENT_DATE"], errors="coerce")
-                df_ship["Year"] = df_ship["Date"].dt.year
-                df_ship["Week"] = df_ship["Date"].dt.isocalendar().week
-                df_ship = df_ship[df_ship["Year"] < 2025]  # ✅ Exclude 2025 data
-        
-                weekly_ship = (
-                    df_ship[df_ship["Year"] == selected_year]
-                    .groupby("Week")[VOLUME_COL]
-                    .sum()
-                    .reset_index()
-                    .rename(columns={VOLUME_COL: "VOLUME"})
-                )
-        
-                # Add start/end date of each week
-                def get_week_range(year, week):
-                    try:
-                        start = pd.Timestamp.fromisocalendar(year, int(week), 1)
-                        end = pd.Timestamp.fromisocalendar(year, int(week), 7)
-                        return start, end
-                    except Exception:
-                        return pd.NaT, pd.NaT
-        
-                weekly_ship["Start_Date"], weekly_ship["End_Date"] = zip(*weekly_ship.apply(
-                    lambda x: get_week_range(selected_year, int(x["Week"])), axis=1
-                ))
-                weekly_ship["WeekRange"] = (
-                    weekly_ship["Start_Date"].dt.strftime("%d %b") + " – " +
-                    weekly_ship["End_Date"].dt.strftime("%d %b")
-                )
-        
-                df_events_week = (
-                    df_events[df_events["Year"] == selected_year]
-                    .groupby("Week")["Event / Task"]
-                    .apply(lambda x: ", ".join(x.dropna().unique()))
-                    .reset_index()
-                )
-        
-                df_weekly = pd.merge(weekly_ship, df_events_week, on="Week", how="left")
-        
-                df_weekly["Tooltip"] = (
-                    "<b>Week " + df_weekly["Week"].astype(str) + "</b><br>" +
-                    df_weekly["WeekRange"] + "<br>" +
-                    "Volume: " + df_weekly["VOLUME"].astype(int).astype(str) + "<br>" +
-                    "Events: " + df_weekly["Event / Task"].fillna("None")
-                )
-        
-                fig_week = go.Figure()
-                fig_week.add_trace(go.Bar(
-                    x=df_weekly["Week"],
-                    y=df_weekly["VOLUME"],
-                    text=df_weekly["VOLUME"],
-                    hovertext=df_weekly["Tooltip"],
-                    hoverinfo="text",
-                    marker_color="mediumvioletred",
-                    name="Weekly Volume"
-                ))
-        
-                fig_week.update_layout(
-                    title=f"{selected_year} — Weekly Shipment Volume & Events",
-                    xaxis_title="Week Number",
-                    yaxis_title="Volume",
-                    template="simple_white",
-                    height=450,
-                    width=800,
-                    margin=dict(l=40, r=40, t=80, b=40)
-                )
-        
-                st.plotly_chart(fig_week, use_container_width=True)
-
-
-              
-                            
-            st.markdown("""
-    ### **Insights: Shipment Volume Analysis (2023–2024)**
-    
-    - Shipment volume 📉 between 2023 and 2024.
-    - Shipment activity cyclical --- 📉 in Q3 of both years
-    - 2024 - May 📈 , August 📉    
-    """)
-
-
-
-    # ---- Tab 2: Top/Bottom Locations ----
-    with tab2:
-        st.markdown("###  Question: Where are shipments highest and where are they lagging?")
-        st.subheader("Top/Bottom Locations")
-        if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
-
-        # --- Normalize location names for consistency ---
-            df_filtered[LOCATION_COL] = df_filtered[LOCATION_COL].replace({
-                "HUBBALLI-1": "HUBBALLI",
-                "HUBBALLI-2": "HUBBALLI",
-                "BELAGAVI-2": "BELAGAVI",
-                "CHIKODI": "CHIKKODI"
-            })
-    
-            # --- Group shipments by location ---
-            location_volume = (
-                df_filtered.groupby(LOCATION_COL)[VOLUME_COL]
-                .sum()
-                .round(0)
-                .reset_index()
-            )
-    
-            choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
-            value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
-            n_locations = st.slider("Number of Locations", 5, 25, 10)
-    
-            if choice == "Top":
-                locs = location_volume.sort_values(by=VOLUME_COL, ascending=False).head(n_locations)
-            else:
-                locs = location_volume.sort_values(by=VOLUME_COL, ascending=True).head(n_locations)
-    
-            if value_type == "Percentage":
-                total_volume = df_filtered[VOLUME_COL].sum().round(0)
-                locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
-    
-            # --- Determine PCI column based on selected year(s) ---
-            if filter_mode == "Year":
-                years_selected = selected_years  
-            else:
-                years_selected = sorted(df_filtered["Year"].dropna().unique())
-    
-            if set(years_selected) == {2023}:
-                pci_col = "Per capita - 2022-23"
-            elif set(years_selected) == {2024}:
-                pci_col = "per capita - 2023-24"
-            else:
-                pci_col = "Grand Total"
-    
-            # --- Load PCI dataset ---
-            df_pci = pd.read_excel(
-                "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx",
-                sheet_name="PCI"
-            )
-    
-            df_pci.columns = [c.strip() for c in df_pci.columns]
-            df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
-            df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
-    
-            # --- Merge HUBBALLI & BELAGAVI variants ---
-            df_pci["Location"] = df_pci["Location"].replace({
-                "HUBBALLI-1": "HUBBALLI",
-                "HUBBALLI-2": "HUBBALLI",
-                "BELAGAVI-2": "BELAGAVI",
-                "CHIKODI": "CHIKKODI"
-            })
-    
-            # --- Aggregate PCI values ---
-            df_pci = df_pci.groupby("Location", as_index=False)[pci_col].mean()
-    
-            # --- Merge with shipment data ---
-            locs["Location_upper"] = locs[LOCATION_COL].str.strip().str.upper()
-            df_merged = pd.merge(
-                locs,
-                df_pci,
-                left_on="Location_upper",
-                right_on="Location",
-                how="left"
-            )
-    
-            df_merged.rename(columns={pci_col: "Per Capita Income"}, inplace=True)
-
-            if value_type == "Percentage":
-                total_volume = df_merged[VOLUME_COL].sum()
-                total_pci = df_merged["Per Capita Income"].sum()
-            
-                df_merged[VOLUME_COL] = (df_merged[VOLUME_COL] / total_volume * 100).round(1)
-                df_merged["Per Capita Income"] = (df_merged["Per Capita Income"] / total_pci * 100).round(1)
-    
-            # --- Melt for bar chart ---
-            df_melted = df_merged.melt(
-                id_vars=[LOCATION_COL],
-                value_vars=[VOLUME_COL, "Per Capita Income"],
-                var_name="Metric",
-                value_name="Value"
-            )
-    
-            # --- Clustered (side-by-side) bar chart ---
-            fig = px.bar(
-                df_melted,
-                x="Value",
-                y=LOCATION_COL,
-                color="Metric",
-                orientation="h",
-                #text=df_melted["Value"].round(0),
-                barmode="group",  # <<< CLUSTERED BARS
-                color_discrete_sequence=px.colors.qualitative.Set2
-            )
-    
-            fig.update_traces(textposition="outside")
-    
-            if choice == "Top":
-                fig.update_layout(yaxis=dict(categoryorder="total ascending"))
-            else:
-                fig.update_layout(yaxis=dict(categoryorder="total descending"))
-    
-            fig.update_layout(
-                title=f"Shipment Volume vs Per Capita Income ({pci_col})",
-                xaxis_title="Value",
-                yaxis_title="Location",
-                legend_title="Metric",
-                template="plotly_dark",
-                height=600,
-                margin=dict(t=80)
-            )
-    
-            st.plotly_chart(fig, use_container_width=True)
 
             st.markdown("""
 ### **Insights:**
