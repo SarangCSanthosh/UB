@@ -114,46 +114,48 @@ def run():
 	
 	    # --- Display static image ---
 	    st.image("assets/comparison.png", caption="Volume Change by Company (2023–2024)", use_container_width=True)
+	
 	    st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
 	
 	    if "ACTUAL_DATE" in df.columns:
 	        df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
 	        df["Year"] = df["ACTUAL_DATE"].dt.year
 	
-	        # --- Clean and filter ---
+	        # --- Clean and filter data ---
 	        df["DBF_COMPANY"] = df["DBF_COMPANY"].astype(str).str.upper()
 	        df["DBF_BRAND"] = df["DBF_BRAND"].astype(str).str.strip().str.upper()
 	
+	        # --- Filter UB company for 2023 and 2024 ---
 	        df_filtered_years = df[(df["Year"].isin([2023, 2024])) & (df["DBF_COMPANY"] == "UB")]
 	
 	        if not df_filtered_years.empty:
-	            # --- Aggregate ---
+	            # --- Aggregate volume by brand & year ---
 	            brand_yearly = (
 	                df_filtered_years.groupby(["DBF_BRAND", "Year"])[VOLUME_COL]
 	                .sum()
 	                .reset_index()
 	            )
-				brands_all = sorted(df_filtered_years["DBF_BRAND"].unique())
-	            # --- Pivot ---
+	
+	            # --- Ensure all brands appear ---
+	            brands_all = sorted(df_filtered_years["DBF_BRAND"].unique())
 	            pivot_df = (
 	                brand_yearly.pivot(index="DBF_BRAND", columns="Year", values=VOLUME_COL)
-					.reindex(brands_all)
+	                .reindex(brands_all)
 	                .fillna(0)
 	            )
 	
-	            # --- Compute YoY ---
+	            # --- Compute YoY change ---
 	            if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
 	                pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
 	                pivot_df["YoY_Percentage"] = (
 	                    (pivot_df["YoY_Change"] / pivot_df[2023].replace(0, np.nan)) * 100
 	                ).round(2)
-	
 	                pivot_df = pivot_df.replace([np.inf, -np.inf, np.nan], 0)
 	
-	                # --- Sort ---
+	                # --- Sort by YoY Change ---
 	                pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
 	
-	                # --- Waterfall Chart ---
+	                # --- Waterfall chart ---
 	                fig = go.Figure(go.Waterfall(
 	                    name="YoY Change",
 	                    orientation="v",
@@ -162,7 +164,7 @@ def run():
 	                    y=pivot_df["YoY_Change"],
 	                    text=pivot_df["YoY_Change"].apply(lambda x: f"{x:,.0f}"),
 	                    textposition="outside",
-	                    connector={"line": {"color": "rgb(63, 63, 63)"}},
+	                    connector={"line": {"color": "rgb(63,63,63)"}},
 	                    customdata=pivot_df["YoY_Percentage"],
 	                    hovertemplate="<b>%{x}</b><br>Change: %{y:,.0f}<br>YoY: %{customdata:.2f}%<extra></extra>"
 	                ))
@@ -178,12 +180,36 @@ def run():
 	
 	                st.plotly_chart(fig, use_container_width=True)
 	
+	                # --- Optional: Show brand summary table ---
+	                st.dataframe(
+	                    pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]]
+	                    .rename(columns={2023: "2023 Volume", 2024: "2024 Volume"})
+	                )
+	
 	            else:
 	                st.warning("Data for both 2023 and 2024 is required to compute YoY change.")
 	        else:
-	            st.info("No records found for 2023 or 2024.")
+	            st.info("No records found for 2023 or 2024 for UB company.")
 	    else:
 	        st.error("The dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
+	
+	    # --- Insights section ---
+	    with st.container():
+	        st.markdown("""
+	        ### **Insights**
+	
+	        **1. External Analysis**
+	        - Shipment growth trend: **SOM BREWERIES > UBL > AB-INBEV**
+	        - Indicates UBL is performing moderately within the competitive landscape.
+	
+	        **2. Internal Analysis**
+	        - **Bullet** brand shows strong positive growth ⬆️  
+	        - **KFS** shows decline ⬇️ indicating potential underperformance.
+	
+	        **Conclusion:**  
+	        KFS might not be a key performing brand for UBL in 2024.
+	        """)
+
        
 
 
