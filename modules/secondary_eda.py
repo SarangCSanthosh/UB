@@ -841,7 +841,7 @@ def run():
                          title="Outlets vs Volume % by Region")
             fig.update_traces(texttemplate="%{text:.0f}%", textposition="inside")
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(region_stats.set_index("DBF_REGION").round(0))
+            #st.dataframe(region_stats.set_index("DBF_REGION").round(0))
         else:
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
         with st.container():
@@ -1072,7 +1072,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
     
                 # Add percentage change to summary table
                 summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
-                st.dataframe(summary_df)
+                #st.dataframe(summary_df)
     
                 # -------------------------------------------------------------------------
                 # NEW SECTION: YoY Change in Disposable Income (Per Capita Income)
@@ -1124,9 +1124,9 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                     st.plotly_chart(fig_pci, use_container_width=True)
     
                     # Display PCI summary table
-                    st.dataframe(df_pci_sorted[["Location", "Per capita - 2022-23", "per capita - 2023-24", "PCI_YoY_%Change"]])
-                else:
-                    st.warning("PCI columns for 2022-23 or 2023-24 are missing in the dataset.")
+                    #st.dataframe(df_pci_sorted[["Location", "Per capita - 2022-23", "per capita - 2023-24", "PCI_YoY_%Change"]])
+                #else:
+                    #st.warning("PCI columns for 2022-23 or 2023-24 are missing in the dataset.")
     
             else:
                 st.info("Data for 2023 and/or 2024 is missing.")
