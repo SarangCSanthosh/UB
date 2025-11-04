@@ -124,7 +124,19 @@ def run():
     
             # --- Filter only 2023 and 2024 ---
             df_filtered_years = df[(df["Year"].isin([2023, 2024])) & (df["DBF_COMPANY"].str.upper() == "UB")]
-    
+			if not df_filtered_years.empty:
+				# --- Display available brands per year ---
+				brands_2023 = sorted(df_filtered_years[df_filtered_years["Year"] == 2023]["DBF_BRAND"].dropna().unique())
+				brands_2024 = sorted(df_filtered_years[df_filtered_years["Year"] == 2024]["DBF_BRAND"].dropna().unique())
+		
+				col1, col2 = st.columns(2)
+				with col1:
+					st.markdown("#### Brands present in **2023**")
+					st.write(brands_2023 if brands_2023 else "No brands found for 2023")
+				with col2:
+					st.markdown("#### Brands present in **2024**")
+					st.write(brands_2024 if brands_2024 else "No brands found for 2024")
+			
             if not df_filtered_years.empty:
                 # --- Aggregate volume by brand & year ---
                 brand_yearly = (
