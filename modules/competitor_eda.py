@@ -183,10 +183,8 @@ def run():
 	            st.info("No records found for 2023 or 2024.")
 	    else:
 	        st.error("The dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
-
-
        
-        with st.container():
+	    with st.container():
             st.markdown("""
 ### **Insights:**
 	
