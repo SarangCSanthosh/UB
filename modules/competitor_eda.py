@@ -112,35 +112,42 @@ def run():
 	    st.markdown("### Question: Which companies and brands contributed most to shipment growth or decline?")
 	    st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
 	
-	    # --- Static image of company comparison ---
 	    st.image("assets/comparison.png", caption="Volume Change by Company (2023–2024)", use_container_width=True)
-	
 	    st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
 	
 	    if "ACTUAL_DATE" in df.columns:
 	        df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
 	        df["Year"] = df["ACTUAL_DATE"].dt.year
 	
-	        # --- Standardize and clean data ---
+	        # --- Clean ---
 	        df["DBF_COMPANY"] = df["DBF_COMPANY"].astype(str).str.strip().str.upper()
 	        df["DBF_BRAND"] = df["DBF_BRAND"].astype(str).str.strip().str.upper()
 	
-	        # --- Filter for UBL brands only ---
+	        # --- Filter UB only ---
 	        df_ub = df[df["DBF_COMPANY"] == "UB"]
 	
-	        # --- Filter only 2023 and 2024 records ---
+	        # --- Filter 2023 and 2024 ---
 	        df_filtered = df_ub[df_ub["Year"].isin([2023, 2024])]
 	
 	        if not df_filtered.empty:
-	            # --- Aggregate volume per brand per year ---
+	            # --- Debug: show what’s actually in each year ---
+	            brands_2023 = sorted(df_filtered.loc[df_filtered["Year"] == 2023, "DBF_BRAND"].unique())
+	            brands_2024 = sorted(df_filtered.loc[df_filtered["Year"] == 2024, "DBF_BRAND"].unique())
+	
+	            st.write("**✅ Brands in 2023:**", brands_2023)
+	            st.write("**✅ Brands in 2024:**", brands_2024)
+	
+	            # --- Combine both sets ---
+	            all_brands = sorted(list(set(brands_2023) | set(brands_2024)))
+	
+	            # --- Aggregate ---
 	            brand_yearly = (
 	                df_filtered.groupby(["DBF_BRAND", "Year"])[VOLUME_COL]
 	                .sum()
 	                .reset_index()
 	            )
 	
-	            # --- Ensure ALL brands appear even if missing a year ---
-	            all_brands = df_ub["DBF_BRAND"].unique()  # all UB brands
+	            # --- Fill missing brand-year combos ---
 	            all_years = [2023, 2024]
 	            full_index = pd.MultiIndex.from_product([all_brands, all_years], names=["DBF_BRAND", "Year"])
 	            brand_yearly = (
@@ -149,19 +156,22 @@ def run():
 	                .reset_index()
 	            )
 	
-	            # --- Pivot to wide format ---
+	            # --- Pivot ---
 	            pivot_df = brand_yearly.pivot(index="DBF_BRAND", columns="Year", values=VOLUME_COL).fillna(0)
 	
-	            # --- Compute YoY Change ---
+	            # --- Compute YoY ---
 	            pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
 	            pivot_df["YoY_Percentage"] = (
 	                np.where(pivot_df[2023] == 0, 0, (pivot_df["YoY_Change"] / pivot_df[2023]) * 100)
 	            ).round(2)
 	
-	            # --- Sort by change ---
 	            pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
 	
-	            # --- Create Waterfall Chart ---
+	            # --- Debug: show all brands with volumes ---
+	            st.write("### 🔍 Debug: Brand Volume Comparison Table")
+	            st.dataframe(pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]])
+	
+	            # --- Waterfall ---
 	            fig = go.Figure(go.Waterfall(
 	                name="YoY Change",
 	                orientation="v",
@@ -186,34 +196,26 @@ def run():
 	
 	            st.plotly_chart(fig, use_container_width=True)
 	
-	            # --- Optional Table for clarity ---
-	            st.dataframe(
-	                pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]]
-	                .rename(columns={2023: "2023 Volume", 2024: "2024 Volume"})
-	            )
-	
 	        else:
-	            st.info("No data available for 2023 or 2024 for UB company.")
+	            st.info("No UB data available for 2023 or 2024.")
 	    else:
-	        st.error("Dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
+	        st.error("Dataset must include 'ACTUAL_DATE' to compute YoY change.")
 	
-	    # --- Insights ---
 	    with st.container():
 	        st.markdown("""
 	        ### **Insights**
 	
 	        **1. External Analysis**
-	        - Overall growth trend across companies: **SOM BREWERIES > UBL > AB-INBEV**
-	        - Indicates UBL’s position is stable but not leading.
+	        - SOM Breweries shows higher growth vs UBL and AB-InBev.
 	
 	        **2. Internal Analysis**
-	        - **Bullet** shows significant positive growth ⬆️  
-	        - **Kingfisher Strong** shows a sharp decline ⬇️  
-	        - Other smaller brands remain relatively flat.
+	        - Bullet shows strong shipment growth ⬆️
+	        - Kingfisher Strong shows a drop ⬇️
 	
 	        **Conclusion:**  
-	        Bullet drives UBL’s growth, while KFS drags overall volume performance.
+	        Bullet drives growth, while KFS drags overall performance.
 	        """)
+
 
 
 
