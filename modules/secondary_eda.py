@@ -183,12 +183,12 @@ def run():
     tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8,tab9 = st.tabs([
         "Shipment Trends",
 		"Month on Month Shipment",
+		"Depot-wise YoY Change",
+		"Region Stacked",
 		"Map",
 		"Region Donut",
-		"Region Stacked",
 		"Special Outlets",
         "Depot Analysis",
-        "Depot-wise YoY Change",
 		"Top Outlets"
     ])
 
@@ -603,6 +603,7 @@ def run():
 	
 
     with tab2:
+		st.markdown("### Question: How do month-on-month shipment volumes compare between 2023 and 2024?")
 	    st.subheader("Month-on-Month Shipment Trends")
 	
 	    # --- Ensure datetime ---
@@ -736,7 +737,7 @@ def run():
 
 
     # ---- Depot Analysis ----
-    with tab7:
+    with tab8:
         st.markdown("###  Question: Which depots are driving the majority of volume?")
         st.subheader("Depot-wise ABC Analysis")
         if "DBF_DEPOT" in df_filtered.columns:
@@ -791,7 +792,7 @@ def run():
 """)
 
     # ---- Region Donut ----
-    with tab4:
+    with tab6:
         st.markdown("###  Question: Which regions account for the largest share of shipments?")
         st.subheader("Region-wise Volume Share")
         if "DBF_REGION" in df_filtered.columns:
@@ -816,7 +817,7 @@ def run():
 """)
 
     # ---- Region Stacked ----
-    with tab5:
+    with tab4:
         st.markdown("###  Question: Which outlets contribute most to regional shipment volume?")
         st.subheader("Outlets & Volume by Region (100% Share)")
         if "DBF_REGION" in df_filtered.columns and "DBF_OUTLET_CODE" in df_filtered.columns:
@@ -851,7 +852,7 @@ The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute 
 """)
 
     # ---- Special Outlets ----
-    with tab6:
+    with tab7:
         st.markdown("###  Question: How does shipment performance differ between Hubbali and Belagavi?")
         st.subheader("Focused Analysis: Hubbali & Belagavi Depots")
 
@@ -923,7 +924,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 
 
         # ---- TAB 7: Depot Map View ----
-    with tab3:
+    with tab5:
         st.markdown("### Question: What is the geographic spread of shipment volumes?")
         st.subheader(" Depot Shipment Volume Map")
     
@@ -1022,7 +1023,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 #.round(0)
             #)
     
-    with tab8:
+    with tab3:
         st.markdown("### Question: How has depot volume changed YoY?")
         st.subheader("Depot-wise YoY Volume Change")
     
