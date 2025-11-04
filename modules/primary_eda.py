@@ -250,7 +250,7 @@ def run():
                     mode="lines+markers",
                     name=f"Shipment Trend ({granularity}, {value_type})",
                     fill="tozeroy",
-                    line=dict(color="mediumvioletred", width=2),
+                    line=dict(color="mediumviolet", width=2),
                     marker=dict(size=6)
                 )
             )
