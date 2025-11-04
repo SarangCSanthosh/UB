@@ -807,7 +807,7 @@ def run():
             )
 
             st.plotly_chart(fig, use_container_width=True)
-            st.dataframe(region_volume.set_index("DBF_REGION").round(0))
+            #st.dataframe(region_volume.set_index("DBF_REGION").round(0))
         else:
             st.info("DBF_REGION column not found.")
         st.markdown("""
