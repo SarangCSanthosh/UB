@@ -123,7 +123,7 @@ def run():
             df["Year"] = df["ACTUAL_DATE"].dt.year
     
             # --- Filter only 2023 and 2024 ---
-            df_filtered_years =  (df["DBF_COMPANY"].str.upper() == "UB")
+            df_filtered_years = df[(df["Year"].isin([2023, 2024])) & (df["DBF_COMPANY"].str.upper() == "UB")]
     
             if not df_filtered_years.empty:
                 # --- Aggregate volume by brand & year ---
