@@ -160,18 +160,18 @@ def run():
             df["Year"] = df["ACTUAL_DATE"].dt.year
     
             # --- Filter only 2023 and 2024 ---
-            df_filtered_years = df[df["Year"].isin([2023, 2024])]
+            df_filtered_years = df[df["Year"].isin([2023, 2024])] & (df["DBF_COMPANY"].str.upper() == "UB")]
     
             if not df_filtered_years.empty:
                 # --- Aggregate volume by brand & year ---
                 brand_yearly = (
-                    df_filtered_years.groupby(["Brand", "Year"])[VOLUME_COL]
+                    df_filtered_years.groupby(["DBF_BRAND", "Year"])[VOLUME_COL]
                     .sum()
                     .reset_index()
                 )
     
                 # --- Pivot: brands as rows, years as columns ---
-                pivot_df = brand_yearly.pivot(index="Brand", columns="Year", values=VOLUME_COL).fillna(0)
+                pivot_df = brand_yearly.pivot(index="DBF_BRAND", columns="Year", values=VOLUME_COL).fillna(0)
     
                 # --- Compute YoY Change ---
                 if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
