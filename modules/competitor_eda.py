@@ -519,7 +519,7 @@ The company’s performance is highly dependent on the stability and success of 
         st.subheader("Monthly Trend by Brand")
 
         # --- Map brand names ---
-        df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
+        #df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
     
         # --- Prepare trend data ---
         df["YearMonth"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce").dt.to_period("M").astype(str)
