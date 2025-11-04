@@ -176,9 +176,9 @@ def run():
                     st.plotly_chart(fig, use_container_width=True)
     
                     # --- Show summary table ---
-                    summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
-                    st.markdown("#### Summary Table: Brand YoY Comparison")
-                    st.dataframe(summary_df)
+                    #summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
+                    #st.markdown("#### Summary Table: Brand YoY Comparison")
+                    #st.dataframe(summary_df)
                 else:
                     st.warning("Data for both 2023 and 2024 is required to compute YoY change.")
             else:
@@ -394,7 +394,7 @@ def run():
 	    st.plotly_chart(fig_packtype, use_container_width=True)
 	
 	    # Data table below the chart
-	    st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
+	    #st.dataframe(pack_type_sales.set_index("Pack_Type")[[VOLUME_COL]].round(0))
 	
 	    # -----------------------------------------
 	    # NEW SECTION: Clustered Bar Chart by Depot
@@ -451,11 +451,11 @@ def run():
 	        st.plotly_chart(fig_cluster, use_container_width=True)
 	
 	        # Optional table for exact values
-	        st.dataframe(
-	            depot_pack.pivot(index="Depot_Clean", columns="Pack_Type", values=VOLUME_COL)
-	            .fillna(0)
-	            .round(0)
-	        )
+	        #st.dataframe(
+	            #depot_pack.pivot(index="Depot_Clean", columns="Pack_Type", values=VOLUME_COL)
+	            #.fillna(0)
+	           # .round(0)
+	        #)
 	
 	        # Insights Section
 	        st.markdown("""
@@ -506,7 +506,7 @@ def run():
         fig_sku.update_layout(height=600, margin=dict(t=100, b=100, l=50, r=50))
         fig_sku.update_xaxes(tickangle=-45)
         st.plotly_chart(fig_sku, use_container_width=True)
-        st.dataframe(sku_data.set_index(SKU_COL)[["Value"]].round(0))
+        #st.dataframe(sku_data.set_index(SKU_COL)[["Value"]].round(0))
         st.markdown("""
 ### **Insights:**
 The company’s performance is highly dependent on the stability and success of the KF 650ML SKU. While KF 650ML is the leader with about 55% of total volume, the ones that follow closely behind are Bullet’s BSSB 650ML with 16% and KFS 330ML cans with 10%.""")
