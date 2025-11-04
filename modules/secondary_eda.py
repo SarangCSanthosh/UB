@@ -348,7 +348,7 @@ def run():
             # ------------------------
             # RIGHT: Bubble Chart of Event Bins
             # ------------------------
-            with col2:
+	        with col2:
                 st.subheader("Event Type Distribution")
             
                 bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
