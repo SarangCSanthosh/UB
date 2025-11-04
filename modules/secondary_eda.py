@@ -404,7 +404,7 @@ def run():
 		    st.subheader("Event-Based Shipment Visualization")
 		
 		    # --- Load Event Calendar ---
-		    EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+		    EVENT_XLSX_URL = "https://docs.google.com/spreadsheets/d/1GxgGo6waZV7WDsF50v_nYSu2mxEX6bmj/export?format=xlsx"
 		    df_events = load_event_calendar(EVENT_XLSX_URL)
 		
 		    df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
