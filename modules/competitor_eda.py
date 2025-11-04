@@ -184,18 +184,6 @@ def run():
 	    else:
 	        st.error("The dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
        
-	    with st.container():
-            st.markdown("""
-### **Insights:**
-	
-	1. EXTERNAL ANALYSIS
-	    • Growth of shipments -> SOM BREWERIES > UBL > AB-INBEV
-	
-    2. INTERNAL ANALYSIS 
-	    • Bullet ⬆️ but KFS ⬇️
-    
-    KFS might not be the key performing brand of UBL
-""")
 
 
     # ---- Tab 2: Pack Size Wise Analysis ----
