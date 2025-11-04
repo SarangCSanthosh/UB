@@ -597,12 +597,7 @@ def run():
 		
 		            st.plotly_chart(fig_week, use_container_width=True)
 		
-		    st.markdown("""
-		    ### **Insights:**
-		    ODD OCCURENCES - Peaks were observed in normalised trend
-		    - August , December - 2023
-		    - March, October - 2024
-		    """)
+		    
 		
 
 	
