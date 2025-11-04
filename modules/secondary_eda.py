@@ -211,7 +211,8 @@ def run():
     ])
 
     # ---- Shipment Trends ----
-    with tab1:
+    # ---- Shipment Trends ----
+	with tab1:
 	    st.markdown("### Question: Do shipment trends look different by year, quarter, or month?")
 	    st.subheader("Shipment Trends and Event Calendar")
 	
@@ -343,77 +344,71 @@ def run():
 	            )
 	
 	            st.plotly_chart(fig_trend, use_container_width=True)
-
-            
-            # ------------------------
-            # RIGHT: Bubble Chart of Event Bins
-            # ------------------------
+	
+	        # ------------------------
+	        # RIGHT: Bubble Chart of Event Bins
+	        # ------------------------
 	        with col2:
-                st.subheader("Event Type Distribution")
-            
-                bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
-            
-                # Make a copy and ensure valid dates
-                df_events_filtered = df_events.copy()
-                df_events_filtered["Date"] = pd.to_datetime(df_events_filtered["Date"], errors="coerce")
-                df_events_filtered = df_events_filtered.dropna(subset=["Date"])
-            
-                # ----------------------------
-                # Apply sidebar filters
-                # ----------------------------
-                if filter_mode == "Year":
-                    if year_choice:
-                        df_events_filtered = df_events_filtered[df_events_filtered["Date"].dt.year.isin(year_choice)]
-                else:
-                    mask_events = (
-                        (df_events_filtered["Date"].dt.date >= start_date)
-                        & (df_events_filtered["Date"].dt.date <= end_date)
-                    )
-                    df_events_filtered = df_events_filtered.loc[mask_events]
-            
-                # ----------------------------
-                # Bubble Chart
-                # ----------------------------
-                if df_events_filtered.empty:
-                    st.info("ℹ️ No events found for the selected filter.")
-                else:
-                    bubble_counts = df_events_filtered[bin_cols].sum().reset_index()
-                    bubble_counts.columns = ["Event_Type", "Count"]
-                    bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
-            
-                    if bubble_counts.empty:
-                        st.info("ℹ️ No events recorded for the selected period.")
-                    else:
-                        fig_bubble = go.Figure(
-                            go.Scatter(
-                                x=bubble_counts["Event_Type"],
-                                y=[1]*len(bubble_counts),  # same y-level for all bubbles
-                                mode="markers+text",
-                                marker=dict(
-                                    size=bubble_counts["Count"] * 10,  # scale bubble size
-                                    color=bubble_counts["Count"],
-                                    colorscale="Viridis",
-                                    showscale=True,
-                                    colorbar=dict(title="Count"),
-                                    sizemode="area"
-                                ),
-                                text=bubble_counts["Count"],
-                                textposition="top center",
-                                hovertemplate="<b>%{x}</b><br>Count: %{text}<extra></extra>"
-                            )
-                        )
-            
-                        fig_bubble.update_layout(
-                            title="Event Type Distribution (Filtered)",
-                            xaxis_title="Event Type",
-                            yaxis=dict(visible=False),  # hide y-axis
-                            height=500,
-                            template="plotly_dark",
-                            margin=dict(t=50)
-                        )
-            
-                        st.plotly_chart(fig_bubble, use_container_width=True)
-
+	            st.subheader("Event Type Distribution")
+	
+	            bin_cols = ["Political", "Festival", "Sports", "Celebrity_Deaths", "Public_Holiday", "Movie", "Weekend"]
+	
+	            df_events_filtered = df_events.copy()
+	            df_events_filtered["Date"] = pd.to_datetime(df_events_filtered["Date"], errors="coerce")
+	            df_events_filtered = df_events_filtered.dropna(subset=["Date"])
+	
+	            # Apply filters
+	            if filter_mode == "Year":
+	                if year_choice:
+	                    df_events_filtered = df_events_filtered[df_events_filtered["Date"].dt.year.isin(year_choice)]
+	            else:
+	                mask_events = (
+	                    (df_events_filtered["Date"].dt.date >= start_date)
+	                    & (df_events_filtered["Date"].dt.date <= end_date)
+	                )
+	                df_events_filtered = df_events_filtered.loc[mask_events]
+	
+	            if df_events_filtered.empty:
+	                st.info("ℹ️ No events found for the selected filter.")
+	            else:
+	                bubble_counts = df_events_filtered[bin_cols].sum().reset_index()
+	                bubble_counts.columns = ["Event_Type", "Count"]
+	                bubble_counts = bubble_counts[bubble_counts["Count"] > 0]
+	
+	                if bubble_counts.empty:
+	                    st.info("ℹ️ No events recorded for the selected period.")
+	                else:
+	                    fig_bubble = go.Figure(
+	                        go.Scatter(
+	                            x=bubble_counts["Event_Type"],
+	                            y=[1] * len(bubble_counts),
+	                            mode="markers+text",
+	                            marker=dict(
+	                                size=bubble_counts["Count"] * 10,
+	                                color=bubble_counts["Count"],
+	                                colorscale="Viridis",
+	                                showscale=True,
+	                                colorbar=dict(title="Count"),
+	                                sizemode="area"
+	                            ),
+	                            text=bubble_counts["Count"],
+	                            textposition="top center",
+	                            hovertemplate="<b>%{x}</b><br>Count: %{text}<extra></extra>"
+	                        )
+	                    )
+	
+	                    fig_bubble.update_layout(
+	                        title="Event Type Distribution (Filtered)",
+	                        xaxis_title="Event Type",
+	                        yaxis=dict(visible=False),
+	                        height=500,
+	                        template="plotly_dark",
+	                        margin=dict(t=50)
+	                    )
+	
+	                    st.plotly_chart(fig_bubble, use_container_width=True)
+	
+	
 
 
 
