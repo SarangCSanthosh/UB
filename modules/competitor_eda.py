@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -54,6 +53,12 @@ def run():
     SKU_COL = "DBF_SKU"
 
     df, DATE_COL = prepare_dates(df)
+	# --- Ensure 'Brand' column exists ---
+	if "DBF_BRAND" in df.columns:
+	    df["Brand"] = df["DBF_BRAND"]
+	else:
+	    st.warning("⚠️ 'DBF_BRAND' column not found — some brand-based charts may not work.")
+
     # Map SKU → Brand before any tab uses it
     #df["Brand"] = df[SKU_COL].apply(map_sku_to_brand)
 
