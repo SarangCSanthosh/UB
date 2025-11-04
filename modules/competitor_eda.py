@@ -112,7 +112,7 @@ def run():
 	    st.markdown("### Question: Which companies and brands contributed most to shipment growth or decline?")
 	    st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
 	
-	    # --- Display static image ---
+	    # --- Static image of company comparison ---
 	    st.image("assets/comparison.png", caption="Volume Change by Company (2023–2024)", use_container_width=True)
 	
 	    st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
@@ -121,96 +121,100 @@ def run():
 	        df["ACTUAL_DATE"] = pd.to_datetime(df["ACTUAL_DATE"], errors="coerce")
 	        df["Year"] = df["ACTUAL_DATE"].dt.year
 	
-	        # --- Clean and filter data ---
-	        df["DBF_COMPANY"] = df["DBF_COMPANY"].astype(str).str.upper()
+	        # --- Standardize and clean data ---
+	        df["DBF_COMPANY"] = df["DBF_COMPANY"].astype(str).str.strip().str.upper()
 	        df["DBF_BRAND"] = df["DBF_BRAND"].astype(str).str.strip().str.upper()
 	
-	        # --- Filter UB company for 2023 and 2024 ---
-	        df_filtered_years = df[(df["Year"].isin([2023, 2024])) & (df["DBF_COMPANY"] == "UB")]
+	        # --- Filter for UBL brands only ---
+	        df_ub = df[df["DBF_COMPANY"] == "UB"]
 	
-	        if not df_filtered_years.empty:
-	            # --- Aggregate volume by brand & year ---
+	        # --- Filter only 2023 and 2024 records ---
+	        df_filtered = df_ub[df_ub["Year"].isin([2023, 2024])]
+	
+	        if not df_filtered.empty:
+	            # --- Aggregate volume per brand per year ---
 	            brand_yearly = (
-	                df_filtered_years.groupby(["DBF_BRAND", "Year"])[VOLUME_COL]
+	                df_filtered.groupby(["DBF_BRAND", "Year"])[VOLUME_COL]
 	                .sum()
 	                .reset_index()
 	            )
 	
-	            # --- Ensure all brands appear ---
-	            brands_all = sorted(df_filtered_years["DBF_BRAND"].unique())
-	            pivot_df = (
-	                brand_yearly.pivot(index="DBF_BRAND", columns="Year", values=VOLUME_COL)
-	                .reindex(brands_all)
-	                .fillna(0)
+	            # --- Ensure ALL brands appear even if missing a year ---
+	            all_brands = df_ub["DBF_BRAND"].unique()  # all UB brands
+	            all_years = [2023, 2024]
+	            full_index = pd.MultiIndex.from_product([all_brands, all_years], names=["DBF_BRAND", "Year"])
+	            brand_yearly = (
+	                brand_yearly.set_index(["DBF_BRAND", "Year"])
+	                .reindex(full_index, fill_value=0)
+	                .reset_index()
 	            )
 	
-	            # --- Compute YoY change ---
-	            if 2023 in pivot_df.columns and 2024 in pivot_df.columns:
-	                pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
-	                pivot_df["YoY_Percentage"] = (
-	                    (pivot_df["YoY_Change"] / pivot_df[2023].replace(0, np.nan)) * 100
-	                ).round(2)
-	                pivot_df = pivot_df.replace([np.inf, -np.inf, np.nan], 0)
+	            # --- Pivot to wide format ---
+	            pivot_df = brand_yearly.pivot(index="DBF_BRAND", columns="Year", values=VOLUME_COL).fillna(0)
 	
-	                # --- Sort by YoY Change ---
-	                pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
+	            # --- Compute YoY Change ---
+	            pivot_df["YoY_Change"] = pivot_df[2024] - pivot_df[2023]
+	            pivot_df["YoY_Percentage"] = (
+	                np.where(pivot_df[2023] == 0, 0, (pivot_df["YoY_Change"] / pivot_df[2023]) * 100)
+	            ).round(2)
 	
-	                # --- Waterfall chart ---
-	                fig = go.Figure(go.Waterfall(
-	                    name="YoY Change",
-	                    orientation="v",
-	                    measure=["relative"] * len(pivot_df),
-	                    x=pivot_df.index,
-	                    y=pivot_df["YoY_Change"],
-	                    text=pivot_df["YoY_Change"].apply(lambda x: f"{x:,.0f}"),
-	                    textposition="outside",
-	                    connector={"line": {"color": "rgb(63,63,63)"}},
-	                    customdata=pivot_df["YoY_Percentage"],
-	                    hovertemplate="<b>%{x}</b><br>Change: %{y:,.0f}<br>YoY: %{customdata:.2f}%<extra></extra>"
-	                ))
+	            # --- Sort by change ---
+	            pivot_df = pivot_df.sort_values("YoY_Change", ascending=False)
 	
-	                fig.update_layout(
-	                    title="Brand-wise Shipment Growth/Decline (2023 → 2024)",
-	                    yaxis=dict(title="Change in Volume"),
-	                    xaxis=dict(title="Brand", tickangle=-45),
-	                    height=600,
-	                    margin=dict(b=150),
-	                    template="plotly_white"
-	                )
+	            # --- Create Waterfall Chart ---
+	            fig = go.Figure(go.Waterfall(
+	                name="YoY Change",
+	                orientation="v",
+	                measure=["relative"] * len(pivot_df),
+	                x=pivot_df.index,
+	                y=pivot_df["YoY_Change"],
+	                text=pivot_df["YoY_Change"].apply(lambda x: f"{x:,.0f}"),
+	                textposition="outside",
+	                connector={"line": {"color": "rgb(63,63,63)"}},
+	                customdata=pivot_df["YoY_Percentage"],
+	                hovertemplate="<b>%{x}</b><br>Change: %{y:,.0f}<br>YoY: %{customdata:.2f}%<extra></extra>"
+	            ))
 	
-	                st.plotly_chart(fig, use_container_width=True)
+	            fig.update_layout(
+	                title="Brand-wise Shipment Growth/Decline (2023 → 2024)",
+	                yaxis=dict(title="Change in Volume"),
+	                xaxis=dict(title="Brand", tickangle=-45),
+	                height=600,
+	                margin=dict(b=150),
+	                template="plotly_white"
+	            )
 	
-	                # --- Optional: Show brand summary table ---
-	                st.dataframe(
-	                    pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]]
-	                    .rename(columns={2023: "2023 Volume", 2024: "2024 Volume"})
-	                )
+	            st.plotly_chart(fig, use_container_width=True)
 	
-	            else:
-	                st.warning("Data for both 2023 and 2024 is required to compute YoY change.")
+	            # --- Optional Table for clarity ---
+	            st.dataframe(
+	                pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]]
+	                .rename(columns={2023: "2023 Volume", 2024: "2024 Volume"})
+	            )
+	
 	        else:
-	            st.info("No records found for 2023 or 2024 for UB company.")
+	            st.info("No data available for 2023 or 2024 for UB company.")
 	    else:
-	        st.error("The dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
+	        st.error("Dataset must include an 'ACTUAL_DATE' column to compute YoY change.")
 	
-	    # --- Insights section ---
+	    # --- Insights ---
 	    with st.container():
 	        st.markdown("""
 	        ### **Insights**
 	
 	        **1. External Analysis**
-	        - Shipment growth trend: **SOM BREWERIES > UBL > AB-INBEV**
-	        - Indicates UBL is performing moderately within the competitive landscape.
+	        - Overall growth trend across companies: **SOM BREWERIES > UBL > AB-INBEV**
+	        - Indicates UBL’s position is stable but not leading.
 	
 	        **2. Internal Analysis**
-	        - **Bullet** brand shows strong positive growth ⬆️  
-	        - **KFS** shows decline ⬇️ indicating potential underperformance.
+	        - **Bullet** shows significant positive growth ⬆️  
+	        - **Kingfisher Strong** shows a sharp decline ⬇️  
+	        - Other smaller brands remain relatively flat.
 	
 	        **Conclusion:**  
-	        KFS might not be a key performing brand for UBL in 2024.
+	        Bullet drives UBL’s growth, while KFS drags overall volume performance.
 	        """)
 
-       
 
 
     # ---- Tab 2: Pack Size Wise Analysis ----
