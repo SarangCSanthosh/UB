@@ -180,7 +180,7 @@ def run():
     # TABS FOR VISUALS
     # --------------------------
     tab1, tab2, tab3, tab4 = st.tabs([
-        "Trends", "Top/Bottom Locations", "Heatmaps", "Clustering"
+        "Trends", "Top/Bottom Locations", "Clustering", "Heatmaps"
     ])
 
     # ---- Tab 1: Trends ----
@@ -414,7 +414,7 @@ def run():
 
 
     # ---- Tab 3: Heatmaps ----
-    with tab3:
+    with tab4:
         st.markdown("###  Question: Where are shipment volumes most concentrated?")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
             st.markdown("**Volume Heatmap**")
@@ -437,7 +437,7 @@ def run():
 """)
 
     # ---- Tab 4: Clustering ----
-    with tab4:
+    with tab3:
         st.markdown("###  Question: Are there distinct groups of locations based on shipment activity?")
         if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
             st.subheader("Clustering")
