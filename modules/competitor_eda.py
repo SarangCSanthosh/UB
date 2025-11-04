@@ -150,6 +150,9 @@ def run():
     
         df["Segment"] = df[SKU_COL].apply(extract_segment)
         df["Date"] = pd.to_datetime(df[DATE_COL])
+
+        exclude_brands = ["BULLET SUPER STRONG"]
+        df = df[~df["Brand"].str.upper().isin(exclude_brands)]
     
         # --- Time Granularity ---
         time_granularity = st.radio(
