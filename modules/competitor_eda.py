@@ -133,10 +133,11 @@ def run():
 	                .sum()
 	                .reset_index()
 	            )
-	
+				brands_all = sorted(df_filtered_years["DBF_BRAND"].unique())
 	            # --- Pivot ---
 	            pivot_df = (
 	                brand_yearly.pivot(index="DBF_BRAND", columns="Year", values=VOLUME_COL)
+					.reindex(brands_all)
 	                .fillna(0)
 	            )
 	
