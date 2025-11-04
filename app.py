@@ -11,7 +11,7 @@ st.set_page_config(page_title="UBL Dashboard", layout="wide")
 # ===============================
 with st.sidebar:
     # --- Add company logo ---
-    st.image("assets/download.jpg", use_container_width=True)  # ← path to your logo
+    st.image("assets/images.jpg", use_container_width=True)  # ← path to your logo
 
     # Optional: add a line separator
     st.markdown("---")
