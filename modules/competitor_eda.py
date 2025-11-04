@@ -175,7 +175,8 @@ def run():
             df_brand = df[df["Brand"] != "OTHER"]
         else:
             df_brand = df[df["Brand"] == selected_brand]
-    
+        df_brand = df_brand[df_brand["Brand"].str.upper() != "BULLET SUPER STRONG"]
+
         # --- Pack Size Filter (NEW) ---
         pack_sizes = ["All"] + sorted(df_brand["Segment"].unique())
         selected_pack = st.radio("Select Pack Size", options=pack_sizes, index=0, horizontal=True)
