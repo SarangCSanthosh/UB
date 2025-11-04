@@ -112,7 +112,7 @@ def run():
 	    st.markdown("### Question: Which companies and brands contributed most to shipment growth or decline?")
 	    st.subheader("Company-wise YoY Shipment Change (2023 → 2024)")
 	
-	    st.image("assets/comparison.png", caption="Volume Change by Company (2023–2024)", use_container_width=True)
+	    st.image("assets/Screenshot 2025-11-04 225130.png", caption="Volume Change by Brands (UB) (2023–2024)", use_container_width=True)
 	    st.subheader("Brand-wise YoY Shipment Change (2023 → 2024)")
 	
 	    
