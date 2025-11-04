@@ -49,35 +49,6 @@ def load_pci_from_gsheet(gsheet_url: str, sheet_name: str = "PCI") -> pd.DataFra
 gsheet_url = "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx"
 df_pci = load_pci_from_gsheet(gsheet_url, sheet_name="PCI")
 
-@st.cache_data
-def load_event_calendar(sheet_id: str):
-    """
-    Loads the event calendar from a public Google Sheet.
-    Input: Google Sheet ID
-    Output: DataFrame
-    """
-    try:
-        # Build a direct download link
-        #download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-        
-        download_url = f"https://docs.google.com/spreadsheets/d/1GxgGo6waZV7WDsF50v_nYSu2mxEX6bmj/export?format=xlsx"
-
-        df = pd.read_excel(download_url)
-
-        # Clean and standardize columns
-        df.columns = df.columns.str.strip()
-        if "Date" in df.columns:
-            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-
-        # Drop rows without valid dates
-        df = df.dropna(subset=["Date"])
-
-        return df
-
-    except Exception as e:
-        st.error(f"❌ Could not load event calendar: {e}")
-        return pd.DataFrame(columns=["Date", "Day", "Month", "Week Number", "Event / Task", "Remarks"])
-
 
 def _pct_change(curr, prev):
     if prev is None or pd.isna(prev) or prev == 0:
