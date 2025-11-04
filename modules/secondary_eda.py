@@ -14,24 +14,6 @@ from streamlit_plotly_events import plotly_events
 def load_excel(path_or_file, sheet_name=0):
     return pd.read_excel(path_or_file, sheet_name=sheet_name)
 
-@st.cache_data
-def load_normalized_data(path):
-    df_norm = pd.read_excel(path)
-
-    # Rename first column to ACTUAL_DATE
-    df_norm.rename(columns={df_norm.columns[0]: "ACTUAL_DATE"}, inplace=True)
-
-    # Ensure datetime
-    df_norm["ACTUAL_DATE"] = pd.to_datetime(df_norm["ACTUAL_DATE"], errors="coerce")
-
-    # Sum across all numeric columns (excluding ACTUAL_DATE)
-    numeric_cols = df_norm.select_dtypes(include=[np.number]).columns
-    df_norm["VOLUME"] = df_norm[numeric_cols].sum(axis=1)
-
-    # Extract YearMonth
-    df_norm["YearMonth"] = df_norm["ACTUAL_DATE"].dt.to_period("M").astype(str)
-
-    return df_norm[["ACTUAL_DATE", "YearMonth", "VOLUME"]]
 
 def prepare_dates(df, date_col="ACTUAL_DATE"):
     df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
@@ -444,7 +426,10 @@ def run():
 		    if granularity == "Monthly":
 		        st.subheader("Monthly Event Heatmap")
 		
-		        selected_year = st.selectbox("Select Year", sorted(df_events["Year"].dropna().unique()))
+		        selected_year = st.selectbox(
+    "Select Year", 
+    sorted([y for y in df_events["Year"].dropna().unique() if y != 2025])
+)
 		        selected_month_name = st.selectbox(
 		            "Select Month",
 		            sorted(df_events["MonthName"].unique(), key=lambda x: pd.to_datetime(x, format="%B").month)
