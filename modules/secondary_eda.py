@@ -1,400 +1,143 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-import plotly.graph_objects as go
-from collections import Counter
-from plotly.subplots import make_subplots
-from streamlit_plotly_events import plotly_events
+# ---- Shipment Trends ----
+with tab1:
+    st.markdown("### Question: Do shipment trends look different by year, quarter, or month?")
+    st.subheader("Shipment Trends")
 
-# --------------------------
-# HELPERS
-# --------------------------
-@st.cache_data
-def load_excel(path_or_file, sheet_name=0):
-    return pd.read_excel(path_or_file, sheet_name=sheet_name)
+    chart_type = st.radio(
+        "Select Chart Type:",
+        ["Shipment Trend", "Event Calendar"],
+        horizontal=True
+    )
 
-@st.cache_data
-def load_normalized_data(path):
-    df_norm = pd.read_excel(path)
+    if chart_type == "Shipment Trend":
 
-    # Rename first column to ACTUAL_DATE
-    df_norm.rename(columns={df_norm.columns[0]: "ACTUAL_DATE"}, inplace=True)
-
-    # Ensure datetime
-    df_norm["ACTUAL_DATE"] = pd.to_datetime(df_norm["ACTUAL_DATE"], errors="coerce")
-
-    # Sum across all numeric columns (excluding ACTUAL_DATE)
-    numeric_cols = df_norm.select_dtypes(include=[np.number]).columns
-    df_norm["VOLUME"] = df_norm[numeric_cols].sum(axis=1)
-
-    # Extract YearMonth
-    df_norm["YearMonth"] = df_norm["ACTUAL_DATE"].dt.to_period("M").astype(str)
-
-    return df_norm[["ACTUAL_DATE", "YearMonth", "VOLUME"]]
-
-def prepare_dates(df, date_col="ACTUAL_DATE"):
-    df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
-    df["Year"] = df[date_col].dt.year
-    df["YearMonth"] = df[date_col].dt.to_period("M")
-    df["Quarter"] = df[date_col].dt.to_period("Q")
-    return df, date_col
-
-@st.cache_data
-def load_event_calendar(sheet_id: str):
-    """
-    Loads the event calendar from a public Google Sheet.
-    Input: Google Sheet ID
-    Output: DataFrame
-    """
-    try:
-        # Build a direct download link
-
-        # download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-        download_url = f"https://docs.google.com/spreadsheets/d/1GxgGo6waZV7WDsF50v_nYSu2mxEX6bmj/export?format=xlsx"
-        # download_url = f"https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
-        # download_url = f"https://docs.google.com/spreadsheets/d/1GxgGo6waZV7WDsF50v_nYSu2mxEX6bmj/export?format=xlsx"
-
-        df = pd.read_excel(download_url)
-
-        # Clean and standardize columns
-        df.columns = df.columns.str.strip()
-        if "Date" in df.columns:
-            df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-
-        # Drop rows without valid dates
-        df = df.dropna(subset=["Date"])
-
-        return df
-
-    except Exception as e:
-        st.error(f"❌ Could not load event calendar: {e}")
-        return pd.DataFrame(columns=["Date", "Day", "Month", "Week Number", "Event / Task", "Remarks"])
-
-
-
-
-# --------------------------
-# MAIN APP
-# --------------------------
-def run():
-    st.title("Secondary Dataset Dashboard")
-
-    # --------------------------
-    # LOAD DATA
-    # --------------------------
-    default_path = "https://docs.google.com/spreadsheets/d/1l69N0xrDbXM7-cP1d9nlwBInaqCy8ftC/export?format=xlsx"
-    #default_path = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
-    df = load_excel(default_path)
-    SHEET_ID = "1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO"
-    df_events = load_event_calendar(SHEET_ID)
-
-    VOLUME_COL = "VOLUME"
-    OUTLET_COL = "DBF_OUTLET_CODE"
-    #df[OUTLET_COL] = df[OUTLET_COL].astype(str).str.strip().str.upper()
-    # 1️⃣ Inspect potential hidden characters
-    #df['clean_outlet'] = (
-        #df[OUTLET_COL]
-        #.astype(str)
-        #.str.replace(r'[\u200b\u200c\u200d\u00a0\r\n\t]', '', regex=True)  # invisible Unicode chars
-        #.str.strip()
-        #.str.upper()
-    #)
-    
-    # 2️⃣ Compare unique counts
-    #print("Before:", df[OUTLET_COL].nunique())
-    #print("After:", df['clean_outlet'].nunique())
-    
-    # 3️⃣ Replace column finally if count improves
-    #df[OUTLET_COL] = df['clean_outlet']
-    #df.drop(columns=['clean_outlet'], inplace=True)
-
-    df, DATE_COL = prepare_dates(df)
-
-    # --------------------------
-    # FIXED KPIs
-    # --------------------------
-    yearly_data = df.groupby("Year").agg(
-        Total_Volume=(VOLUME_COL, "sum"),
-        Unique_Outlets=(OUTLET_COL, "nunique"),
-        Total_Shipments=(DATE_COL, "count"),
-    ).sort_index()
-
-    latest_year = yearly_data.index.max()
-    prev_year = latest_year - 1 if latest_year - 1 in yearly_data.index else None
-
-    def pct_delta(cur, prev):
-        if prev is None or prev == 0:
-            return None
-        return ((cur - prev) / prev) * 100
-
-    if prev_year:
-        kpi_volume = yearly_data.loc[latest_year, "Total_Volume"]
-        kpi_outlets = yearly_data.loc[latest_year, "Unique_Outlets"]
-        kpi_shipments = yearly_data.loc[latest_year, "Total_Shipments"]
-
-        delta_volume = pct_delta(kpi_volume, yearly_data.loc[prev_year, "Total_Volume"])
-        delta_outlets = pct_delta(kpi_outlets, yearly_data.loc[prev_year, "Unique_Outlets"])
-        delta_shipments = pct_delta(kpi_shipments, yearly_data.loc[prev_year, "Total_Shipments"])
-    else:
-        kpi_volume = kpi_outlets = kpi_shipments = 0
-        delta_volume = delta_outlets = delta_shipments = None
-
-    def format_delta(val):
-        return f"{val:+.0f}%" if val is not None and pd.notna(val) else "N/A"
-
-    # --------------------------
-    # SHOW FIXED KPIs
-    # --------------------------
-    col1, col2,col3 = st.columns(3)
-    col1.metric("Total Volume", f"{int(kpi_volume):,}", format_delta(delta_volume))
-    col2.metric("Unique Outlets", f"{kpi_outlets}", format_delta(delta_outlets))
-    col3.metric("Total Shipments", f"{kpi_shipments}", format_delta(delta_shipments))
-    st.caption(f"YoY change: {latest_year} vs {prev_year}")
-    st.markdown("---")
-
-    # --------------------------
-    # SIDEBAR FILTERS
-    # --------------------------
-    st.sidebar.header("Filters")
-
-    filter_mode = st.sidebar.radio("Filter by:", ["Year", "Date Range"], horizontal=True)
-    df_filtered = df.copy()
-
-    if filter_mode == "Year":
-        year_choice = st.sidebar.multiselect(
-            "Select Year(s)", options=sorted(df["Year"].dropna().unique()), default=sorted(df["Year"].dropna().unique())
+        # --- Controls (Granularity and View Mode) ---
+        granularity = st.radio(
+            "Granularity", ["Yearly", "Quarterly", "Monthly"],
+            horizontal=True, key="trend_granularity"
         )
-        if year_choice:
-            df_filtered = df_filtered[df_filtered["Year"].isin(year_choice)]
-    else:
-        start_date = st.sidebar.date_input("Start Date", df[DATE_COL].min().date())
-        end_date = st.sidebar.date_input("End Date", df[DATE_COL].max().date())
-        mask = (df_filtered[DATE_COL].dt.date >= start_date) & (
-            df_filtered[DATE_COL].dt.date <= end_date
+        view_mode = st.radio(
+            "Display Mode", ["Absolute", "Percentage"],
+            horizontal=True, key="trend_view"
         )
-        df_filtered = df_filtered.loc[mask]
 
-        # --------------------------------------------
-    # Apply the same sidebar filters to df_events
-    # --------------------------------------------
-    df_events_filtered = df_events.copy()
-    
-    # Ensure Date column is datetime
-    df_events_filtered["Date"] = pd.to_datetime(df_events_filtered["Date"], errors="coerce")
-    df_events_filtered = df_events_filtered.dropna(subset=["Date"])
-    
-    if filter_mode == "Year":
-        if year_choice:
-            df_events_filtered = df_events_filtered[df_events_filtered["Date"].dt.year.isin(year_choice)]
-    else:
-        mask_events = (
-            (df_events_filtered["Date"].dt.date >= start_date)
-            & (df_events_filtered["Date"].dt.date <= end_date)
+        # --- Shipment Trend (Filtered Main Data) ---
+        if granularity == "Yearly":
+            df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
+        elif granularity == "Quarterly":
+            df_filtered["Label"] = df_filtered["Quarter"].astype(str)
+        else:
+            df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
+
+        trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
+
+        if view_mode == "Percentage":
+            total_sum = trend_df[VOLUME_COL].sum()
+            trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
+            y_title = "Percentage (%)"
+        else:
+            trend_df["Value"] = trend_df[VOLUME_COL]
+            y_title = "Volume"
+
+        # --- Load Event Calendar ---
+        EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
+        df_events = load_event_calendar(EVENT_CSV_URL)
+        df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
+
+        if granularity == "Yearly":
+            df_events["Label"] = df_events["Date"].dt.year.astype(str)
+        elif granularity == "Quarterly":
+            df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
+        else:
+            df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
+
+        # --- Clean event names ---
+        def clean_event_name(text):
+            if pd.isna(text):
+                return None
+            text = str(text).strip()
+            if not text or text.lower() in ["nan", "none"]:
+                return None
+            replacements = {
+                "Against": "",
+                "Friendly": "BFC",
+                "Footll": "Football",
+                "Pro Ka": "Pro Kabbadi",
+                "C ": " ",
+                "IND World cup": "IND World Cup",
+                "RCB Match": "RCB Match",
+                "Week end": "Weekend",
+                "INDependence": "Independence",
+                "Ni8": "Night"
+            }
+            for k, v in replacements.items():
+                text = text.replace(k, v)
+            text = " ".join(text.split())
+            text = text.title().replace("Ipl", "IPL").replace("Bf", "BFC")
+            return text
+
+        df_events["Event / Task"] = df_events["Event / Task"].apply(clean_event_name)
+
+        # --- Aggregate events by Label ---
+        def summarize_events(x):
+            counts = x.value_counts()
+            lines = []
+            for event, count in counts.items():
+                lines.append(f"{event} (x{count})" if count > 1 else event)
+            return "<br>".join(lines)
+
+        events_agg = (
+            df_events.groupby("Label", dropna=False)["Event / Task"]
+            .apply(summarize_events)
+            .reset_index()
         )
-        df_events_filtered = df_events_filtered.loc[mask_events]
 
+        trend_df = trend_df.merge(events_agg, on="Label", how="left")
 
-    # --------------------------
-    # VISUALIZATIONS (tabs)
-    # --------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8,tab9 = st.tabs([
-        "Shipment Trends",
-		"Month on Month Shipment",
-		"Map",
-		"Region Donut",
-		"Region Stacked",
-		"Special Outlets",
-        "Depot Analysis",
-        "Depot-wise YoY Change",
-		"Top Outlets"
-    ])
+        # --- Layout with col1 and col2 ---
+        col1, col2 = st.columns([2, 1])  # left wider for line chart
 
-    # ---- Shipment Trends ----
-    with tab1:
-        st.markdown("###  Question: Do shipment trends look different by year, quarter, or month?")
-        st.subheader("Shipment Trends and Event Calendar")
-    
-        # --- Chart Selection ---
-        chart_type = st.radio(
-            "Select Chart Type:",
-            ["Shipment Trend", "Event Calendar"],
-            horizontal=True
-        )
-    
-        
-    
-        # ===============================
-        # 📊 IF SHIPMENT TREND SELECTED
-        # ===============================
-        if chart_type == "Shipment Trend":
+        # ------------------------
+        # LEFT: Shipment Trend ONLY
+        # ------------------------
+        with col1:
+            fig_trend = go.Figure()
 
-            # --- Controls (Granularity and View Mode) ---
-            granularity = st.radio(
-                "Granularity", ["Yearly", "Quarterly", "Monthly"],  # ✅ Removed "Daily"
-                horizontal=True, key="trend_granularity"
-            )
-            view_mode = st.radio(
-                "Display Mode", ["Absolute", "Percentage"],
-                horizontal=True, key="trend_view"
-            )
-            # --- Shipment Trend (Filtered Main Data) ---
-            if granularity == "Yearly":
-                df_filtered["Label"] = df_filtered["Year"].astype(int).astype(str)
-            elif granularity == "Quarterly":
-                df_filtered["Label"] = df_filtered["Quarter"].astype(str)
-            else:  # Monthly granularity
-                df_filtered["Label"] = df_filtered["YearMonth"].astype(str)
-    
-            trend_df = df_filtered.groupby("Label")[VOLUME_COL].sum().reset_index()
-    
-            if view_mode == "Percentage":
-                total_sum = trend_df[VOLUME_COL].sum()
-                trend_df["Value"] = (trend_df[VOLUME_COL] / total_sum) * 100
-                y_title = "Percentage (%)"
-            else:
-                trend_df["Value"] = trend_df[VOLUME_COL]
-                y_title = "Volume"
-    
-            # --- Load and Filter Normalised Data ---
-            df_normalised = load_normalized_data(
-                r"https://docs.google.com/spreadsheets/d/1lg0iIgKx9byQj7d2NZO-k1gKdFuNxxQe/export?format=xlsx"
-            )
-    
-            if filter_mode == "Year":
-                if year_choice:
-                    df_normalised = df_normalised[df_normalised["ACTUAL_DATE"].dt.year.isin(year_choice)]
-            else:
-                df_normalised = df_normalised[
-                    (df_normalised["ACTUAL_DATE"].dt.date >= start_date)
-                    & (df_normalised["ACTUAL_DATE"].dt.date <= end_date)
-                ]
-    
-            df_normalised["Year"] = df_normalised["ACTUAL_DATE"].dt.year
-            df_normalised["Quarter"] = df_normalised["ACTUAL_DATE"].dt.to_period("Q").astype(str)
-            df_normalised["YearMonth"] = df_normalised["ACTUAL_DATE"].dt.to_period("M").astype(str)
-    
-            if granularity == "Yearly":
-                norm_df = df_normalised.groupby("Year")["VOLUME"].sum().reset_index()
-                norm_df["Label"] = norm_df["Year"].astype(str)
-            elif granularity == "Quarterly":
-                norm_df = df_normalised.groupby("Quarter")["VOLUME"].sum().reset_index()
-                norm_df["Label"] = norm_df["Quarter"].astype(str)
-            else:
-                norm_df = df_normalised.groupby("YearMonth")["VOLUME"].sum().reset_index()
-                norm_df["Label"] = norm_df["YearMonth"].astype(str)
-    
-            if view_mode == "Percentage":
-                total_norm = norm_df["VOLUME"].sum()
-                norm_df["Normalized_Value"] = (norm_df["VOLUME"] / total_norm) * 100
-                norm_y_title = "Normalized Volume (%)"
-            else:
-                norm_df["Normalized_Value"] = norm_df["VOLUME"]
-                norm_y_title = "Normalized Volume"
-    
-            # --- Load Event Calendar ---
-            #EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
-            EVENT_CSV_URL = "https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
-            df_events = load_event_calendar(EVENT_CSV_URL)
-            df_events["Date"] = pd.to_datetime(df_events["Date"], errors="coerce")
-    
-            if granularity == "Yearly":
-                df_events["Label"] = df_events["Date"].dt.year.astype(str)
-            elif granularity == "Quarterly":
-                df_events["Label"] = df_events["Date"].dt.to_period("Q").astype(str)
-            else:
-                df_events["Label"] = df_events["Date"].dt.to_period("M").astype(str)
-    
-            # --- Clean and normalize event names ---
-            def clean_event_name(text):
-                if pd.isna(text):
-                    return None
-                text = str(text).strip()
-                if not text or text.lower() in ["nan", "none"]:
-                    return None
-
-            # Fix common corrupt patterns
-                text = text.replace("Against", "")
-                text = text.replace("Friendly", "BFC")
-                text = text.replace("Footll", "Football")
-                text = text.replace("Pro Ka", "Pro Kabbadi")
-                text = text.replace("C ", " ")
-                text = text.replace("IND World cup", "IND World Cup")
-                text = text.replace("RCB Match", "RCB Match")
-                text = text.replace("Week end", "Weekend")
-                text = text.replace("INDependence", "Independence")
-                text = text.replace("Ni8", "Night")
-    
-                # Remove extra spaces and normalize casing
-                text = " ".join(text.split())
-                text = text.title().replace("Ipl", "IPL").replace("Bf","BFC")
-                return text
-
-            df_events["Event / Task"] = df_events["Event / Task"].apply(clean_event_name)
-            
-            # --- Aggregate events by Label ---
-            def summarize_events(x):
-                counts = x.value_counts()
-                lines = []
-                for event, count in counts.items():
-                    if count > 1:
-                        lines.append(f"{event} (x{count})")
-                    else:
-                        lines.append(event)
-                return "<br>".join(lines)
-    
-            events_agg = (
-                df_events.groupby("Label", dropna=False)["Event / Task"]
-                .apply(summarize_events)
-                .reset_index()
-            )
-
-            trend_df = trend_df.merge(events_agg, on="Label", how="left")
-                
-            col1, col2 = st.columns([2, 1])  # left wider for line chart
-            
-            # ------------------------
-            # LEFT: Shipment Trend + Normalized Volume
-            # ------------------------
-            with col1:
-                fig_trend = go.Figure()
-                
-                # Line: Shipment trend
-                fig_trend.add_trace(
-                    go.Scatter(
-                        x=trend_df["Label"],
-                        y=trend_df["Value"],
-                        mode="lines+markers",
-                        name=f"Shipment Trend ({granularity}, {view_mode})",
-                        fill="tozeroy",
-                        hovertext=trend_df["Event / Task"],
-                        hoverinfo="x+y+text",
-                    )
+            # Line: Shipment trend (purple)
+            fig_trend.add_trace(
+                go.Scatter(
+                    x=trend_df["Label"],
+                    y=trend_df["Value"],
+                    mode="lines+markers",
+                    name=f"Shipment Trend ({granularity}, {view_mode})",
+                    fill="tozeroy",
+                    hovertext=trend_df["Event / Task"],
+                    hoverinfo="x+y+text",
+                    line=dict(color="mediumvioletred", width=3),
+                    marker=dict(size=7, color="mediumvioletred", line=dict(width=1, color="darkmagenta"))
                 )
-                
-                # Line: Normalized volume (secondary y-axis)
-                fig_trend.add_trace(
-                    go.Scatter(
-                        x=norm_df["Label"],
-                        y=norm_df["Normalized_Value"],
-                        mode="lines+markers",
-                        name=f"Normalized {granularity} Volume",
-                        line=dict(color="red"),
-                        yaxis="y2"
-                    )
-                )
-                
-                fig_trend.update_layout(
-                    title=f"Shipment Trend vs Normalized Volume ({granularity})",
-                    xaxis_title=granularity,
-                    yaxis=dict(title=y_title, side="left"),
-                    yaxis2=dict(title=norm_y_title, overlaying="y", side="right"),
-                    height=500,
-                    hovermode="x unified",
-                    template="plotly_dark",
-                    legend_title="Metrics",
-                )
-                st.plotly_chart(fig_trend, use_container_width=True)
+            )
+
+            fig_trend.update_layout(
+                title=f"Shipment Trend ({granularity})",
+                xaxis_title=granularity,
+                yaxis_title=y_title,
+                height=500,
+                hovermode="x unified",
+                template="plotly_white",
+                legend_title="Metrics",
+                margin=dict(l=40, r=40, t=60, b=40)
+            )
+
+            st.plotly_chart(fig_trend, use_container_width=True)
+
+    st.markdown("""
+    ### **Insights**
+    - Displays shipment trend over time based on the selected granularity.
+    - Highlights peaks and dips in shipment performance.
+    - Hover over points to view relevant events that may explain changes.
+    """)
+
             
             # ------------------------
             # RIGHT: Bubble Chart of Event Bins
