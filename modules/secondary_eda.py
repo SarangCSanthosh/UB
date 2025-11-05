@@ -184,7 +184,7 @@ def run():
         "Shipment Trends",
 		"Month on Month Shipment",
 		"Depot-wise YoY Change",
-		"Region Stacked",
+		"Region Clustered",
 		"Map",
 		"Region Donut",
 		"Special Outlets",
@@ -817,19 +817,27 @@ def run():
 - Whereas NORTH KARNATAKA 1 is lagging by contributing the rest of 40%.
 """)
 
-    # ---- Region Stacked ----
+       # ---- Region Clustered ----
     with tab4:
         st.markdown("###  Question: Which outlets contribute most to regional shipment volume?")
-        st.subheader("Outlets & Volume by Region (100% Share)")
+        st.subheader("Outlets & Volume by Region (Clustered View)")
+
         if "DBF_REGION" in df_filtered.columns and "DBF_OUTLET_CODE" in df_filtered.columns:
+            # --- Aggregate outlet count and volume by region ---
             region_stats = df_filtered.groupby("DBF_REGION").agg(
                 Outlet_Count=("DBF_OUTLET_CODE", "nunique"),
                 Total_Volume=(VOLUME_COL, "sum"),
             ).reset_index()
 
-            region_stats["Outlet %"] = (region_stats["Outlet_Count"] / region_stats["Outlet_Count"].sum().round(0)) * 100
-            region_stats["Volume %"] = (region_stats["Total_Volume"] / region_stats["Total_Volume"].sum().round(0)) * 100
+            # --- Compute percentages ---
+            region_stats["Outlet %"] = (
+                region_stats["Outlet_Count"] / region_stats["Outlet_Count"].sum()
+            ) * 100
+            region_stats["Volume %"] = (
+                region_stats["Total_Volume"] / region_stats["Total_Volume"].sum()
+            ) * 100
 
+            # --- Melt for plotting ---
             melted = region_stats.melt(
                 id_vars="DBF_REGION",
                 value_vars=["Outlet %", "Volume %"],
@@ -837,20 +845,43 @@ def run():
                 value_name="Percent",
             )
 
-            fig = px.bar(melted, x="DBF_REGION", y="Percent", color="Metric",
-                         barmode="stack", text=melted["Percent"].round(0),
-                         title="Outlets vs Volume % by Region")
-            fig.update_traces(texttemplate="%{text:.0f}%", textposition="inside")
+            # --- Create clustered bar chart (side-by-side) ---
+            fig = px.bar(
+                melted,
+                x="DBF_REGION",
+                y="Percent",
+                color="Metric",
+                barmode="group",  # 👈 changed from "stack" to "group"
+                text=melted["Percent"].round(0),
+                title="Outlets vs Volume % by Region (Clustered View)",
+                color_discrete_sequence=px.colors.qualitative.Set2,
+            )
+
+            fig.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
+
+            fig.update_layout(
+                xaxis_title="Region",
+                yaxis_title="Percentage (%)",
+                template="plotly_white",
+                height=550,
+                bargap=0.15,
+                bargroupgap=0.05,
+                legend_title="Metric",
+                margin=dict(l=40, r=40, t=60, b=40),
+            )
+
             st.plotly_chart(fig, use_container_width=True)
-            #st.dataframe(region_stats.set_index("DBF_REGION").round(0))
+
         else:
             st.info("DBF_REGION or DBF_OUTLET_CODE not found.")
-        with st.container():
-            st.markdown("""
-### **Insights:**
-The chart depicts that 61% of Number of outlets in North Karnataka 1 contribute to just 40% of total shipment volume, whereas only 39% of Number of Outlets in North Karnataka 2 drive for 60% of total shipment volume, indicating that North Karnataka 2 region is the core volume driver
 
-""")
+        st.markdown("""
+        ### **Insights:**
+        The chart shows that **North Karnataka 1** has 61 % of outlets but only 40 % of shipment volume,  
+        whereas **North Karnataka 2** contributes 60 % of total volume with just 39 % of outlets —  
+        highlighting its dominance as the core shipment region.
+        """)
+
 
     # ---- Special Outlets ----
     with tab7:
