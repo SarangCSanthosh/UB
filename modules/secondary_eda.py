@@ -1179,6 +1179,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             st.subheader("Top/Bottom Locations")
             VOLUME_COL="VOLUME"
             LOCATION_COL="DBF_DEPOT"
+            available_years = sorted(df_loc["Year"].dropna().unique())
             selected_years = st.sidebar.multiselect(
             "Select Year(s)", options=available_years, default=available_years)
 		
