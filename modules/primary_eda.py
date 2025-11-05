@@ -150,8 +150,8 @@ def run():
     # --------------------------
     # TABS FOR VISUALS
     # --------------------------
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "Trends", "Top/Bottom Locations", "Pareto Analysis", "Heatmaps"
+    tab1, tab2, tab3, tab4,tab5 = st.tabs([
+        "Trends", "Top/Bottom Locations", "Heatmaps", "Pareto Analysis"
     ])
 
     # ---- Tab 1: Trends ----
@@ -408,7 +408,7 @@ def run():
 """)
 
     # ---- Tab 4: Pareto Analysis ----
-    with tab4:
+    with tab5:
         st.markdown("###  Question: Which locations contribute the most to total shipment volume?")
         st.subheader("Pareto Analysis of Shipment Volume")
 
