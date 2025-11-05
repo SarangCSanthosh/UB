@@ -151,7 +151,7 @@ def run():
     # TABS FOR VISUALS
     # --------------------------
     tab1, tab2, tab3, tab4 = st.tabs([
-        "Trends", "Top/Bottom Locations", "Clustering", "Heatmaps"
+        "Trends", "Top/Bottom Locations", "Pareto Analysis", "Heatmaps"
     ])
 
     # ---- Tab 1: Trends ----
@@ -407,9 +407,8 @@ def run():
 
 """)
 
-    # ---- Tab 4: Clustering ----
-        # ---- Tab 3: Pareto Chart ----
-    with tab3:
+    # ---- Tab 4: Pareto Analysis ----
+    with tab4:
         st.markdown("###  Question: Which locations contribute the most to total shipment volume?")
         st.subheader("Pareto Analysis of Shipment Volume")
 
@@ -444,10 +443,10 @@ def run():
 
             pareto_df["Category"] = pareto_df["Cumulative_%"].apply(classify_pareto)
 
-            # --- Create combined Pareto chart (bars + cumulative line) ---
+            # --- Create Pareto Chart (Bars + Cumulative Line) ---
             fig = go.Figure()
 
-            # Bars for shipment volume
+            # Bars: Shipment volume by location
             fig.add_trace(
                 go.Bar(
                     x=pareto_df[LOCATION_COL],
@@ -462,7 +461,7 @@ def run():
                 )
             )
 
-            # Line for cumulative percentage
+            # Line: Cumulative percentage
             fig.add_trace(
                 go.Scatter(
                     x=pareto_df[LOCATION_COL],
@@ -476,7 +475,7 @@ def run():
                 )
             )
 
-            # --- Layout formatting ---
+            # --- Layout Settings ---
             fig.update_layout(
                 title="Pareto Analysis of Shipment Volume by Location",
                 xaxis=dict(title="Location", tickangle=45),
@@ -495,7 +494,7 @@ def run():
 
             st.plotly_chart(fig, use_container_width=True)
 
-            # --- Show DataFrame Below ---
+            # --- Data Table ---
             st.dataframe(
                 pareto_df[[LOCATION_COL, VOLUME_COL, "Cumulative_%", "Category"]]
                 .round(2)
@@ -505,12 +504,13 @@ def run():
             # --- Insights ---
             st.markdown("""
             ### **Insights:**
-            - 🟢 **Category A** (Top 70%) — These few key locations contribute the majority of shipment volume.
-            - 🟠 **Category B** (Next 20%) — Moderate contributors; potential growth or efficiency opportunities.
-            - 🔴 **Category C** (Bottom 10%) — Low-impact locations; may require optimization or consolidation.
+            - 🟢 **Category A (Top 70%)** — Core locations driving the majority of shipment volume.  
+            - 🟠 **Category B (Next 20%)** — Moderate contributors; focus for expansion.  
+            - 🔴 **Category C (Bottom 10%)** — Low-impact zones; may need optimization or resource reallocation.
             """)
         else:
             st.warning("Required columns not found in dataset.")
+
 
 """)
 
