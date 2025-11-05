@@ -1179,6 +1179,8 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             st.subheader("Top/Bottom Locations")
             VOLUME_COL="VOLUME"
             LOCATION_COL="DBF_DEPOT"
+            selected_years = st.sidebar.multiselect(
+            "Select Year(s)", options=available_years, default=available_years)
 		
             if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
 				
