@@ -1222,7 +1222,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	        elif set(selected_years) == {2024}:
 	            pci_col = "per capita - 2023-24"
 	        else:
-	            pci_col = "Grand Total"
+	            pci_col = "Total PCI"
 	
 	        # --- Load PCI dataset ---
 	        df_pci = pd.read_excel(
