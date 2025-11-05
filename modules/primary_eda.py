@@ -151,7 +151,7 @@ def run():
     # TABS FOR VISUALS
     # --------------------------
     tab1, tab2, tab3, tab4 = st.tabs([
-        "Trends", "Top/Bottom Locations", "Heatmaps", "Pareto Analysis"
+        "Trends", "Top/Bottom Locations", "Pareto Analysis","Heatmaps"
     ])
 
     # ---- Tab 1: Trends ----
