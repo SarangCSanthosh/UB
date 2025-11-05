@@ -180,7 +180,7 @@ def run():
     # --------------------------
     # VISUALIZATIONS (tabs)
     # --------------------------
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8,tab9 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7,tab8,tab9, tab10 = st.tabs([
         "Shipment Trends",
 		"Month on Month Shipment",
 		"Depot-wise YoY Change",
@@ -189,7 +189,8 @@ def run():
 		"Region Donut",
 		"Special Outlets",
         "Depot Analysis",
-		"Top Outlets"
+		"Top Outlets",
+		"Top/Bottom Locations"
     ])
 
     # ---- Shipment Trends ----
@@ -1172,7 +1173,135 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	        4. CHITRADURGA -  New liquor store licenses rejected by CM 
             5. VIJAYAPURA - Disposable Income ⬆️, but shipments ⬇️
             """)
+
+    with tab10:
+            st.markdown("###  Question: Where are shipments highest and where are they lagging?")
+            st.subheader("Top/Bottom Locations")
+			VOLUME_COL="VOLUME"
+			LOCATION_COL="DBF_DEPOT"
+		
+            if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
     
+            # --- Normalize location names for consistency ---
+                df_filtered[LOCATION_COL] = df_filtered[LOCATION_COL].replace({
+                    "HUBBALLI-1": "HUBBALLI",
+                    "HUBBALLI-2": "HUBBALLI",
+                    "BELAGAVI-2": "BELAGAVI",
+                    "CHIKODI": "CHIKKODI"
+                })
+        
+                # --- Group shipments by location ---
+                location_volume = (
+                    df_filtered.groupby(LOCATION_COL)[VOLUME_COL]
+                    .sum()
+                    .round(0)
+                    .reset_index()
+                )
+        
+                choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
+                value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
+                n_locations = st.slider("Number of Locations", 5, 25, 10)
+        
+                if choice == "Top":
+                    locs = location_volume.sort_values(by=VOLUME_COL, ascending=False).head(n_locations)
+                else:
+                    locs = location_volume.sort_values(by=VOLUME_COL, ascending=True).head(n_locations)
+        
+                if value_type == "Percentage":
+                    total_volume = df_filtered[VOLUME_COL].sum().round(0)
+                    locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
+        
+                # --- Determine PCI column based on selected year(s) ---
+                if filter_mode == "Year":
+                    years_selected = selected_years  
+                else:
+                    years_selected = sorted(df_filtered["Year"].dropna().unique())
+        
+                if set(years_selected) == {2023}:
+                    pci_col = "Per capita - 2022-23"
+                elif set(years_selected) == {2024}:
+                    pci_col = "per capita - 2023-24"
+                else:
+                    pci_col = "Grand Total"
+        
+                # --- Load PCI dataset ---
+                df_pci = pd.read_excel(
+                    "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx",
+                    sheet_name="PCI"
+                )
+        
+                df_pci.columns = [c.strip() for c in df_pci.columns]
+                df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
+                df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
+        
+                # --- Merge HUBBALLI & BELAGAVI variants ---
+                df_pci["Location"] = df_pci["Location"].replace({
+                    "HUBBALLI-1": "HUBBALLI",
+                    "HUBBALLI-2": "HUBBALLI",
+                    "BELAGAVI-2": "BELAGAVI",
+                    "CHIKODI": "CHIKKODI"
+                })
+        
+                # --- Aggregate PCI values ---
+                df_pci = df_pci.groupby("Location", as_index=False)[pci_col].mean()
+        
+                # --- Merge with shipment data ---
+                locs["Location_upper"] = locs[LOCATION_COL].str.strip().str.upper()
+                df_merged = pd.merge(
+                    locs,
+                    df_pci,
+                    left_on="Location_upper",
+                    right_on="Location",
+                    how="left"
+                )
+        
+                df_merged.rename(columns={pci_col: "Per Capita Income"}, inplace=True)
+    
+                if value_type == "Percentage":
+                    total_volume = df_merged[VOLUME_COL].sum()
+                    total_pci = df_merged["Per Capita Income"].sum()
+                
+                    df_merged[VOLUME_COL] = (df_merged[VOLUME_COL] / total_volume * 100).round(1)
+                    df_merged["Per Capita Income"] = (df_merged["Per Capita Income"] / total_pci * 100).round(1)
+        
+                # --- Melt for bar chart ---
+                df_melted = df_merged.melt(
+                    id_vars=[LOCATION_COL],
+                    value_vars=[VOLUME_COL, "Per Capita Income"],
+                    var_name="Metric",
+                    value_name="Value"
+                )
+        
+                # --- Clustered (side-by-side) bar chart ---
+                fig = px.bar(
+                    df_melted,
+                    x="Value",
+                    y=LOCATION_COL,
+                    color="Metric",
+                    orientation="h",
+                    #text=df_melted["Value"].round(0),
+                    barmode="group",  # <<< CLUSTERED BARS
+                    color_discrete_sequence=px.colors.qualitative.Set2
+                )
+        
+                fig.update_traces(textposition="outside")
+        
+                if choice == "Top":
+                    fig.update_layout(yaxis=dict(categoryorder="total ascending"))
+                else:
+                    fig.update_layout(yaxis=dict(categoryorder="total descending"))
+        
+                fig.update_layout(
+                    title=f"Shipment Volume vs Per Capita Income ({pci_col})",
+                    xaxis_title="Value",
+                    yaxis_title="Location",
+                    legend_title="Metric",
+                    template="plotly_dark",
+                    height=600,
+                    margin=dict(t=80)
+                )
+        
+                st.plotly_chart(fig, use_container_width=True)
 
 
 # ===============================
