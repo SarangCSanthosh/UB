@@ -295,7 +295,7 @@ def run():
                 elif set(years_selected) == {2024}:
                     pci_col = "per capita - 2023-24"
                 else:
-                    pci_col = "Grand Total"
+                    pci_col = "Total PCI"
         
                 # --- Load PCI dataset ---
                 df_pci = pd.read_excel(
