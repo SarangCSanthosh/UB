@@ -407,7 +407,7 @@ def run():
 
 """)
 
-    # ---- Tab 4: Pareto Analysis ----
+# ---- Tab 4: Pareto Analysis ----
     with tab5:
         st.markdown("###  Question: Which locations contribute the most to total shipment volume?")
         st.subheader("Pareto Analysis of Shipment Volume")
