@@ -1181,11 +1181,12 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	    VOLUME_COL = "VOLUME"
 	    LOCATION_COL = "DBF_DEPOT"
 	
-	    # ✅ Use the main filtered DataFrame
+	    # ✅ Use filtered dataset for available years
 	    available_years = sorted(df_filtered["Year"].dropna().unique())
-	    selected_years = available_years  # same as global filter
+	    selected_years = available_years  # Use same years from global filter
 	
 	    if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
+	
 	        # --- Normalize location names for consistency ---
 	        df_filtered[LOCATION_COL] = df_filtered[LOCATION_COL].replace({
 	            "HUBBALLI-1": "HUBBALLI",
@@ -1202,7 +1203,6 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	            .reset_index()
 	        )
 	
-	        # --- User options for Top/Bottom ---
 	        choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
 	        value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
 	        n_locations = st.slider("Number of Locations", 5, 25, 10)
@@ -1217,14 +1217,9 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	            locs[VOLUME_COL] = (locs[VOLUME_COL] / total_volume * 100).round(0)
 	
 	        # --- Determine PCI column based on selected year(s) ---
-	        if filter_mode == "Year":
-	            years_selected = selected_years
-	        else:
-	            years_selected = sorted(df_filtered["Year"].dropna().unique())
-	
-	        if set(years_selected) == {2023}:
+	        if set(selected_years) == {2023}:
 	            pci_col = "Per capita - 2022-23"
-	        elif set(years_selected) == {2024}:
+	        elif set(selected_years) == {2024}:
 	            pci_col = "per capita - 2023-24"
 	        else:
 	            pci_col = "Grand Total"
@@ -1277,16 +1272,18 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	            value_name="Value"
 	        )
 	
-	        # --- Clustered bar chart ---
+	        # --- Clustered (side-by-side) bar chart ---
 	        fig = px.bar(
 	            df_melted,
 	            x="Value",
 	            y=LOCATION_COL,
 	            color="Metric",
 	            orientation="h",
-	            barmode="group",
+	            barmode="group",  # Clustered bars
 	            color_discrete_sequence=px.colors.qualitative.Set2
 	        )
+	
+	        fig.update_traces(textposition="outside")
 	
 	        if choice == "Top":
 	            fig.update_layout(yaxis=dict(categoryorder="total ascending"))
@@ -1304,7 +1301,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	        )
 	
 	        st.plotly_chart(fig, use_container_width=True)
-	
+
 
 
 # ===============================
