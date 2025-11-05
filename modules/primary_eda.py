@@ -408,68 +408,109 @@ def run():
 """)
 
     # ---- Tab 4: Clustering ----
+        # ---- Tab 3: Pareto Chart ----
     with tab3:
-        st.markdown("###  Question: Are there distinct groups of locations based on shipment activity?")
-        if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
-            st.subheader("Clustering")
-            granularity = st.radio("Clustering Granularity", ["Month", "Quarter", "Year"], horizontal=True)
-            normalize = st.checkbox("Normalize Features", value=True)
-            k = st.slider("Clusters (k)", 2, 10, 4)
+        st.markdown("###  Question: Which locations contribute the most to total shipment volume?")
+        st.subheader("Pareto Analysis of Shipment Volume")
 
-            time_col = "YearMonth" if granularity == "Month" else "Quarter" if granularity == "Quarter" else "Year"
-            pivot = pd.pivot_table(df_filtered, index=LOCATION_COL, columns=time_col,
-                                   values=VOLUME_COL, aggfunc="sum", fill_value=0)
-            pivot.columns = pivot.columns.astype(str)
-            pivot = pivot.loc[pivot.sum(axis=1) > 0]
+        LOCATION_COL = "LOCATION"
+        VOLUME_COL = "VOLUME"
 
-            if pivot.shape[0] < k:
-                st.warning(f"Not enough locations ({pivot.shape[0]}) to form {k} clusters. Please reduce k or select more locations.")
-            else:
-                X = pivot.values
-                if normalize:
-                    X = MinMaxScaler().fit_transform(X)
+        if LOCATION_COL in df_filtered.columns and VOLUME_COL in df_filtered.columns:
+            # --- Aggregate shipment volume by location ---
+            pareto_df = (
+                df_filtered.groupby(LOCATION_COL)[VOLUME_COL]
+                .sum()
+                .round(0)
+                .reset_index()
+                .sort_values(by=VOLUME_COL, ascending=False)
+                .reset_index(drop=True)
+            )
 
-                km = KMeans(n_clusters=k, n_init=10, random_state=42)
-                labels = km.fit_predict(X)
+            # --- Compute cumulative volume and percentage ---
+            pareto_df["Cumulative_Volume"] = pareto_df[VOLUME_COL].cumsum()
+            pareto_df["Cumulative_%"] = (
+                100 * pareto_df["Cumulative_Volume"] / pareto_df[VOLUME_COL].sum()
+            ).round(2)
 
-                comps = PCA(n_components=2, random_state=42).fit_transform(X)
-                comp_df = pd.DataFrame({LOCATION_COL: pivot.index, "PC1": comps[:, 0],
-                                        "PC2": comps[:, 1], "Cluster": labels})
+            # --- Pareto classification (A/B/C) ---
+            def classify_pareto(p):
+                if p <= 70:
+                    return "A"
+                elif p <= 90:
+                    return "B"
+                else:
+                    return "C"
 
-                # --- Add total shipment volume for bubble size ---
-                comp_df["Total_Volume"] = pivot.sum(axis=1).values
-    
-                # --- Bubble Chart ---
-                fig_bubble = px.scatter(
-                    comp_df,
-                    x="PC1",
-                    y="PC2",
-                    size="Total_Volume",
-                    color="Cluster",
-                    hover_name=LOCATION_COL,
-                    size_max=45,
-                    color_continuous_scale="Turbo",
-                    title="Clustering of Locations (Bubble Size = Total Shipment Volume)"
+            pareto_df["Category"] = pareto_df["Cumulative_%"].apply(classify_pareto)
+
+            # --- Create combined Pareto chart (bars + cumulative line) ---
+            fig = go.Figure()
+
+            # Bars for shipment volume
+            fig.add_trace(
+                go.Bar(
+                    x=pareto_df[LOCATION_COL],
+                    y=pareto_df[VOLUME_COL],
+                    name="Shipment Volume",
+                    marker_color=pareto_df["Category"].map(
+                        {"A": "green", "B": "orange", "C": "red"}
+                    ),
+                    text=pareto_df[VOLUME_COL],
+                    textposition="outside",
+                    hovertemplate="<b>%{x}</b><br>Volume: %{y:,.0f}<extra></extra>",
                 )
-                fig_bubble.update_traces(marker=dict(opacity=0.8, line=dict(width=1, color='DarkSlateGrey')))
-                st.plotly_chart(fig_bubble, use_container_width=True)
-    
-                # --- Display Cluster Table ---
-                st.dataframe(
-                    comp_df[[LOCATION_COL, "Cluster", "Total_Volume"]]
-                    .sort_values("Cluster")
-                    .round(0)
-                    .set_index(LOCATION_COL),
-                    use_container_width=True,
-                    height=250
+            )
+
+            # Line for cumulative percentage
+            fig.add_trace(
+                go.Scatter(
+                    x=pareto_df[LOCATION_COL],
+                    y=pareto_df["Cumulative_%"],
+                    mode="lines+markers",
+                    name="Cumulative %",
+                    yaxis="y2",
+                    line=dict(color="purple", width=3),
+                    marker=dict(size=6, color="purple"),
+                    hovertemplate="<b>%{x}</b><br>Cumulative: %{y:.2f}%<extra></extra>",
                 )
-                #st.dataframe(comp_df[[LOCATION_COL, "Cluster"]].round(0), width=400, height=200)
-                st.markdown("""
-### **Insights:**
-- 🟣 Cluster 0: Low-demand rural zones — Bagalkot, Sedam, Koppal, Ballari (require shared logistics support).
-- 🟢 Cluster 1: Balanced trade regions — Raichur, Hosapete, Belagavi (suitable for scaling operations).
-- 🟠 Cluster 2: Emerging hubs — Vijayapura, Bidar, Yadgiri (show increasing shipment potential).
-- 🔴 Cluster 3: Major shipment centres — Kalaburagi, Hubballi (strategic for warehousing and route optimisation).
+            )
+
+            # --- Layout formatting ---
+            fig.update_layout(
+                title="Pareto Analysis of Shipment Volume by Location",
+                xaxis=dict(title="Location", tickangle=45),
+                yaxis=dict(title="Shipment Volume"),
+                yaxis2=dict(
+                    title="Cumulative %",
+                    overlaying="y",
+                    side="right",
+                    range=[0, 110],
+                ),
+                legend=dict(x=0.8, y=1.1, orientation="h"),
+                height=600,
+                margin=dict(l=40, r=40, t=80, b=120),
+                template="plotly_white",
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+            # --- Show DataFrame Below ---
+            st.dataframe(
+                pareto_df[[LOCATION_COL, VOLUME_COL, "Cumulative_%", "Category"]]
+                .round(2)
+                .set_index(LOCATION_COL)
+            )
+
+            # --- Insights ---
+            st.markdown("""
+            ### **Insights:**
+            - 🟢 **Category A** (Top 70%) — These few key locations contribute the majority of shipment volume.
+            - 🟠 **Category B** (Next 20%) — Moderate contributors; potential growth or efficiency opportunities.
+            - 🔴 **Category C** (Bottom 10%) — Low-impact locations; may require optimization or consolidation.
+            """)
+        else:
+            st.warning("Required columns not found in dataset.")
 
 """)
 
