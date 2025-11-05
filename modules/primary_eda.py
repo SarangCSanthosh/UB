@@ -407,8 +407,109 @@ def run():
 
 """)
 
-# ---- Tab 4: Pareto Analysis ----
-    
+    # ---- Tab 4: Pareto Analysis ----
+    with tab3:
+        st.markdown("###  Question: Which locations contribute the most to total shipment volume?")
+        st.subheader("Pareto Analysis of Shipment Volume")
+
+        LOCATION_COL = "LOCATION"
+        VOLUME_COL = "VOLUME"
+
+        if LOCATION_COL in df_filtered.columns and VOLUME_COL in df_filtered.columns:
+            # --- Aggregate shipment volume by location ---
+            pareto_df = (
+                df_filtered.groupby(LOCATION_COL)[VOLUME_COL]
+                .sum()
+                .round(0)
+                .reset_index()
+                .sort_values(by=VOLUME_COL, ascending=False)
+                .reset_index(drop=True)
+            )
+
+            # --- Compute cumulative volume and percentage ---
+            pareto_df["Cumulative_Volume"] = pareto_df[VOLUME_COL].cumsum()
+            pareto_df["Cumulative_%"] = (
+                100 * pareto_df["Cumulative_Volume"] / pareto_df[VOLUME_COL].sum()
+            ).round(2)
+
+            # --- Pareto classification (A/B/C) ---
+            def classify_pareto(p):
+                if p <= 70:
+                    return "A"
+                elif p <= 90:
+                    return "B"
+                else:
+                    return "C"
+
+            pareto_df["Category"] = pareto_df["Cumulative_%"].apply(classify_pareto)
+
+            # --- Create Pareto Chart (Bars + Cumulative Line) ---
+            fig = go.Figure()
+
+            # Bars: Shipment volume by location
+            fig.add_trace(
+                go.Bar(
+                    x=pareto_df[LOCATION_COL],
+                    y=pareto_df[VOLUME_COL],
+                    name="Shipment Volume",
+                    marker_color=pareto_df["Category"].map(
+                        {"A": "green", "B": "orange", "C": "red"}
+                    ),
+                    text=pareto_df[VOLUME_COL],
+                    textposition="outside",
+                    hovertemplate="<b>%{x}</b><br>Volume: %{y:,.0f}<extra></extra>",
+                )
+            )
+
+            # Line: Cumulative percentage
+            fig.add_trace(
+                go.Scatter(
+                    x=pareto_df[LOCATION_COL],
+                    y=pareto_df["Cumulative_%"],
+                    mode="lines+markers",
+                    name="Cumulative %",
+                    yaxis="y2",
+                    line=dict(color="purple", width=3),
+                    marker=dict(size=6, color="purple"),
+                    hovertemplate="<b>%{x}</b><br>Cumulative: %{y:.2f}%<extra></extra>",
+                )
+            )
+
+            # --- Layout Settings ---
+            fig.update_layout(
+                title="Pareto Analysis of Shipment Volume by Location",
+                xaxis=dict(title="Location", tickangle=45),
+                yaxis=dict(title="Shipment Volume"),
+                yaxis2=dict(
+                    title="Cumulative %",
+                    overlaying="y",
+                    side="right",
+                    range=[0, 110],
+                ),
+                legend=dict(x=0.8, y=1.1, orientation="h"),
+                height=600,
+                margin=dict(l=40, r=40, t=80, b=120),
+                template="plotly_white",
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+            # --- Data Table ---
+            st.dataframe(
+                pareto_df[[LOCATION_COL, VOLUME_COL, "Cumulative_%", "Category"]]
+                .round(2)
+                .set_index(LOCATION_COL)
+            )
+
+            # --- Insights ---
+            st.markdown("""
+            ### **Insights:**
+            - 🟢 **Category A (Top 70%)** — Core locations driving the majority of shipment volume.  
+            - 🟠 **Category B (Next 20%)** — Moderate contributors; focus for expansion.  
+            - 🔴 **Category C (Bottom 10%)** — Low-impact zones; may need optimization or resource reallocation.
+            """)
+        else:
+            st.warning("Required columns not found in dataset.")    
 
 
     
