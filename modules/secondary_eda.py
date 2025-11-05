@@ -937,7 +937,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
             "RAICHUR": (16.2046, 77.3555),
             "SINDHANUR": (15.7689, 76.7557),
             "BALLARI": (15.1394, 76.9214),
-            "HOSAPETE": (15.2843, 76.3771),
+            "HOSAPETE": (15.2833, 76.4000),
             "KOPPAL": (15.3500, 76.1500),
             "BAGALKOT": (16.1744, 75.6620),
             "JAMAKHANDI": (16.5167, 75.3000),
