@@ -1177,10 +1177,11 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
     with tab10:
             st.markdown("###  Question: Where are shipments highest and where are they lagging?")
             st.subheader("Top/Bottom Locations")
-			VOLUME_COL="VOLUME"
-			LOCATION_COL="DBF_DEPOT"
+            VOLUME_COL="VOLUME"
+            LOCATION_COL="DBF_DEPOT"
 		
             if VOLUME_COL in df_filtered.columns and LOCATION_COL in df_filtered.columns:
+				
     
             # --- Normalize location names for consistency ---
                 df_filtered[LOCATION_COL] = df_filtered[LOCATION_COL].replace({
