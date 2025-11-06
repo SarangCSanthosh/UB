@@ -504,9 +504,9 @@ def run():
             # --- Insights ---
             st.markdown("""
             ### **Insights:**
-            - 🟢 **Category A (Top 70%)** — Core locations driving the majority of shipment volume.  
-            - 🟠 **Category B (Next 20%)** — Moderate contributors; focus for expansion.  
-            - 🔴 **Category C (Bottom 10%)** — Low-impact zones; may need optimization or resource reallocation.
+            GREEN - Strong distribution network
+            ORANGE - Moderate shipments but high potential if pricing/logistics improve.
+            RED - Distribution cost high ; Beer volumes in smaller Karnataka towns fell >18% in 2024 (TOI, Jan 2025).
             """)
         else:
             st.warning("Required columns not found in dataset.")    
