@@ -1107,71 +1107,14 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
                 summary_df = pivot_df[[2023, 2024, "YoY_Change", "YoY_Percentage"]].round(0)
                 #st.dataframe(summary_df)
     
-                # -------------------------------------------------------------------------
-                # NEW SECTION: YoY Change in Disposable Income (Per Capita Income)
-                # -------------------------------------------------------------------------
-                st.markdown("### YoY Change in Disposable Income (Per Capita Income)")
-    
-                # Load PCI data
-                df_pci = pd.read_excel(
-                    "https://docs.google.com/spreadsheets/d/1Pg0DkCaqQJymbrkIIqAcjbgCa-7MVHJB/export?format=xlsx",
-                    sheet_name="PCI"
-                )
-                df_pci.columns = [c.strip() for c in df_pci.columns]
-                df_pci.rename(columns={"Row Labels": "Location"}, inplace=True)
-                df_pci["Location"] = df_pci["Location"].str.strip().str.upper()
-    
-                
-    
-                # Calculate YoY change in PCI
-                if "Per capita - 2022-23" in df_pci.columns and "per capita - 2023-24" in df_pci.columns:
-                    df_pci["PCI_YoY_Change"] = df_pci["per capita - 2023-24"] - df_pci["Per capita - 2022-23"]
-                    df_pci["PCI_YoY_%Change"] = (
-                        df_pci["PCI_YoY_Change"] / df_pci["Per capita - 2022-23"]
-                    ) * 100
-                    df_pci["PCI_YoY_%Change"] = df_pci["PCI_YoY_%Change"].round(2)
-    
-                    df_pci_sorted = df_pci.sort_values("PCI_YoY_%Change", ascending=False)
-    
-                    # Bar chart for PCI YoY change
-                    fig_pci = px.bar(
-                        df_pci_sorted,
-                        x="PCI_YoY_%Change",
-                        y="Location",
-                        orientation="h",
-                        color="PCI_YoY_%Change",
-                        color_continuous_scale="Tealgrn",
-                        text=df_pci_sorted["PCI_YoY_%Change"].apply(lambda x: f"{x:.1f}%")
-                    )
-    
-                    fig_pci.update_layout(
-                        title="YoY % Change in Per Capita Income (2023 → 2024)",
-                        xaxis_title="YoY % Change in PCI",
-                        yaxis_title="Location",
-                        height=600,
-                        template="plotly_dark",
-                        margin=dict(t=60, b=80)
-                    )
-    
-                    fig_pci.update_traces(textposition="outside")
-                    st.plotly_chart(fig_pci, use_container_width=True)
-    
-                    # Display PCI summary table
-                    #st.dataframe(df_pci_sorted[["Location", "Per capita - 2022-23", "per capita - 2023-24", "PCI_YoY_%Change"]])
-                #else:
-                    #st.warning("PCI columns for 2022-23 or 2023-24 are missing in the dataset.")
-    
-            else:
-                st.info("Data for 2023 and/or 2024 is missing.")
-        else:
-            st.info("DBF_DEPOT or ACTUAL_DATE column not found.")
         st.markdown("""
             ### **Insights**
-	        1. CHIKKODI - Good Kingfisher presence around sugar factories
-	        2. KALABURAGI - Disposable Income ⬇️, shipments also ⬆️
-	        3. SINDHANUR - Young drinkers turn towards hard drinks 
-	        4. CHITRADURGA -  New liquor store licenses rejected by CM 
-            5. VIJAYAPURA - Disposable Income ⬆️, but shipments ⬇️
+	        - SINDHANUR - Young drinkers turn towards hard drinks 
+			- CHITRADURGA - new liquor store licenses rejected by CM
+			- HUBBALI - SEZ + industrial expansion → logistic congestion.
+			- BAGALKOT - Rural warehouses hit by soaring input/fuel costs (Deccan Herald 2024).
+			- Possible Bull whip effect of Disposable Income
+			- Sedam / Kalaburagi - hosts 24×7 warehousing facilities → offering distribution reach & accessibility.
             """)
 
     with tab10:
