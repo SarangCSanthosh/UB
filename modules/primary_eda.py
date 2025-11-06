@@ -273,7 +273,7 @@ def run():
         
                 choice = st.radio("Select Type", ["Top", "Bottom"], horizontal=True)
                 value_type = st.radio("Value Type", ["Absolute", "Percentage"], horizontal=True)
-                n_locations = st.slider("Number of Locations", 5, 25, 10)
+                n_locations = st.slider("Number of Locations", 5, 20, 10)
         
                 if choice == "Top":
                     locs = location_volume.sort_values(by=VOLUME_COL, ascending=False).head(n_locations)
