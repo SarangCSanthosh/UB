@@ -1302,7 +1302,7 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	
 	        st.plotly_chart(fig, use_container_width=True)
 
-			st.markdown("""
+		st.markdown("""
             ### **Insights**
 
 			- Kalaburagi – Volume Boom Despite Low PCI
