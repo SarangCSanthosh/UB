@@ -1302,6 +1302,20 @@ BELAGAVI 2 AND HUBALLI 2 are contributing fairly lesser - 17% and 18% respective
 	
 	        st.plotly_chart(fig, use_container_width=True)
 
+			st.markdown("""
+            ### **Insights**
+
+			- Kalaburagi – Volume Boom Despite Low PCI
+			- 🚚 Strong distributor network 
+
+			- Vijayapura - Strategic logistics hub (NH-13 corridor)
+			- 🏪 Strong retail partnerships drive steady throughput.
+			- 🎉 Festival-season spikes post-2023 drought
+
+			- Ballari – High Income, But Volume Lag
+			- 🏙️ Distribution gaps in urban on-trade outlets reduce visibility.
+			""")
+
 
 
 # ===============================
