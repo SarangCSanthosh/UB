@@ -32,10 +32,9 @@ def load_event_calendar(sheet_id: str):
     try:
         # Build a direct download link
 
-        # download_url = f"https://docs.google.com/spreadsheets/d/1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO/export?format=xlsx"
+        
         download_url = f"https://docs.google.com/spreadsheets/d/1GxgGo6waZV7WDsF50v_nYSu2mxEX6bmj/export?format=xlsx"
-        # download_url = f"https://docs.google.com/spreadsheets/d/1PZSyJWB_1iPbARkUOiNOVooF51PjDhxlgGxgCdSCzKk/export?format=xlsx"
-        # download_url = f"https://docs.google.com/spreadsheets/d/1GxgGo6waZV7WDsF50v_nYSu2mxEX6bmj/export?format=xlsx"
+        
 
         df = pd.read_excel(download_url)
 
@@ -66,30 +65,14 @@ def run():
     # LOAD DATA
     # --------------------------
     default_path = "https://docs.google.com/spreadsheets/d/1l69N0xrDbXM7-cP1d9nlwBInaqCy8ftC/export?format=xlsx"
-    #default_path = "https://docs.google.com/spreadsheets/d/1te1MVxSoO3EWwg_9akooxKxIEgI4KDna/export?format=xlsx"
+    
     df = load_excel(default_path)
     SHEET_ID = "1QYN4ZHmB-FpA1wUFlzh5Vp-WtMFPV8jO"
     df_events = load_event_calendar(SHEET_ID)
 
     VOLUME_COL = "VOLUME"
     OUTLET_COL = "DBF_OUTLET_CODE"
-    #df[OUTLET_COL] = df[OUTLET_COL].astype(str).str.strip().str.upper()
-    # 1️⃣ Inspect potential hidden characters
-    #df['clean_outlet'] = (
-        #df[OUTLET_COL]
-        #.astype(str)
-        #.str.replace(r'[\u200b\u200c\u200d\u00a0\r\n\t]', '', regex=True)  # invisible Unicode chars
-        #.str.strip()
-        #.str.upper()
-    #)
     
-    # 2️⃣ Compare unique counts
-    #print("Before:", df[OUTLET_COL].nunique())
-    #print("After:", df['clean_outlet'].nunique())
-    
-    # 3️⃣ Replace column finally if count improves
-    #df[OUTLET_COL] = df['clean_outlet']
-    #df.drop(columns=['clean_outlet'], inplace=True)
 
     df, DATE_COL = prepare_dates(df)
 
